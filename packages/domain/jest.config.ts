@@ -1,6 +1,6 @@
 export default {
   displayName: 'domain',
   preset: '../../jest.preset.js',
+  rootDir: '.',
   testEnvironment: 'node',
-  transform: { '^.+\\.ts$': ['ts-jest', { useESM: true }] },
 };
