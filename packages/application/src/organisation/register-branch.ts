@@ -35,11 +35,13 @@ export class RegisterBranch implements UseCase<RegisterBranchInput, RegisterBran
     // clock is available for time-dependent validation/event stamping as the
     // use case grows; registration itself records no time-varying invariant yet.
     void this.clock;
+    // Omit `licences` when undefined rather than assigning undefined, to satisfy
+    // exactOptionalPropertyTypes against Branch.register's optional property.
     const branch = Branch.register({
       branchId: BranchId.of(input.branchId),
       type: input.type,
       name: input.name,
-      licences: input.licences,
+      ...(input.licences !== undefined ? { licences: input.licences } : {}),
     });
     await this.branches.save(branch);
     return { branchId: branch.branchId.value };
