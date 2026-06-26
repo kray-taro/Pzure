@@ -4,8 +4,8 @@ Log every blocker here and review weekly. Mirror the legacy `Module_X - Blockers
 
 | ID | Title | Area | Severity | Status | Owner | Notes / Resolution |
 | --- | --- | --- | --- | --- | --- | --- |
-| B-001 | Stack discrepancy: Service Bus vs BullMQ/Redis | Architecture | High | 🔴 Open | Solution Architect | Master Plan says Azure Service Bus; ADR-005 says BullMQ/Redis. Decide authoritative source. |
-| B-002 | Stack discrepancy: generic RBAC vs Keycloak | Architecture | Medium | 🔴 Open | Solution Architect | ADR-002 specifies Keycloak; confirm and align Master Plan. |
+| B-001 | Stack discrepancy: Service Bus vs BullMQ/Redis | Architecture | High | 🔴 Open | Solution Architect | Tracked in [#48](https://gitlab.com/cricketaustin-group/Pzure/-/issues/48). Master Plan says Azure Service Bus; ADR-005 says BullMQ/Redis. Decide authoritative source. |
+| B-002 | Stack discrepancy: generic RBAC vs Keycloak | Architecture | Medium | 🔴 Open | Solution Architect | Tracked in [#49](https://gitlab.com/cricketaustin-group/Pzure/-/issues/49). ADR-002 specifies Keycloak; confirm and align Master Plan. |
 | B-003 | eTIMS implementation path undecided | Integration | High | 🔴 Open | Tech Lead | Direct API / VSCU / OSCU / certified middleware to be confirmed in Sprint 0. |
 | B-004 | Azure tenant/subscription ownership | Infrastructure | High | 🔴 Open | PM / Client | Production must run in client-owned Azure tenant. |
 | B-005 | SMS & WhatsApp providers not selected | Communication | Medium | 🔴 Open | BA | Africa's Talking referenced in ADR-005; confirm + WhatsApp BSP. |
