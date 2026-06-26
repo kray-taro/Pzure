@@ -21,7 +21,9 @@ default:
 install:
   stage: install
   script:
-    - npm ci
+    # Interim: `npm install` until a generated package-lock.json is committed,
+    # at which point this reverts to `npm ci` for reproducible installs.
+    - npm install
   artifacts:
     paths:
       - node_modules/
