@@ -7,3 +7,4 @@ export * from './base/errors.js';
 export * from './ports/repository.js';
 export * from './ports/branch-scope.js';
 export * from './ports/clock.js';
+export * from './organisation/index.js';
