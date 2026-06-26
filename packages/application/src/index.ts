@@ -7,3 +7,4 @@ export * from './ports/message-bus.js';
 export * from './ports/cache.js';
 export * from './ports/search-index.js';
 export * from './use-case.js';
+export * from './organisation/register-branch.js';
