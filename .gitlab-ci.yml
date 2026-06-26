@@ -8,6 +8,11 @@ stages:
   - test
   - security
 
+variables:
+  # Ephemeral runners gain nothing from the Nx daemon or a cross-machine local
+  # cache; the latter makes Nx fail with "Invalid Cache Directory".
+  NX_DAEMON: "false"
+
 default:
   image: node:20
   cache:
@@ -16,7 +21,6 @@ default:
         - package-lock.json
     paths:
       - node_modules/
-      - .nx/cache/
 
 install:
   stage: install
