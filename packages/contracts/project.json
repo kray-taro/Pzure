@@ -1,0 +1,7 @@
+{
+  "name": "contracts",
+  "sourceRoot": "packages/contracts/src",
+  "projectType": "library",
+  "tags": ["layer:contracts"],
+  "targets": { "lint": { "executor": "@nx/eslint:lint" } }
+}

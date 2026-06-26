@@ -1,0 +1,10 @@
+{
+  "name": "worker",
+  "sourceRoot": "apps/worker/src",
+  "projectType": "application",
+  "tags": ["layer:app"],
+  "targets": {
+    "lint": { "executor": "@nx/eslint:lint" },
+    "build": { "executor": "@nx/js:tsc", "options": { "main": "apps/worker/src/main.ts", "outputPath": "dist/apps/worker" } }
+  }
+}

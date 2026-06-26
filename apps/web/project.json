@@ -1,0 +1,7 @@
+{
+  "name": "web",
+  "sourceRoot": "apps/web/src",
+  "projectType": "application",
+  "tags": ["layer:app"],
+  "targets": { "lint": { "executor": "@nx/eslint:lint" } }
+}

@@ -1,0 +1,79 @@
+# Pzure CI. Mandatory gates before merge: lint, unit tests, integration tests,
+# and security scanning must all pass. No secrets in code (COMPLIANCE.md);
+# configuration is environment-based. Nothing here deploys to or targets main.
+
+stages:
+  - install
+  - quality
+  - test
+  - security
+
+default:
+  image: node:20
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - node_modules/
+      - .nx/cache/
+
+install:
+  stage: install
+  script:
+    - npm ci
+  artifacts:
+    paths:
+      - node_modules/
+    expire_in: 1 hour
+
+lint:
+  stage: quality
+  needs: [install]
+  script:
+    - npm run lint
+
+typecheck:
+  stage: quality
+  needs: [install]
+  script:
+    - npm run typecheck
+
+unit-tests:
+  stage: test
+  needs: [install]
+  script:
+    - npm run test
+
+integration-tests:
+  stage: test
+  needs: [install]
+  services:
+    - name: mcr.microsoft.com/mssql/server:2022-latest
+      alias: sqlserver
+    - name: redis:7
+      alias: redis
+  variables:
+    ACCEPT_EULA: "Y"
+    MSSQL_SA_PASSWORD: "$CI_MSSQL_SA_PASSWORD"
+    DB_HOST: sqlserver
+    REDIS_URL: redis://redis:6379
+  script:
+    # Seed a disposable DB (baseline migration), run integration tests, tear down.
+    # No shared mutable state between runs.
+    - npm run test:integration
+
+# Security gates. Uses GitLab-managed templates; runs as required gates.
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+sast:
+  stage: security
+
+dependency_scanning:
+  stage: security
+
+secret_detection:
+  stage: security

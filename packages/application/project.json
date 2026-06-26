@@ -1,0 +1,10 @@
+{
+  "name": "application",
+  "sourceRoot": "packages/application/src",
+  "projectType": "library",
+  "tags": ["layer:application"],
+  "targets": {
+    "lint": { "executor": "@nx/eslint:lint" },
+    "test": { "executor": "@nx/jest:jest", "options": { "jestConfig": "packages/application/jest.config.ts" } }
+  }
+}

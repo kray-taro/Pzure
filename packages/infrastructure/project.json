@@ -1,0 +1,10 @@
+{
+  "name": "infrastructure",
+  "sourceRoot": "packages/infrastructure/src",
+  "projectType": "library",
+  "tags": ["layer:infrastructure"],
+  "targets": {
+    "lint": { "executor": "@nx/eslint:lint" },
+    "test:integration": { "executor": "@nx/jest:jest", "options": { "jestConfig": "packages/infrastructure/jest.integration.config.ts" } }
+  }
+}
