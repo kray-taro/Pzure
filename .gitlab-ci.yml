@@ -2,6 +2,16 @@
 # and security scanning must all pass. No secrets in code (COMPLIANCE.md);
 # configuration is environment-based. Nothing here deploys to or targets main.
 
+# Run one pipeline per change: a merge-request pipeline when an MR is open,
+# otherwise a branch pipeline. Prevents the empty/failed MR pipeline seen on
+# MR !1 (no workflow rules meant custom jobs had no merge_request_event rule).
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS'
+      when: never
+    - if: '$CI_COMMIT_BRANCH'
+
 stages:
   - install
   - quality
