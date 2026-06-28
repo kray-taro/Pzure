@@ -39,14 +39,16 @@ for name in "${!OTHER_LABELS[@]}"; do
   glab label create --repo "$PROJECT" --name "$name" --color "${OTHER_LABELS[$name]}" --description "Pzure workflow/type" || echo "  (exists?) $name"
 done
 
-# --- Milestones: Sprint 0 .. Sprint 37 ------------------------------------
-# glab has no native milestone create; use the API via `glab api`.
-echo "Creating milestones Sprint 0..37..."
-for i in $(seq 0 37); do
-  glab api --method POST "projects/$(printf '%s' "$PROJECT" | sed 's#/#%2F#')/milestones" \
-    -f "title=Sprint $i" \
-    -f "description=Pzure 2-week sprint $i (see DOCS/PROJECT-TRACKING/ROADMAP.md)" \
-    >/dev/null 2>&1 && echo "  created Sprint $i" || echo "  (exists?) Sprint $i"
-done
+# --- Milestones -----------------------------------------------------------
+# NOTE: milestone creation now lives in create-milestones.sh, which surfaces
+# real API errors and also creates the Sprint 0A/0B/0C architecture-gate
+# milestones. The inline loop below was swallowing errors (2>&1 ... ||),
+# which is why milestones appeared missing. Prefer the dedicated script:
+#
+#   bash create-milestones.sh
+#
+echo "Skipping inline milestone creation. Run: bash create-milestones.sh"
 
-echo "Done. Next: assign labels/milestones to issues #1-#53 per WORK-ITEMS.md and LABELS-AND-MILESTONES.md."
+echo "Done. Next:"
+echo "  1) bash create-milestones.sh      # creates Sprint 0,0A,0B,0C,1..37"
+echo "  2) bash apply-board-structure.sh  # applies labels+milestones+parents to issues"

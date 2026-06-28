@@ -33,11 +33,16 @@ Scoped labels (`module::x`) are mutually exclusive per issue.
 
 ## Milestones
 
-One milestone per sprint: **Sprint 0** through **Sprint 37**. Suggested 2-week cadence; set start/due dates to match the agreed programme calendar. Issue-to-milestone mapping follows the sprint prefix in each issue title (see `WORK-ITEMS.md`).
+One milestone per sprint: **Sprint 0**, **Sprint 0A/0B/0C** (architecture gate), then **Sprint 1** through **Sprint 37**. Suggested 2-week cadence; set start/due dates to match the agreed programme calendar. Issue-to-milestone mapping follows the sprint prefix in each issue title (see `WORK-ITEMS.md`).
+
+> Create milestones with `create-milestones.sh` (surfaces API errors), then assign them with `apply-board-structure.sh`. The older inline loop in `setup-labels-milestones.sh` swallowed errors and is now disabled.
 
 | Milestone | Issues |
 | --- | --- |
 | Sprint 0 | #12, plus blockers #48-#53 (target close) |
+| Sprint 0A | #54 (data architecture & tenancy — Gate 0) |
+| Sprint 0B | #55 (security/identity architecture — Gate 0) |
+| Sprint 0C | #56 (offline/integration/NFR/deployment/DR — Gate 0) |
 | Sprint 3 | #13 |
 | Sprint 4 | #14 |
 | Sprint 5 | #15 |
