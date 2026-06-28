@@ -6,7 +6,7 @@
 
 ## 1. Context and Problem Statement
 
-Pzure must integrate with critical external systems: eTIMS (KRA) for tax invoices, SHA for claims, Daraja (M-Pesa) for payments, and Africa's Talking for SMS. 
+Pzure must integrate with critical external systems: eTIMS (KRA) for tax invoices, SHA for claims, Daraja (M-Pesa) for payments, and Africa's Talking for SMS.
 
 If we synchronously call the eTIMS API during the POS checkout flow and the eTIMS API is down, the sale fails, stopping retail operations. We need a robust asynchronous pattern to guarantee message delivery to external APIs without blocking internal transactions.
 

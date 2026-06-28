@@ -29,10 +29,11 @@ We need a strategy for field-level encryption that protects highly sensitive dat
 
 For the MVP, we will use a single strong AES-256-GCM symmetric key injected via environment variables. NestJS will intercept specific entity fields (e.g., using TypeORM transformers or Prisma middlewares) to encrypt them on write and decrypt on read.
 
-### Fields Designated for Encryption:
-* `patient.national_id`
-* `patient.phone_primary` (if not used as the primary search index, or we hash a search-friendly version)
-* `emr.clinical_notes.note_text`
+### Fields Designated for Encryption
+
+- `patient.national_id`
+- `patient.phone_primary` (if not used as the primary search index, or we hash a search-friendly version)
+- `emr.clinical_notes.note_text`
 
 ### Positive Consequences
 
