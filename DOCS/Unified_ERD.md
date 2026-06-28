@@ -43,6 +43,7 @@ erDiagram
         uuid id PK
         uuid organisation_id FK
         string patient_number
+        string national_id
         string first_name
         string last_name
         date dob
