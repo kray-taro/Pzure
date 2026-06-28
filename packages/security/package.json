@@ -1,0 +1,19 @@
+{
+  "name": "@pzure/security",
+  "version": "0.1.0",
+  "description": "Pzure security invariants as code: the PII/PHI encryption-scope registry and its enforcing tests (ADR-003 / ADR-007, Gate 0B #55).",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

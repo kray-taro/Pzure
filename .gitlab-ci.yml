@@ -18,6 +18,15 @@ stages:
   - lint
   - typecheck
   - test
+  - scan
+
+# Gate 0B (#55): full SAST + dependency scanning replace the day-one secret
+# guard's "baseline only" scope. The local guard stays as a cheap fast-fail in
+# the `guard` stage; these templates add deep static analysis and CVE checks.
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
 
 default:
   image: node:20-alpine
@@ -76,3 +85,14 @@ test:
   script:
     - npm test
   coverage: '/All files[^|]*\|[^|]*\s+([\d.]+)/'
+
+# Pin the managed-template jobs into the `scan` stage so they run after the
+# cheap gates and parallelise with each other (DDIA scalability).
+sast:
+  stage: scan
+
+gemnasium-dependency_scanning:
+  stage: scan
+
+secret_detection:
+  stage: scan
