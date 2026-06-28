@@ -29,12 +29,20 @@ Approved architectural decisions live as ADRs in `DOCS/ADRs/`. This log indexes 
 
 > ADR-007..020 stubbed to close B-007 (Gate 0). Owned by Sprint 0A ([#54](https://gitlab.com/cricketaustin-group/Pzure/-/issues/54)), 0B ([#55](https://gitlab.com/cricketaustin-group/Pzure/-/issues/55)), 0C ([#56](https://gitlab.com/cricketaustin-group/Pzure/-/issues/56)); move to Approved as each architecture sprint completes.
 
-## Open decisions (to close in Sprint 0)
+## Closed decisions (resolved in Sprint 0)
 
-| ID | Topic | Options | Recommendation |
+| ID | Topic | Decision | Issue |
 | --- | --- | --- | --- |
-| D-001 | Queue technology | Azure Service Bus vs BullMQ/Redis | Follow ADR-005 (BullMQ/Redis) unless enterprise Azure policy mandates Service Bus |
-| D-002 | SQL Server deployment | Azure SQL / Managed Instance / SQL VM | Confirm with client enterprise policy |
-| D-003 | App hosting | App Service / Container Apps / AKS | Choose by internal DevOps capability |
-| D-004 | eTIMS path | Direct API / VSCU / OSCU / middleware | Decide with KRA/eTIMS readiness |
-| D-005 | Frontend framing | "ViteJS" (plan) vs "React + Vite" (ADRs) | Treat as React SPA built with Vite |
+| D-001 | Queue technology | **Hybrid:** outbox + pluggable transport; BullMQ/Redis MVP, Service Bus later if policy requires | [#48](https://gitlab.com/cricketaustin-group/Pzure/-/issues/48) |
+| D-002 | SQL Server deployment | **Azure SQL Database** (private endpoint, public access off, TDE, Entra auth, PITR; admin in Key Vault). Managed Instance only if later needs demand | [#51](https://gitlab.com/cricketaustin-group/Pzure/-/issues/51) |
+| D-003 | App hosting | **Azure Container Apps** (API + workers + scheduler; private ingress; managed identity; Key Vault secrets). AKS deferred until DevOps capability exists | [#51](https://gitlab.com/cricketaustin-group/Pzure/-/issues/51) |
+| D-004 | eTIMS path | **Software VSCU**; arbitrary credentials until KRA approval; outbox adapter | [#50](https://gitlab.com/cricketaustin-group/Pzure/-/issues/50) |
+| D-005 | Frontend framing | **React SPA built with Vite** (+ TypeScript, Tailwind, Radix); see ADR-026 / Module 10 | [#11](https://gitlab.com/cricketaustin-group/Pzure/-/issues/11) |
+
+## New ADRs to author (from Sprint 0 resolutions)
+
+| ADR | Decision | Status |
+| --- | --- | --- |
+| ADR-COMMS-001 | SMS provider: Africa's Talking MVP default, adapter-based | To author ([#52](https://gitlab.com/cricketaustin-group/Pzure/-/issues/52)) |
+| ADR-COMMS-002 | WhatsApp provider: official BSP, adapter-based, approved templates | To author ([#52](https://gitlab.com/cricketaustin-group/Pzure/-/issues/52)) |
+| ADR-026 | Frontend stack: Vite + React + TS + Tailwind + Radix + design system | To author ([#11](https://gitlab.com/cricketaustin-group/Pzure/-/issues/11)) |
