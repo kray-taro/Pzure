@@ -42,7 +42,10 @@ For a 10-branch health retail platform, row-level scoping using `organisation_id
 
 ## 5. Implementation Notes
 
-* **Mandatory Columns:** Every transactional table must include `branch_id (UNIQUEIDENTIFIER)`. Every top-level master data table must include `organisation_id (UNIQUEIDENTIFIER)`.
+* **Scoping classes (not a blanket column rule):** Per `Unified_ERD.md`, branch scope is carried two ways and a table belongs to exactly one class (see §6.4 for the full classification and its RLS consequences):
+  * **Directly-scoped** - the table owns a `branch_id (UNIQUEIDENTIFIER) NOT NULL` column (e.g. `emr_visits`, `billing_sales`, `pharmacy_dispenses`, `inventory_stock_batches`, `inventory_purchase_orders`).
+  * **Inheritance-scoped** - the table has no `branch_id` column and reaches its owning branch through a foreign-key chain (e.g. `inventory_stock_movements` via `batch_id`, `billing_invoices`/`billing_payments` via `sale_id`, `emr_*`/`pharmacy_prescriptions`/`claims_claims` via `visit_id`, the lab tables via the order/sample chain).
+  Every top-level master data table includes `organisation_id (UNIQUEIDENTIFIER)` instead and is org-scoped, not branch-scoped.
 * **ORM/Query Builder Enforcement:** The backend (NestJS) must use global query scopes or interceptors to automatically inject the user's current `branch_id` from their JWT token into all read and write queries.
 * **Cross-Branch Operations:** For inter-branch transfers or corporate reporting, a specific `Corporate` role or system service account will bypass the branch scope.
 
@@ -73,7 +76,20 @@ Partition key per hot table (from `Unified_ERD.md`):
 | `pharmacy_dispenses` | `branch_id` | `prescription_id` | Dispensing happens at the dispensing branch |
 | `emr_visits` | `branch_id` | `patient_id` | A visit occurs at one branch; patient may roam across branches |
 
-Derived/child tables inherit the partition of their parent via the FK chain and must carry/join on `branch_id`: `billing_invoices` and `billing_payments` (via `sale_id`); `inventory_stock_movements` (via `batch_id`); `emr_clinical_notes`, `emr_diagnoses`, `pharmacy_prescriptions` (via `visit_id`). `claims_claims` partitions by the visit's `branch_id`.
+Derived/child tables are **inheritance-scoped**: they hold no `branch_id` column and reach the owning branch through the FK chain shown below (column names verified against `Unified_ERD.md`). They partition with, and must join through, their parent:
+
+| Inheritance-scoped table | FK column | Resolves branch via |
+| --- | --- | --- |
+| `billing_invoices` | `sale_id` | `billing_sales.branch_id` |
+| `billing_payments` | `sale_id` | `billing_sales.branch_id` |
+| `inventory_stock_movements` | `batch_id` | `inventory_stock_batches.branch_id` |
+| `emr_clinical_notes` | `visit_id` | `emr_visits.branch_id` |
+| `emr_diagnoses` | `visit_id` | `emr_visits.branch_id` |
+| `pharmacy_prescriptions` | `visit_id` | `emr_visits.branch_id` |
+| `claims_claims` | `visit_id` | `emr_visits.branch_id` |
+| `lab_orders` | `visit_id` | `emr_visits.branch_id` |
+| `lab_samples` | `order_id` | `lab_orders` -> `emr_visits.branch_id` |
+| `lab_results` | `sample_id` | `lab_samples` -> `lab_orders` -> `emr_visits.branch_id` |
 
 **Hot-branch detection:** A branch becomes "hot" when its share of write throughput or row count materially exceeds an even split (alert threshold: a single `branch_id` exceeding 2x the mean branch write rate over a rolling 24h window, or p95 transactional latency for that branch breaching the NFR of API p95 < 500 ms). Detection inputs: per-`branch_id` write counters and query latency emitted to the monitoring stack; periodic row-count-by-`branch_id` snapshot job (reuses the ADR-014 snapshot scheduler so it does not load the transactional path).
 
@@ -100,7 +116,7 @@ Consistency level is set **per entity**, by safety impact, not globally.
 * **`claims_*` analytics** (`claims_claims`, `claims_tariffs` aggregates for reporting): eventual consistency acceptable for analytical/aggregate reads. Note: *claim submission* itself is online-only and transactional (ADR-008/012); only the **analytical read path** over claims data is eventually consistent.
 * **Cached reference/catalogue data** at the branch (products, price lists, ICD-10): read-mostly; on conflict, **server-wins** (ADR-009).
 
-**Replication topology:** single-primary, asynchronous read replica(s). All writes and all consistency-critical reads (stock, dispense, payment) target the primary. Only the reporting/analytics read path is allowed to read replicas/snapshots. This matches DDIA's "read-your-writes is required for operational paths, not for reporting."
+**Replication topology:** single-primary; the MVP reporting path uses scheduled snapshots only (ADR-014). Asynchronous read replica(s) are a later-phase addition, not present at MVP. All writes and all consistency-critical reads (stock, dispense, payment) target the primary. Only the reporting/analytics read path is allowed to read replicas/snapshots. This matches DDIA's principle that read-your-writes is required for operational paths, not for reporting.
 
 ### 6.3 Offline append-only eventual-consistency boundary (ADR-006 / 008 / 009)
 
@@ -115,15 +131,22 @@ The offline model is the platform's deliberate eventual-consistency zone, and it
 
 The Section 5 ORM/query-scope enforcement is necessary but not sufficient; tenancy isolation must be **machine-verified** (DDIA reliability: no invariant relies on developer discipline). Enforcement is defence-in-depth: application-layer global query scope (injects `branch_id` from JWT) **plus** database RLS policies on every branch-scoped table as a backstop.
 
-Test plan (each item is an automated, CI-runnable test; all must pass before Gate 0A sign-off and must stay green thereafter):
+**RLS strategy by scoping class.** SQL Server RLS predicates evaluate over columns of the row being accessed, so the two scoping classes from Section 5 need different policies. This is a hard design constraint, not a detail - a single "`branch_id` predicate" cannot be applied to a table that has no `branch_id` column:
+
+| Scoping class | Tables | RLS approach |
+| --- | --- | --- |
+| Directly-scoped | `core_branches`, `emr_visits`, `pharmacy_dispenses`, `billing_sales`, `inventory_stock_batches`, `inventory_purchase_orders` | Filter predicate `branch_id = CONVERT(UNIQUEIDENTIFIER, SESSION_CONTEXT(N'branch_id'))`, plus a matching block predicate so cross-branch INSERT/UPDATE is rejected at the DB. |
+| Inheritance-scoped | the §6.1 FK-chain tables (incl. `lab_orders` / `lab_samples` / `lab_results`) | Each such table must EITHER (a) **denormalise a `branch_id` column** populated at write time (preferred: keeps the predicate simple and indexable and makes the no-oversell joins cheaper), OR (b) use a **join-based table-valued security predicate function** that resolves the branch through the FK chain. The companion implementation MR ([#67](https://gitlab.com/cricketaustin-group/Pzure/-/issues/67)) records the per-table choice in the migration. |
+
+Test plan (each item is an automated, CI-runnable test; all must pass before Gate 0A sign-off and must stay green thereafter). Implementation is tracked in [#67](https://gitlab.com/cricketaustin-group/Pzure/-/issues/67):
 
 1. **Positive scope:** a user authenticated for Branch A reading `billing_sales` / `emr_visits` / `inventory_stock_batches` / `pharmacy_dispenses` returns **only** rows where `branch_id = A`.
 2. **Negative cross-branch read:** the same Branch A user querying a Branch B row id returns **zero rows** (not an authorization error that leaks existence).
-3. **Negative cross-branch write:** an insert/update attempting `branch_id = B` while scoped to A is **rejected** by the DB RLS policy even if the application scope is bypassed.
+3. **Negative cross-branch write:** a write that would place a row under Branch B while the session is scoped to A is **rejected** by the DB RLS block predicate even if the application scope is bypassed. For directly-scoped tables this is an `INSERT/UPDATE` with `branch_id = B`; for inheritance-scoped tables it is a child row whose parent resolves to Branch B (e.g. a `billing_payment` against a Branch B `sale_id`).
 4. **Forgotten-filter backstop:** a deliberately unscoped query (simulating a developer omitting `WHERE branch_id = X`) returns only the session-branch rows because the RLS policy is active - proving the backstop catches the Negative Consequence called out in Section 4.
 5. **Corporate bypass is explicit:** the `Corporate` role / service account can read across branches **only** through the designated cross-branch path, and every such access writes an audit event (ties ADR-020 export control + audit).
 6. **Master vs transactional:** `organisation_id`-scoped master data (`inventory_products`, terminology) is visible across the org's branches; transactional tables are not - asserting the two-tier scope.
-7. **Migration guard:** a schema test asserts every transactional table in `Unified_ERD.md` carries `branch_id` and has an RLS policy attached; a new transactional table without one fails CI.
+7. **Migration guard:** a schema test asserts every transactional table in `Unified_ERD.md` is in a known scoping class - either **directly-scoped** (owns `branch_id`) or **inheritance-scoped** (a documented FK chain in the §6.1 table that resolves to `emr_visits.branch_id` or `billing_sales.branch_id`) - **and** has an RLS policy attached implementing that class. A new transactional table that is in neither class, or has no RLS policy, fails CI. This is what makes the scope claim enforceable rather than asserted.
 
 ### 6.5 ADR review checklist (Gate 0A) - all evidenced
 
@@ -134,7 +157,7 @@ Test plan (each item is an automated, CI-runnable test; all must pass before Gat
 | Rebalancing plan | Done | Section 6.1 (vertical -> read offload -> physical partition -> branch-range shard) |
 | Per-entity consistency level | Done | Section 6.2 (strong: stock/dispense/payments; eventual: reporting, `claims_*` analytics) |
 | Offline eventual-consistency boundary | Done | Section 6.3 (ADR-006/008/009 bound to the strong-consistency entities) |
-| Row-level-security enforcement test plan | Done | Section 6.4 (7 automated tests, incl. forgotten-filter backstop) |
+| Row-level-security enforcement test plan | Planned (companion MR) | Section 6.4 specifies the 7 automated tests + the per-class RLS approach and migration guard; **implementation is tracked in [#67](https://gitlab.com/cricketaustin-group/Pzure/-/issues/67)**. Gate 0A isolation is *designed* here, and is *enforced* only once #67 is green on `develop`. |
 | Ratified against Unified_ERD.md | Done | All table names cross-checked against `DOCS/Unified_ERD.md` |
 
 ### 6.6 Cross-references

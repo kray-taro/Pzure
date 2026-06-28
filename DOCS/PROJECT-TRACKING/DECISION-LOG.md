@@ -6,7 +6,7 @@ Approved architectural decisions live as ADRs in `DOCS/ADRs/`. This log indexes 
 
 | ADR | Decision | Status |
 | --- | --- | --- |
-| ADR-001 | Branch-aware multi-tenancy via row-level `organisation_id`/`branch_id` (shared DB, shared schema); **ratified Gate 0A** against `Unified_ERD.md` (partition key `branch_id`, per-entity consistency, RLS test plan) | Approved (ratified) |
+| ADR-001 | Branch-aware multi-tenancy via row-level `organisation_id`/`branch_id` (shared DB, shared schema); **ratified Gate 0A** 2026-06-28 ([#54](https://gitlab.com/cricketaustin-group/Pzure/-/issues/54)) against `Unified_ERD.md` (partition key `branch_id`, per-entity consistency, RLS enforcement tracked in [#67](https://gitlab.com/cricketaustin-group/Pzure/-/issues/67)) | Approved (ratified) |
 | ADR-002 | Authentication via Keycloak (OIDC); in-memory access token, rotating refresh token | Approved |
 | ADR-003 | Field-level AES-256-GCM encryption for PII/PHI (MVP), migrate to envelope encryption later | Approved |
 | ADR-004 | RBAC via Keycloak + application-layer 4-digit pharmacist PIN for regulated overrides | Approved |
