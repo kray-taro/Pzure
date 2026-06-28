@@ -1,13 +1,21 @@
 # ADR-016: Backup and Disaster Recovery
 
-**Status:** Draft  
+**Status:** Approved  
 **Date:** 2026-06-28  
 **Author(s):** DevOps / Cloud Engineer
 
-> Stub created to close B-007 (Gate 0). Owning work item: [#56](https://gitlab.com/cricketaustin-group/Pzure/-/issues/56) Sprint 0C.
+> Resolves B-006 ([#53](https://gitlab.com/cricketaustin-group/Pzure/-/issues/53)) backup/DR aspects and the DR posture from B-004 ([#51](https://gitlab.com/cricketaustin-group/Pzure/-/issues/51)). Owning work item: [#56](https://gitlab.com/cricketaustin-group/Pzure/-/issues/56) Sprint 0C.
 
 ## 1. Context and Problem Statement
 A regulated health platform needs defined RPO/RTO and tested restores before pilot.
 
 ## 4. Decision Outcome
-**Chosen (proposed):** RPO ≤15 min (DB point-in-time restore), RTO ≤4h for production restoration; geo-redundant document backups; append-only backup-protected audit logs; restore drills before pilot and quarterly; mandatory DR runbook; branch offline-continuity SOP.
+**Chosen (Approved — authoritative DR targets):**
+- **RPO ≤ 15 min** via Azure SQL point-in-time restore.
+- **RTO ≤ 4h** for production restoration.
+- Automated SQL backups; **PITR retention ≥ 35 days** (longer if compliance requires); **geo-redundant** backup storage.
+- Documents/files on Storage with **versioning + soft delete**; Key Vault **soft delete + purge protection**.
+- App containers rebuilt from registry/pipeline; append-only, backup-protected audit logs.
+- **DR runbook mandatory before production go-live**; restore drills before pilot and quarterly; branch offline-continuity SOP.
+
+> These targets are authoritative and **supersede** the looser MVP figures (RPO ≤24h / RTO ≤8–24h) discussed during B-004 triage.

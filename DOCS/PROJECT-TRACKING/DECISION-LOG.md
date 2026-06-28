@@ -18,10 +18,10 @@ Approved architectural decisions live as ADRs in `DOCS/ADRs/`. This log indexes 
 | ADR-010 | eTIMS integration strategy (outbox adapter, queue/retry/rejection) | Draft |
 | ADR-011 | M-Pesa Daraja integration strategy (STK/C2B, callbacks, idempotency, reconciliation) | Draft |
 | ADR-012 | Claims SHA/manual/API submission strategy (generic engine, adapter interface) | Draft |
-| ADR-013 | WhatsApp/SMS communication strategy (consent-led, Cloud API, templates) | Draft |
+| ADR-013 | WhatsApp/SMS communication strategy (consent-led, adapter-based, templates) | Approved |
 | ADR-014 | Reporting architecture (separate read models/snapshots from MVP) | Draft |
-| ADR-015 | Azure deployment topology (client tenant, IaC, environments) | Draft |
-| ADR-016 | Backup & DR (RPO ≤15min, RTO ≤4h, restore drills) | Draft |
+| ADR-015 | Azure deployment topology (client tenant, Azure SQL DB, Container Apps, private-first) | Approved |
+| ADR-016 | Backup & DR (RPO ≤15min, RTO ≤4h, 35-day PITR, restore drills) — **authoritative DR targets** | Approved |
 | ADR-017 | Rollout & rollback (feature flags, blue-green, branch-wave canary) | Draft |
 | ADR-018 | Device/printer/scanner support model (device registry, test matrix) | Draft |
 | ADR-019 | Data retention & archival policy (health data ≥20yrs, retention matrix) | Draft |
@@ -43,6 +43,6 @@ Approved architectural decisions live as ADRs in `DOCS/ADRs/`. This log indexes 
 
 | ADR | Decision | Status |
 | --- | --- | --- |
-| ADR-COMMS-001 | SMS provider: Africa's Talking MVP default, adapter-based | To author ([#52](https://gitlab.com/cricketaustin-group/Pzure/-/issues/52)) |
-| ADR-COMMS-002 | WhatsApp provider: official BSP, adapter-based, approved templates | To author ([#52](https://gitlab.com/cricketaustin-group/Pzure/-/issues/52)) |
-| ADR-026 | Frontend stack: Vite + React + TS + Tailwind + Radix + design system | To author ([#11](https://gitlab.com/cricketaustin-group/Pzure/-/issues/11)) |
+| ADR-COMMS-001 | SMS provider: Africa's Talking MVP default, adapter-based | Approved ([#52](https://gitlab.com/cricketaustin-group/Pzure/-/issues/52)) |
+| ADR-COMMS-002 | WhatsApp provider: official BSP, adapter-based, approved templates | Approved ([#52](https://gitlab.com/cricketaustin-group/Pzure/-/issues/52)) |
+| ADR-026 | Frontend stack: Vite + React + TS + Tailwind + Radix + design system | Approved ([#11](https://gitlab.com/cricketaustin-group/Pzure/-/issues/11)) |
