@@ -7,6 +7,9 @@ Derived from `Modul_Master - Implementation Plan.md`. 2-week sprints, ~72 weeks 
 | Sprint | Theme | Status |
 | --- | --- | --- |
 | 0 | Programme mobilisation (governance, team, environments, backlog) | ⬜ |
+| 0A | Data architecture & tenancy baseline ([#54](https://gitlab.com/cricketaustin-group/Pzure/-/issues/54)) — Gate 0 | ⬜ |
+| 0B | Security, privacy & identity architecture ([#55](https://gitlab.com/cricketaustin-group/Pzure/-/issues/55)) — Gate 0 | ⬜ |
+| 0C | Offline, integration, NFR, deployment & DR architecture ([#56](https://gitlab.com/cricketaustin-group/Pzure/-/issues/56)) — Gate 0 | ⬜ |
 | 1 | Enterprise discovery & 10-branch operating model | ⬜ |
 | 2 | Solution architecture & Azure landing zone design | ⬜ |
 | 3 | DevSecOps foundation & base platform skeleton | ⬜ |

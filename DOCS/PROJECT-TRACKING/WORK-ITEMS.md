@@ -6,7 +6,7 @@ All Pzure work items created as **project Issues** (Epics require a group). Modu
 
 | Item | GitLab | Children |
 | --- | --- | --- |
-| Foundation — Platform & Security | [#1](https://gitlab.com/cricketaustin-group/Pzure/-/issues/1) | #12, #13, #14, #38, #39, #40, #41, #42, #43, #44, #45, #46, #47 |
+| Foundation — Platform & Security | [#1](https://gitlab.com/cricketaustin-group/Pzure/-/issues/1) | #12, #54, #55, #56, #13, #14, #38, #39, #40, #41, #42, #43, #44, #45, #46, #47 |
 | Module 1 — Organisation & Licensing | [#2](https://gitlab.com/cricketaustin-group/Pzure/-/issues/2) | #15 |
 | Module 2 — POS, Billing & Payments | [#3](https://gitlab.com/cricketaustin-group/Pzure/-/issues/3) | #16, #17, #18 |
 | Module 3 — Pharmacy Dispensing | [#4](https://gitlab.com/cricketaustin-group/Pzure/-/issues/4) | #22, #23, #24, #25 |
@@ -23,6 +23,9 @@ All Pzure work items created as **project Issues** (Epics require a group). Modu
 | Sprint | Issue | Parent |
 | --- | --- | --- |
 | 0 | [#12](https://gitlab.com/cricketaustin-group/Pzure/-/issues/12) Programme mobilisation | #1 |
+| 0A | [#54](https://gitlab.com/cricketaustin-group/Pzure/-/issues/54) Data architecture & tenancy baseline (Gate 0) | #1 |
+| 0B | [#55](https://gitlab.com/cricketaustin-group/Pzure/-/issues/55) Security, privacy & identity architecture (Gate 0) | #1 |
+| 0C | [#56](https://gitlab.com/cricketaustin-group/Pzure/-/issues/56) Offline, integration, NFR, deployment & DR architecture (Gate 0) | #1 |
 | 3 | [#13](https://gitlab.com/cricketaustin-group/Pzure/-/issues/13) DevSecOps foundation & skeleton | #1 |
 | 4 | [#14](https://gitlab.com/cricketaustin-group/Pzure/-/issues/14) Core master data & branch foundation | #1 |
 | 5 | [#15](https://gitlab.com/cricketaustin-group/Pzure/-/issues/15) Organisation, licensing, professionals, contracts | #2 |
