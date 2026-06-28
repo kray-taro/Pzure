@@ -1,0 +1,27 @@
+{
+  "name": "@pzure/root",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Pzure monorepo root. Develop integration line. main untouched until release gate.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc -b --noEmit packages/design-tokens || tsc --noEmit -p packages/design-tokens/tsconfig.json",
+    "test": "vitest run --coverage",
+    "guard:branch": "bash scripts/check-branch-name.sh",
+    "guard:hex": "bash scripts/check-no-raw-hex.sh",
+    "guard:secrets": "bash scripts/check-no-secrets.sh"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "@vitest/coverage-v8": "^2.0.5",
+    "eslint": "^9.9.0",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^2.0.5"
+  }
+}
