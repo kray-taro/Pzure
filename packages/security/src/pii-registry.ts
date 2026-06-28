@@ -38,7 +38,13 @@ export interface ColumnClassification {
 export const COLUMN_CLASSIFICATIONS: readonly ColumnClassification[] = [
   // patient_patients (PII) - the real ERD patient table.
   { table: 'patient_patients', column: 'patient_number', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
-  { table: 'patient_patients', column: 'national_id', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
+  // national_id is encrypted PII, but ADR-003 §4 scopes the deterministic HMAC
+  // search hash to phone_primary only - it does NOT designate one for
+  // national_id. A deterministic hash over a low-entropy national ID is
+  // offline-enumerable (the DBA threat ADR-003 §1 names), so no searchHash here.
+  // If national-ID exact-match search is needed, ratify it in an ADR amendment
+  // (with an enumeration mitigation) before re-adding searchHash.
+  { table: 'patient_patients', column: 'national_id', dataClass: 'pii', fieldEncrypted: true },
   { table: 'patient_patients', column: 'phone_primary', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
   { table: 'patient_patients', column: 'first_name', dataClass: 'pii', fieldEncrypted: true },
   { table: 'patient_patients', column: 'last_name', dataClass: 'pii', fieldEncrypted: true },
