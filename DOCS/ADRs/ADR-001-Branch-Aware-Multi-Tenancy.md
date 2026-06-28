@@ -45,3 +45,102 @@ For a 10-branch health retail platform, row-level scoping using `organisation_id
 * **Mandatory Columns:** Every transactional table must include `branch_id (UNIQUEIDENTIFIER)`. Every top-level master data table must include `organisation_id (UNIQUEIDENTIFIER)`.
 * **ORM/Query Builder Enforcement:** The backend (NestJS) must use global query scopes or interceptors to automatically inject the user's current `branch_id` from their JWT token into all read and write queries.
 * **Cross-Branch Operations:** For inter-branch transfers or corporate reporting, a specific `Corporate` role or system service account will bypass the branch scope.
+
+---
+
+## 6. Ratification Addendum (Gate 0A) - Tenancy ratified against Unified_ERD
+
+**Ratification status:** Ratified for Gate 0A  
+**Ratification date:** 2026-06-28  
+**Owning work item:** [#54](https://gitlab.com/cricketaustin-group/Pzure/-/issues/54) Sprint 0A (blocker B-007)  
+**Reviewed against:** `DOCS/Unified_ERD.md`  
+**Method:** Reviewed per *Designing Data-Intensive Applications* (DDIA) - partitioning, replication, and consistency made explicit per entity rather than assumed.
+
+This addendum ratifies the Section 4 decision (shared DB, shared schema, row-level `organisation_id` / `branch_id`) by binding it to the concrete tables defined in `Unified_ERD.md`. It closes the gap DDIA warns about: a tenancy model is incomplete until its partition key, replication topology, and per-entity consistency level are stated and testable.
+
+### 6.1 Partitioning (DDIA Ch. 6)
+
+**Partition / shard key:** `branch_id` is the partition key for all high-volume transactional tables. Cross-branch master data (`inventory_products`, `terminology_diagnosis_codes`, `pharmacy_drug_ingredients`) is **not** branch-partitioned; it is replicated reference data scoped by `organisation_id`.
+
+The MVP runs a single Azure SQL Database (per ADR-015 / D-002), so partitioning is initially **logical**: `branch_id` is the leading column of the clustered or covering indexes and the mandatory predicate on every transactional query. The model below is forward-compatible with physical partitioning (SQL Server partitioned tables, or branch-range sharding) once a single instance is outgrown, without an application rewrite.
+
+Partition key per hot table (from `Unified_ERD.md`):
+
+| Hot table | Partition / shard key | Secondary distribution key | Rationale |
+| --- | --- | --- | --- |
+| `billing_sales` | `branch_id` | `sale_date` (range, for archival) | Sales volume is branch-local and time-skewed |
+| `inventory_stock_batches` | `branch_id` | `product_id` | Stock is physically held at one branch; decrement is branch-local |
+| `pharmacy_dispenses` | `branch_id` | `prescription_id` | Dispensing happens at the dispensing branch |
+| `emr_visits` | `branch_id` | `patient_id` | A visit occurs at one branch; patient may roam across branches |
+
+Derived/child tables inherit the partition of their parent via the FK chain and must carry/join on `branch_id`: `billing_invoices` and `billing_payments` (via `sale_id`); `inventory_stock_movements` (via `batch_id`); `emr_clinical_notes`, `emr_diagnoses`, `pharmacy_prescriptions` (via `visit_id`). `claims_claims` partitions by the visit's `branch_id`.
+
+**Hot-branch detection:** A branch becomes "hot" when its share of write throughput or row count materially exceeds an even split (alert threshold: a single `branch_id` exceeding 2x the mean branch write rate over a rolling 24h window, or p95 transactional latency for that branch breaching the NFR of API p95 < 500 ms). Detection inputs: per-`branch_id` write counters and query latency emitted to the monitoring stack; periodic row-count-by-`branch_id` snapshot job (reuses the ADR-014 snapshot scheduler so it does not load the transactional path).
+
+**Rebalancing plan:** Because the partition key is `branch_id` (not a hash), rebalancing is *operational*, not a re-keying exercise:
+
+1. **Vertical first (MVP):** scale up the single Azure SQL Database tier; logical partitioning keeps a hot branch from degrading others at the index level.
+2. **Read offload:** move that branch's reporting/analytics reads to the read replica (Section 6.2) so writes are not contended by reads.
+3. **Physical partitioning:** promote the logical scheme to SQL Server partitioned tables keyed on `branch_id` ranges; hot branches get their own filegroup/partition.
+4. **Branch-range sharding (future):** relocate a hot branch (or set of branches) to a dedicated database. Cross-branch reporting then runs over the read models (ADR-014), not live joins, so the corporate view survives the split. No `branch_id` value changes; only its physical home does, which is the key benefit of branch-keyed partitioning over hash sharding.
+
+### 6.2 Replication and consistency (DDIA Ch. 5, 7, 9)
+
+Consistency level is set **per entity**, by safety impact, not globally.
+
+**Strong consistency (required - no exceptions):**
+
+* **Stock decrement** (`inventory_stock_batches.quantity_on_hand`, `inventory_stock_movements`): decrement and the sale/dispense must occur in a **single serializable transaction on the primary**, with a guard that blocks `quantity_on_hand` from going negative online. This is the **no-oversell** invariant. Concurrent decrements on the same batch are linearised by the primary; reads that drive a decrement decision must be from the primary, never a replica.
+* **Dispensing** (`pharmacy_dispenses`, and the `pharmacy_prescriptions` dispense lock): a prescription may be dispensed exactly once. The dispense lock (ADR-009) is enforced on the primary; a second writer is rejected to the manual queue. No replica read may authorise a dispense.
+* **Payments** (`billing_payments`): never eventually-merged; reconciled on the primary (suspense workflow, ADR-011).
+
+**Eventual consistency / read-replica acceptable:**
+
+* **Reporting and analytics:** dashboards and exports read **materialised views / scheduled snapshots** and, later, a **read replica** - per **ADR-014**. Stale-by-snapshot reads are explicitly acceptable here and must never run against the transactional tables. This is the boundary that protects POS/clinical latency.
+* **`claims_*` analytics** (`claims_claims`, `claims_tariffs` aggregates for reporting): eventual consistency acceptable for analytical/aggregate reads. Note: *claim submission* itself is online-only and transactional (ADR-008/012); only the **analytical read path** over claims data is eventually consistent.
+* **Cached reference/catalogue data** at the branch (products, price lists, ICD-10): read-mostly; on conflict, **server-wins** (ADR-009).
+
+**Replication topology:** single-primary, asynchronous read replica(s). All writes and all consistency-critical reads (stock, dispense, payment) target the primary. Only the reporting/analytics read path is allowed to read replicas/snapshots. This matches DDIA's "read-your-writes is required for operational paths, not for reporting."
+
+### 6.3 Offline append-only eventual-consistency boundary (ADR-006 / 008 / 009)
+
+The offline model is the platform's deliberate eventual-consistency zone, and its boundary is drawn exactly at the strong-consistency entities above:
+
+* Offline writes are **append-only events** queued in IndexedDB and pushed to the server (ADR-006), carrying `idempotency_key`, `branch_id`, `device_id`, `client_timestamp`, `server_timestamp` (ADR-008).
+* The **per-entity offline matrix** (ADR-008) keeps consistency-critical actions narrow: POS sales are append-only and provisional until synced; pharmacy dispense/stock movement is *limited* append-only against last-synced stock with **negative-stock blocked**; clinical notes and lab results are **draft-only**; claims and communication are **online-only**.
+* On sync, conflicts resolve by **entity-level policy** with **no blind last-write-wins** (ADR-009): stock uses negative-stock block + reconciliation event; prescriptions use the dispense lock; clinical notes use the addendum model; unresolved cases route to an admin resolution queue with a full audit trail.
+* **Convergence guarantee:** `idempotency_key` makes replay safe (no double-processing); the resolution queue guarantees no silent data loss. Eventual consistency is therefore bounded to operations the offline matrix permits, and never weakens the online no-oversell / no-double-dispense invariants.
+
+### 6.4 Row-Level Security (RLS) enforcement test plan
+
+The Section 5 ORM/query-scope enforcement is necessary but not sufficient; tenancy isolation must be **machine-verified** (DDIA reliability: no invariant relies on developer discipline). Enforcement is defence-in-depth: application-layer global query scope (injects `branch_id` from JWT) **plus** database RLS policies on every branch-scoped table as a backstop.
+
+Test plan (each item is an automated, CI-runnable test; all must pass before Gate 0A sign-off and must stay green thereafter):
+
+1. **Positive scope:** a user authenticated for Branch A reading `billing_sales` / `emr_visits` / `inventory_stock_batches` / `pharmacy_dispenses` returns **only** rows where `branch_id = A`.
+2. **Negative cross-branch read:** the same Branch A user querying a Branch B row id returns **zero rows** (not an authorization error that leaks existence).
+3. **Negative cross-branch write:** an insert/update attempting `branch_id = B` while scoped to A is **rejected** by the DB RLS policy even if the application scope is bypassed.
+4. **Forgotten-filter backstop:** a deliberately unscoped query (simulating a developer omitting `WHERE branch_id = X`) returns only the session-branch rows because the RLS policy is active - proving the backstop catches the Negative Consequence called out in Section 4.
+5. **Corporate bypass is explicit:** the `Corporate` role / service account can read across branches **only** through the designated cross-branch path, and every such access writes an audit event (ties ADR-020 export control + audit).
+6. **Master vs transactional:** `organisation_id`-scoped master data (`inventory_products`, terminology) is visible across the org's branches; transactional tables are not - asserting the two-tier scope.
+7. **Migration guard:** a schema test asserts every transactional table in `Unified_ERD.md` carries `branch_id` and has an RLS policy attached; a new transactional table without one fails CI.
+
+### 6.5 ADR review checklist (Gate 0A) - all evidenced
+
+| Checklist item | Status | Evidence (this ADR) |
+| --- | --- | --- |
+| Partition key per hot table | Done | Section 6.1 table: `branch_id` for `billing_sales`, `inventory_stock_batches`, `pharmacy_dispenses`, `emr_visits` |
+| Hot-branch detection | Done | Section 6.1 (thresholds + snapshot-based detection) |
+| Rebalancing plan | Done | Section 6.1 (vertical -> read offload -> physical partition -> branch-range shard) |
+| Per-entity consistency level | Done | Section 6.2 (strong: stock/dispense/payments; eventual: reporting, `claims_*` analytics) |
+| Offline eventual-consistency boundary | Done | Section 6.3 (ADR-006/008/009 bound to the strong-consistency entities) |
+| Row-level-security enforcement test plan | Done | Section 6.4 (7 automated tests, incl. forgotten-filter backstop) |
+| Ratified against Unified_ERD.md | Done | All table names cross-checked against `DOCS/Unified_ERD.md` |
+
+### 6.6 Cross-references
+
+* **ADR-014** - Reporting architecture (read models / snapshots / read replica) - consumes the eventual-consistency reporting path in Section 6.2.
+* **ADR-006 / ADR-008 / ADR-009** - Offline scope, per-entity offline matrix, conflict resolution - define the Section 6.3 boundary.
+* **ADR-011** - M-Pesa reconciliation - payments suspense workflow referenced in Section 6.2.
+* **ADR-020** - Masking & export control - audited corporate bypass in Section 6.4.
+* **ADR-015** / **D-002** - Azure SQL Database topology - basis for single-primary + read replica.
