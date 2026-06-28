@@ -6,7 +6,7 @@
 
 ## 1. Context and Problem Statement
 
-The Pzure platform requires robust identity management for branch staff, clinical professionals, and system administrators. The system handles sensitive PHI (Protected Health Information) governed by the Kenya Data Protection Act. 
+The Pzure platform requires robust identity management for branch staff, clinical professionals, and system administrators. The system handles sensitive PHI (Protected Health Information) governed by the Kenya Data Protection Act.
 
 We need to select an authentication provider and define the token lifecycle, balancing security, developer experience, and the requirement to keep MVP infrastructure costs near zero.
 
@@ -43,15 +43,18 @@ Keycloak provides enterprise-grade OIDC, RBAC, and session management out-of-the
 ## 5. Token Lifecycle & Implementation Notes
 
 ### Token Configuration
-* **Access Token:** Short-lived JWT (e.g., 15 minutes). Contains user identity, roles, and branch scopes.
-* **Refresh Token:** Long-lived (e.g., 8 hours), rotating. Kept in an `HttpOnly` secure cookie.
-* **Storage:** The frontend SPA (React) must store the Access Token in memory, NOT in `localStorage`. 
+
+- **Access Token:** Short-lived JWT (e.g., 15 minutes). Contains user identity, roles, and branch scopes.
+- **Refresh Token:** Long-lived (e.g., 8 hours), rotating. Kept in an `HttpOnly` secure cookie.
+- **Storage:** The frontend SPA (React) must store the Access Token in memory, NOT in `localStorage`.
 
 ### Multi-Branch Context
-* A user may have access to Branch A and Branch B.
-* Upon login, they select their active branch context.
-* The frontend requests a token from Keycloak. The NestJS backend extracts the `branch_id` claim to apply global tenant scoping to all database queries.
+
+- A user may have access to Branch A and Branch B.
+- Upon login, they select their active branch context.
+- The frontend requests a token from Keycloak. The NestJS backend extracts the `branch_id` claim to apply global tenant scoping to all database queries.
 
 ### Pharmacist PIN Override
-* For controlled actions (e.g., overriding a drug interaction warning), the system requires a 4-digit PIN.
-* This is a local verification implemented in the `core.users` table, not handled by Keycloak, to keep the UX fast and avoid full re-authentication flows.
+
+- For controlled actions (e.g., overriding a drug interaction warning), the system requires a 4-digit PIN.
+- This is a local verification implemented in the `core.users` table, not handled by Keycloak, to keep the UX fast and avoid full re-authentication flows.

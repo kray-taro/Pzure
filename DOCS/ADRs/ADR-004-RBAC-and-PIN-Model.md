@@ -6,7 +6,7 @@
 
 ## 1. Context and Problem Statement
 
-Pzure handles operations ranging from simple retail sales to clinical prescribing and dispensing of controlled medicines. Access must be restricted based on the user's role (e.g., Cashier vs. Pharmacist). 
+Pzure handles operations ranging from simple retail sales to clinical prescribing and dispensing of controlled medicines. Access must be restricted based on the user's role (e.g., Cashier vs. Pharmacist).
 
 Furthermore, clinical systems often suffer from "alert fatigue." When a severe drug-drug interaction is flagged, or when dispensing a highly restricted drug, we must verify that the acting pharmacist actively acknowledges the risk. A full OAuth2 login redirect is too slow for a fast-paced pharmacy counter.
 
@@ -26,7 +26,7 @@ Furthermore, clinical systems often suffer from "alert fatigue." When a severe d
 
 **Chosen option:** Option 3 (Application-Layer PIN Hash).
 
-Keycloak will handle the primary session and coarse-grained Role-Based Access Control (RBAC). For fast clinical verifications, the NestJS backend will manage a secondary 4-digit PIN. 
+Keycloak will handle the primary session and coarse-grained Role-Based Access Control (RBAC). For fast clinical verifications, the NestJS backend will manage a secondary 4-digit PIN.
 
 When a pharmacist needs to override an alert, the React frontend displays a modal asking for their 4-digit PIN and a reason. The backend hashes the provided PIN, compares it against the `core_users.pin_hash`, and if valid, logs the override and proceeds with the transaction.
 

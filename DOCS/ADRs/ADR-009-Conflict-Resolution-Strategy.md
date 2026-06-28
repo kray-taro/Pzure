@@ -7,9 +7,11 @@
 > Gate 0 baseline. Owning work item: [#56](https://gitlab.com/cricketaustin-group/Pzure/-/issues/56) Sprint 0C. Companion to ADR-008.
 
 ## 1. Context and Problem Statement
+
 Offline append-only writes can collide on sync. No blind automatic merge is acceptable for clinical, stock, or financial data.
 
 ## 3. Considered Options
+
 1. Last-write-wins.
 2. Automatic field merge.
 3. Entity-level policies + manual resolution queue.
@@ -30,7 +32,9 @@ Offline append-only writes can collide on sync. No blind automatic merge is acce
 | Payments | Never auto-merged; suspense workflow (see ADR-011) |
 
 ## 6. Consequences
+
 No blind/last-write-wins merge for clinical, stock or financial data. Unresolvable conflicts never silently drop data; they route to an **admin resolution queue** with full audit trail (actor, before/after, decision).
 
 ## 7. Implementation Notes
-* Resolution queue UI with side-by-side diff; every resolution writes an audit event. Idempotency via `idempotency_key` from ADR-008 prevents duplicate replays.
+
+- Resolution queue UI with side-by-side diff; every resolution writes an audit event. Idempotency via `idempotency_key` from ADR-008 prevents duplicate replays.

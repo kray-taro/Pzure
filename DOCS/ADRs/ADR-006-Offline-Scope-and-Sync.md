@@ -26,12 +26,13 @@ We need to define exactly what functions remain available offline and how data i
 
 **Chosen option:** Option 3 (Degraded Offline Mode with Append-Only Events).
 
-We will use the browser's `IndexedDB` (via a wrapper like Dexie.js or localForage) to cache essential master data (product catalogues, price lists, active patients). 
+We will use the browser's `IndexedDB` (via a wrapper like Dexie.js or localForage) to cache essential master data (product catalogues, price lists, active patients).
 
 When offline, the system enters a distinct **"Offline Mode"** UI. Complex clinical operations (prescribing new treatments, ordering labs, processing insurance claims) are **blocked**. Operations are restricted to:
-* Cash sales of basic products.
-* Recording temporary clinical notes (saved as drafts).
-* Queuing patients with temporary offline IDs.
+
+- Cash sales of basic products.
+- Recording temporary clinical notes (saved as drafts).
+- Queuing patients with temporary offline IDs.
 
 ### Positive Consequences
 
