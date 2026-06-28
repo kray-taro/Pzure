@@ -5,14 +5,17 @@
 **Author(s):** DevOps / Cloud Engineer
 
 > Resolves B-006 ([#53](https://gitlab.com/cricketaustin-group/Pzure/-/issues/53)) backup/DR aspects and the DR posture from B-004 ([#51](https://gitlab.com/cricketaustin-group/Pzure/-/issues/51)). Owning work item: [#56](https://gitlab.com/cricketaustin-group/Pzure/-/issues/56) Sprint 0C.
-
+>
 > **Authoritative DR target (canonical):** `RPO <= 15 min / RTO <= 4h`. This exact token is mirrored verbatim in the Gate 0 checklist and the B-004 row of `ISSUES-AND-BLOCKERS.md`; `scripts/check-dr-consistency.sh` fails CI if the three drift.
 
 ## 1. Context and Problem Statement
+
 A regulated health platform needs defined RPO/RTO and tested restores before pilot.
 
 ## 4. Decision Outcome
+
 **Chosen (Approved — authoritative DR targets):**
+
 - **RPO ≤ 15 min** via Azure SQL point-in-time restore.
 - **RTO ≤ 4h** for production restoration.
 - Automated SQL backups; **PITR retention ≥ 35 days** (longer if compliance requires); **geo-redundant** backup storage.

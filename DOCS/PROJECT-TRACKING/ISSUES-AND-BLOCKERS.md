@@ -18,6 +18,7 @@ Log every blocker here and review weekly. Mirror the legacy `Module_X - Blockers
 ## Gate 0 (Architecture Baseline Approval) — from Module_X
 
 Before module build (gates the parallel lanes), the following must be approved:
+
 - ERD approved; tenancy ADR approved (shared DB, branch-scoped rows).
 - Security ADRs approved (OIDC/auth/session/MFA, encryption + Key Vault, regulated-action PIN, audit + data-access logging).
 - Offline scope + conflict policy approved.
