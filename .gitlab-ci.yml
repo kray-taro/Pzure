@@ -18,6 +18,7 @@ stages:
   - lint
   - typecheck
   - test
+  - integration
 
 default:
   image: node:20-alpine
@@ -59,6 +60,16 @@ secret-detection:
     - apk add --no-cache bash grep >/dev/null
     - bash scripts/check-no-secrets.sh
 
+# Tenancy migration guard (ADR-001 §6.4 test 7). Cheap, no DB: fails if any
+# Unified_ERD.md transactional table is unclassified or a scope chain is broken,
+# and (once migrations exist) if a transactional table has no RLS policy.
+tenancy-scoping:
+  stage: guard
+  before_script: []
+  image: node:20-alpine
+  script:
+    - node scripts/check-tenancy-scoping.mjs
+
 # --- lint / typecheck / test -------------------------------------------------
 
 lint:
@@ -76,3 +87,23 @@ test:
   script:
     - npm test
   coverage: '/All files[^|]*\|[^|]*\s+([\d.]+)/'
+
+# Live RLS isolation tests (ADR-001 §6.4 T1–T6) against a real SQL Server.
+# Required gate — NOT allow_failure — because it guards cross-branch isolation.
+# CI_MSSQL_SA_PASSWORD is a masked project variable; no secret is committed
+# (COMPLIANCE.md). If it is unset the mssql service cannot start and this job
+# fails red, which correctly blocks merge rather than passing silently.
+integration-tenancy:
+  stage: integration
+  services:
+    - name: mcr.microsoft.com/mssql/server:2022-latest
+      alias: sqlserver
+  variables:
+    ACCEPT_EULA: "Y"
+    MSSQL_SA_PASSWORD: "$CI_MSSQL_SA_PASSWORD"
+    DB_HOST: sqlserver
+    CI_MSSQL_SA_PASSWORD: "$CI_MSSQL_SA_PASSWORD"
+  script:
+    # Wait for SQL Server to accept connections before running the suite.
+    - apk add --no-cache bash >/dev/null 2>&1 || true
+    - npm run test:tenancy

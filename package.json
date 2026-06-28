@@ -12,14 +12,17 @@
     "lint": "eslint .",
     "typecheck": "tsc -b --noEmit packages/design-tokens || tsc --noEmit -p packages/design-tokens/tsconfig.json",
     "test": "vitest run --coverage",
+    "test:tenancy": "vitest run tests/tenancy/rls-isolation.test.ts",
     "guard:branch": "bash scripts/check-branch-name.sh",
     "guard:hex": "bash scripts/check-no-raw-hex.sh",
-    "guard:secrets": "bash scripts/check-no-secrets.sh"
+    "guard:secrets": "bash scripts/check-no-secrets.sh",
+    "guard:tenancy": "node scripts/check-tenancy-scoping.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
     "@vitest/coverage-v8": "^2.0.5",
     "eslint": "^9.9.0",
+    "mssql": "^11.0.1",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.0.0",
     "vitest": "^2.0.5"
