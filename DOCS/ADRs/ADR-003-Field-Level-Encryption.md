@@ -12,10 +12,10 @@ We need a strategy for field-level encryption that protects highly sensitive dat
 
 ## 2. Decision Drivers
 
-* **Compliance:** Must comply with Kenya Data Protection Act and PPB guidelines.
-* **Cost:** Avoid expensive managed Key Management Services (KMS) for the MVP phase.
-* **Performance:** Encryption/decryption must not introduce noticeable latency to the EMR or POS workflows.
-* **Searchability:** Encrypted fields are generally unsearchable. We must carefully choose which fields to encrypt to avoid breaking core application workflows (e.g., patient search).
+- **Compliance:** Must comply with Kenya Data Protection Act and PPB guidelines.
+- **Cost:** Avoid expensive managed Key Management Services (KMS) for the MVP phase.
+- **Performance:** Encryption/decryption must not introduce noticeable latency to the EMR or POS workflows.
+- **Searchability:** Encrypted fields are generally unsearchable. We must carefully choose which fields to encrypt to avoid breaking core application workflows (e.g., patient search).
 
 ## 3. Considered Options
 

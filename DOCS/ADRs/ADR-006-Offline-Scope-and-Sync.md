@@ -12,9 +12,9 @@ We need to define exactly what functions remain available offline and how data i
 
 ## 2. Decision Drivers
 
-* **Patient Safety:** We cannot risk two clinicians prescribing interacting drugs simultaneously while offline.
-* **Inventory Integrity:** We cannot sell the same physical box of medicine twice.
-* **Complexity:** Full bidirectional sync is too expensive to build for the MVP.
+- **Patient Safety:** We cannot risk two clinicians prescribing interacting drugs simultaneously while offline.
+- **Inventory Integrity:** We cannot sell the same physical box of medicine twice.
+- **Complexity:** Full bidirectional sync is too expensive to build for the MVP.
 
 ## 3. Considered Options
 

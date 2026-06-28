@@ -12,9 +12,9 @@ Furthermore, clinical systems often suffer from "alert fatigue." When a severe d
 
 ## 2. Decision Drivers
 
-* **Regulatory Compliance:** The Pharmacy and Poisons Board (PPB) requires strict audit trails for controlled medicines.
-* **User Experience:** Pharmacists cannot wait 5 seconds for an SSO redirect every time they approve a prescription.
-* **Security:** Cashiers must not be able to bypass clinical warnings using a shared terminal.
+- **Regulatory Compliance:** The Pharmacy and Poisons Board (PPB) requires strict audit trails for controlled medicines.
+- **User Experience:** Pharmacists cannot wait 5 seconds for an SSO redirect every time they approve a prescription.
+- **Security:** Cashiers must not be able to bypass clinical warnings using a shared terminal.
 
 ## 3. Considered Options
 
@@ -32,18 +32,18 @@ When a pharmacist needs to override an alert, the React frontend displays a moda
 
 ### Positive Consequences
 
-* **Frictionless UX:** 4-digit entry takes < 1 second and doesn't redirect the browser.
-* **Strong Auditability:** The specific action is cryptographically tied to the pharmacist who entered the PIN, even if the terminal is shared.
-* **Decoupled Architecture:** Keeps Keycloak focused on identity and SSO, while the application handles clinical workflow logic.
+- **Frictionless UX:** 4-digit entry takes < 1 second and doesn't redirect the browser.
+- **Strong Auditability:** The specific action is cryptographically tied to the pharmacist who entered the PIN, even if the terminal is shared.
+- **Decoupled Architecture:** Keeps Keycloak focused on identity and SSO, while the application handles clinical workflow logic.
 
 ### Negative Consequences
 
-* **PIN Management:** Requires building UI screens for users to set, change, and recover their PIN.
-* **Brute Force Risk:** 4-digit PINs are susceptible to brute forcing.
+- **PIN Management:** Requires building UI screens for users to set, change, and recover their PIN.
+- **Brute Force Risk:** 4-digit PINs are susceptible to brute forcing.
 
 ## 5. Implementation Notes
 
-* The `core_users` table will add: `pin_hash` (bcrypt), `pin_failed_attempts` (int), `pin_locked_until` (datetime).
-* **Lockout Policy:** 5 failed attempts locks the PIN for 15 minutes.
-* **Audit Logging:** Every successful and failed PIN entry MUST generate an event in `audit_security_events`.
-* **RBAC:** Keycloak roles will be mapped to JWT claims. NestJS will use a custom `@RequireRole('Pharmacist')` decorator on API endpoints.
+- The `core_users` table will add: `pin_hash` (bcrypt), `pin_failed_attempts` (int), `pin_locked_until` (datetime).
+- **Lockout Policy:** 5 failed attempts locks the PIN for 15 minutes.
+- **Audit Logging:** Every successful and failed PIN entry MUST generate an event in `audit_security_events`.
+- **RBAC:** Keycloak roles will be mapped to JWT claims. NestJS will use a custom `@RequireRole('Pharmacist')` decorator on API endpoints.
