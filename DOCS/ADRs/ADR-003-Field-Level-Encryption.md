@@ -48,5 +48,8 @@ For the MVP, we will use a single strong AES-256-GCM symmetric key injected via 
 ## 5. Implementation Notes
 
 * Implement a `CryptoService` in NestJS.
-* Use deterministic encryption (or store the IV alongside the ciphertext) for fields that require exact-match querying.
-* Ensure the master key is strictly managed via GitHub Secrets during CI/CD and is never committed to source control.
+* For exact-match querying on encrypted fields, do NOT use deterministic encryption; store a keyed HMAC blind index alongside the AES-256-GCM ciphertext (exposed as `EncryptionService.blindIndex`). AES-256-GCM itself is non-deterministic: persist the random IV and auth tag inside the ciphertext envelope.
+* Ensure the master key is supplied at runtime from the CI/CD platform's secret store and is never committed to source control. The project must support both supported platforms:
+  * **GitLab:** masked, protected CI/CD variables (project or group scope).
+  * **GitHub:** GitHub Actions encrypted secrets (repository or environment scope).
+  In both cases the key is read from an environment variable (e.g. `PZURE_MASTER_KEY`) at process start; the `EncryptionService` adapter is agnostic to which platform injected it.
