@@ -11,12 +11,24 @@ set -euo pipefail
 PROJECT="cricketaustin-group/Pzure"
 ENC_PROJECT=$(printf '%s' "$PROJECT" | sed 's#/#%2F#')
 
+# Group that owns the project. GitLab forbids creating a PROJECT milestone
+# whose title already exists as a GROUP milestone in the same hierarchy
+# ("already being used for another group or project milestone"), so we must
+# treat group milestones as existing too.
+GROUP="${PROJECT%/*}"
+ENC_GROUP=$(printf '%s' "$GROUP" | sed 's#/#%2F#')
+
 command -v glab >/dev/null || { echo "glab not found"; exit 1; }
 command -v jq   >/dev/null || { echo "jq not found";   exit 1; }
 
-# Existing milestone titles (so we can skip them).
-mapfile -t EXISTING < <(glab api --paginate "projects/$ENC_PROJECT/milestones?per_page=100" \
-                        | jq -r '.[].title')
+# Existing milestone titles (so we can skip them). Include BOTH project and
+# group (with ancestors) milestones; either kind triggers the 400 conflict.
+mapfile -t EXISTING < <(
+  {
+    glab api --paginate "projects/$ENC_PROJECT/milestones?per_page=100"
+    glab api --paginate "groups/$ENC_GROUP/milestones?include_ancestors=true&per_page=100"
+  } | jq -r '.[].title'
+)
 
 exists() { local t="$1"; for e in "${EXISTING[@]:-}"; do [ "$e" = "$t" ] && return 0; done; return 1; }
 
