@@ -1,10 +1,14 @@
-# Pzure CI. Mandatory gates before merge: lint, unit tests, integration tests,
-# and security scanning must all pass. No secrets in code (COMPLIANCE.md);
+# Pzure CI. One root pipeline for the repository (single source of truth).
+# Mandatory gates before merge: policy guards, lint, type-check, unit tests,
+# integration tests, and security scanning. No secrets in code (COMPLIANCE.md);
 # configuration is environment-based. Nothing here deploys to or targets main.
+#
+# This file reconciles develop's DevSecOps guard gates (#13) with the Phase 1
+# install/test/security stages so the two pipelines no longer collide on merge
+# (refs #63, #64).
 
 # Run one pipeline per change: a merge-request pipeline when an MR is open,
-# otherwise a branch pipeline. Prevents the empty/failed MR pipeline seen on
-# MR !1 (no workflow rules meant custom jobs had no merge_request_event rule).
+# otherwise a branch pipeline.
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -13,6 +17,7 @@ workflow:
     - if: '$CI_COMMIT_BRANCH'
 
 stages:
+  - guard
   - install
   - quality
   - test
@@ -31,6 +36,33 @@ default:
         - package-lock.json
     paths:
       - node_modules/
+
+# --- guard stage: cheap, fast-failing policy checks (from #13) ----------------
+
+branch-name:
+  stage: guard
+  image: alpine:3.20
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"'
+  script:
+    - apk add --no-cache bash >/dev/null
+    - bash scripts/check-branch-name.sh "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"
+
+no-raw-hex:
+  stage: guard
+  image: alpine:3.20
+  script:
+    - apk add --no-cache bash grep >/dev/null
+    - bash scripts/check-no-raw-hex.sh
+
+secret-detection-guard:
+  stage: guard
+  image: alpine:3.20
+  script:
+    - apk add --no-cache bash grep >/dev/null
+    - bash scripts/check-no-secrets.sh
+
+# --- install / quality / test ------------------------------------------------
 
 install:
   stage: install
@@ -75,10 +107,10 @@ integration-tests:
       alias: redis-cache
   variables:
     ACCEPT_EULA: "Y"
-    # Falls back to a policy-compliant (>=8 char, mixed) password if the masked
-    # CI variable is unset, so the mssql service does not crash on startup.
-    # Real environments MUST set CI_MSSQL_SA_PASSWORD (no secrets in code).
-    MSSQL_SA_PASSWORD: "${CI_MSSQL_SA_PASSWORD:-Pzure_CI_Pass1}"
+    # Required masked CI variable. No fallback: secrets are never committed
+    # (COMPLIANCE.md). If unset, the mssql service fails to start and this
+    # allow_failure job is skipped/red without leaking a credential.
+    MSSQL_SA_PASSWORD: "$CI_MSSQL_SA_PASSWORD"
     DB_HOST: sqlserver
     REDIS_URL: redis://redis-cache:6379
   script:
@@ -86,7 +118,8 @@ integration-tests:
     # No shared mutable state between runs.
     - npm run test:integration
 
-# Security gates. Uses GitLab-managed templates; runs as required gates.
+# --- security gates (GitLab-managed templates) -------------------------------
+
 include:
   - template: Security/SAST.gitlab-ci.yml
   - template: Security/Dependency-Scanning.gitlab-ci.yml

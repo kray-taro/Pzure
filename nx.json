@@ -11,5 +11,5 @@
     "test": { "cache": true },
     "typecheck": { "cache": true }
   },
-  "defaultBase": "main"
+  "defaultBase": "develop"
 }
