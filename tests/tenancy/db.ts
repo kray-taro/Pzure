@@ -18,14 +18,39 @@ export function dbConfigured(): boolean {
   return Boolean(process.env.DB_HOST && (process.env.CI_MSSQL_SA_PASSWORD || process.env.MSSQL_SA_PASSWORD));
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 export async function connect(): Promise<Db> {
-  const pool = await new sql.ConnectionPool({
+  const config: sql.config = {
     server: process.env.DB_HOST as string,
     user: 'sa',
     password: (process.env.CI_MSSQL_SA_PASSWORD || process.env.MSSQL_SA_PASSWORD) as string,
     options: { trustServerCertificate: true, encrypt: false },
     pool: { max: 4, min: 0 },
-  }).connect();
+  };
+
+  // SQL Server containers take time to accept connections on cold start. Retry
+  // with backoff (~60s budget) so this security gate is reliable, not flaky.
+  const deadline = Date.now() + 60_000;
+  let lastErr: unknown;
+  let pool: sql.ConnectionPool | undefined;
+  while (Date.now() < deadline) {
+    try {
+      pool = await new sql.ConnectionPool(config).connect();
+      await pool.request().query('SELECT 1;');
+      break;
+    } catch (err) {
+      lastErr = err;
+      if (pool) {
+        try { await pool.close(); } catch { /* ignore */ }
+        pool = undefined;
+      }
+      await sleep(2_000);
+    }
+  }
+  if (!pool) {
+    throw new Error(`SQL Server not reachable within 60s: ${String(lastErr)}`);
+  }
 
   async function asBranch<T>(branchId: string | null, query: string, opts?: { bypass?: boolean }) {
     // SESSION_CONTEXT must be set on the same connection/request that runs the
