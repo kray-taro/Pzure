@@ -16,7 +16,7 @@ All Pzure work items created as **project Issues** (Epics require a group). Modu
 | Module 7 — Claims & Insurance | [#8](https://gitlab.com/cricketaustin-group/Pzure/-/issues/8) | #30, #31, #32, #33 |
 | Module 8 — Reporting & Analytics | [#9](https://gitlab.com/cricketaustin-group/Pzure/-/issues/9) | #34, #35 |
 | Module 9 — Patient Communication | [#10](https://gitlab.com/cricketaustin-group/Pzure/-/issues/10) | #36, #37 |
-| Module 10 — Frontend & Design System | [#11](https://gitlab.com/cricketaustin-group/Pzure/-/issues/11) | (cross-cutting) |
+| Module 10 — Frontend & Design System | [#11](https://gitlab.com/cricketaustin-group/Pzure/-/issues/11) | #57, #58, #59, #60, #61, #62 (cross-cutting) |
 
 ## Sprint child issues
 
@@ -62,6 +62,19 @@ All Pzure work items created as **project Issues** (Epics require a group). Modu
 | 36 | [#46](https://gitlab.com/cricketaustin-group/Pzure/-/issues/46) Pilot wave 3 — 5 branches | #1 |
 | 37 | [#47](https://gitlab.com/cricketaustin-group/Pzure/-/issues/47) Stabilisation & optimisation | #1 |
 
+## Module 10 frontend child issues
+
+Design-system & frontend architecture foundation, broken out from Module_10 (sections 4-22). Cross-cutting: F1-F3 unlock module UIs from Sprint 3; F4-F6 run alongside the relevant module lanes.
+
+| Ref | Issue | Parent | Milestone |
+| --- | --- | --- | --- |
+| F1 | [#57](https://gitlab.com/cricketaustin-group/Pzure/-/issues/57) Frontend architecture decision & design tokens (ADR-026) | #11 | Sprint 2 |
+| F2 | [#58](https://gitlab.com/cricketaustin-group/Pzure/-/issues/58) Core component library & Storybook | #11 | Sprint 3 (with skeleton #13) |
+| F3 | [#59](https://gitlab.com/cricketaustin-group/Pzure/-/issues/59) App shells & monorepo structure | #11 | Sprint 4 (with master data #14) |
+| F5 | [#61](https://gitlab.com/cricketaustin-group/Pzure/-/issues/61) Responsive layout, accessibility, forms & status language | #11 | Sprint 5 |
+| F4 | [#60](https://gitlab.com/cricketaustin-group/Pzure/-/issues/60) Dedicated POS touch shell prototype | #11 | Sprint 7 (with POS core #16) |
+| F6 | [#62](https://gitlab.com/cricketaustin-group/Pzure/-/issues/62) Print/label templates & frontend testing baseline | #11 | Sprint 13 (with dispensing #23) |
+
 ## Parallelisation map (work that can run simultaneously)
 
 Mapped to the 5 squads in the Master Plan (Platform & Security, Commerce & Inventory, Clinical & Pharmacy, Claims/Reporting/Comms, QA/Data/Release). A sprint number is the *earliest* it can start once its dependencies are met; squads run their lanes concurrently.
@@ -90,7 +103,20 @@ Mapped to the 5 squads in the Master Plan (Platform & Security, Commerce & Inven
 | Commerce | Commerce & Inventory | [#16](https://gitlab.com/cricketaustin-group/Pzure/-/issues/16) → [#17](https://gitlab.com/cricketaustin-group/Pzure/-/issues/17) → [#18](https://gitlab.com/cricketaustin-group/Pzure/-/issues/18) | POS core → payments → eTIMS, strictly sequential within lane |
 | Inventory | Commerce & Inventory | [#19](https://gitlab.com/cricketaustin-group/Pzure/-/issues/19) → [#20](https://gitlab.com/cricketaustin-group/Pzure/-/issues/20) → [#21](https://gitlab.com/cricketaustin-group/Pzure/-/issues/21) | Independent of Commerce lane until POS stock-out integration in #20 |
 | EMR | Clinical & Pharmacy | [#26](https://gitlab.com/cricketaustin-group/Pzure/-/issues/26) → [#27](https://gitlab.com/cricketaustin-group/Pzure/-/issues/27) | Can start at #14; no dependency on POS |
-| Frontend/Design System | Frontend | [#11](https://gitlab.com/cricketaustin-group/Pzure/-/issues/11) | Cross-cutting, runs continuously from Sprint 3 |
+| Frontend/Design System | Frontend | [#57](https://gitlab.com/cricketaustin-group/Pzure/-/issues/57) → [#58](https://gitlab.com/cricketaustin-group/Pzure/-/issues/58) → [#59](https://gitlab.com/cricketaustin-group/Pzure/-/issues/59) → [#61](https://gitlab.com/cricketaustin-group/Pzure/-/issues/61) → [#60](https://gitlab.com/cricketaustin-group/Pzure/-/issues/60) → [#62](https://gitlab.com/cricketaustin-group/Pzure/-/issues/62) | Cross-cutting under #11; staggered S2→S13 (see cadence below). F1 starts in Sprint 2 (parallel with Gate 0), the rest follow as their paired module lands |
+
+### Frontend lane cadence (#11 children, staggered)
+
+The frontend lane is internally **sequential** (each F-issue builds on the previous design-system layer) but each item is timed to land with the module that first needs it.
+
+| Sprint | Frontend issue | Depends on (frontend) | Paired module lane |
+| --- | --- | --- | --- |
+| 2 | [#57](https://gitlab.com/cricketaustin-group/Pzure/-/issues/57) F1 tokens / ADR-026 | — | none (foundation, runs with Gate 0) |
+| 3 | [#58](https://gitlab.com/cricketaustin-group/Pzure/-/issues/58) F2 component library & Storybook | F1 tokens | skeleton [#13](https://gitlab.com/cricketaustin-group/Pzure/-/issues/13) |
+| 4 | [#59](https://gitlab.com/cricketaustin-group/Pzure/-/issues/59) F3 app shells & monorepo | F2 components | core master data [#14](https://gitlab.com/cricketaustin-group/Pzure/-/issues/14) (shells need branch context) |
+| 5 | [#61](https://gitlab.com/cricketaustin-group/Pzure/-/issues/61) F5 responsive/a11y/forms/status | F3 shells | sets standards before heavy module UI ([#15](https://gitlab.com/cricketaustin-group/Pzure/-/issues/15) onward) |
+| 7 | [#60](https://gitlab.com/cricketaustin-group/Pzure/-/issues/60) F4 POS touch shell | F3 shells + F5 standards | POS core [#16](https://gitlab.com/cricketaustin-group/Pzure/-/issues/16) |
+| 13 | [#62](https://gitlab.com/cricketaustin-group/Pzure/-/issues/62) F6 print/labels & testing baseline | F2 components | dispensing/labels [#23](https://gitlab.com/cricketaustin-group/Pzure/-/issues/23), lab [#28](https://gitlab.com/cricketaustin-group/Pzure/-/issues/28) |
 
 ### Lanes with a soft cross-lane dependency
 
@@ -101,6 +127,25 @@ Mapped to the 5 squads in the Master Plan (Platform & Security, Commerce & Inven
 | Claims | [#30](https://gitlab.com/cricketaustin-group/Pzure/-/issues/30) → [#31](https://gitlab.com/cricketaustin-group/Pzure/-/issues/31) → [#32](https://gitlab.com/cricketaustin-group/Pzure/-/issues/32) → [#33](https://gitlab.com/cricketaustin-group/Pzure/-/issues/33) | EMR ([#27](https://gitlab.com/cricketaustin-group/Pzure/-/issues/27)) + Lab ([#28](https://gitlab.com/cricketaustin-group/Pzure/-/issues/28)) + Pharmacy ([#23](https://gitlab.com/cricketaustin-group/Pzure/-/issues/23)) for claim attachments. Payer engine ([#30](https://gitlab.com/cricketaustin-group/Pzure/-/issues/30)) can start independently |
 | Reporting | [#34](https://gitlab.com/cricketaustin-group/Pzure/-/issues/34) → [#35](https://gitlab.com/cricketaustin-group/Pzure/-/issues/35) | Consumes data from all transactional lanes; schema-ready reports can start early |
 | Communication | [#36](https://gitlab.com/cricketaustin-group/Pzure/-/issues/36) → [#37](https://gitlab.com/cricketaustin-group/Pzure/-/issues/37) | Consent engine ([#36](https://gitlab.com/cricketaustin-group/Pzure/-/issues/36)) independent; payment prompts ([#37](https://gitlab.com/cricketaustin-group/Pzure/-/issues/37)) need M-Pesa ([#17](https://gitlab.com/cricketaustin-group/Pzure/-/issues/17)) |
+
+### Sequential needs (must NOT be parallelised)
+
+Beyond the hard chain above, these orderings are mandatory even when squads have capacity:
+
+**Intra-lane (strict within a single squad's lane):**
+- Commerce: [#16](https://gitlab.com/cricketaustin-group/Pzure/-/issues/16) → [#17](https://gitlab.com/cricketaustin-group/Pzure/-/issues/17) → [#18](https://gitlab.com/cricketaustin-group/Pzure/-/issues/18) — payments need a working POS; eTIMS needs finalised invoices.
+- Inventory: [#19](https://gitlab.com/cricketaustin-group/Pzure/-/issues/19) → [#20](https://gitlab.com/cricketaustin-group/Pzure/-/issues/20) → [#21](https://gitlab.com/cricketaustin-group/Pzure/-/issues/21) — stock ledger needs PO/GRN; expiry/recall need the ledger.
+- Pharmacy: [#22](https://gitlab.com/cricketaustin-group/Pzure/-/issues/22) → [#23](https://gitlab.com/cricketaustin-group/Pzure/-/issues/23) → [#24](https://gitlab.com/cricketaustin-group/Pzure/-/issues/24) → [#25](https://gitlab.com/cricketaustin-group/Pzure/-/issues/25) — dispensing needs an approved prescription; controlled meds and delivery extend dispensing.
+- EMR: [#26](https://gitlab.com/cricketaustin-group/Pzure/-/issues/26) → [#27](https://gitlab.com/cricketaustin-group/Pzure/-/issues/27); Lab: [#28](https://gitlab.com/cricketaustin-group/Pzure/-/issues/28) → [#29](https://gitlab.com/cricketaustin-group/Pzure/-/issues/29); Claims: [#30](https://gitlab.com/cricketaustin-group/Pzure/-/issues/30) → [#31](https://gitlab.com/cricketaustin-group/Pzure/-/issues/31) → [#32](https://gitlab.com/cricketaustin-group/Pzure/-/issues/32) → [#33](https://gitlab.com/cricketaustin-group/Pzure/-/issues/33); Reporting: [#34](https://gitlab.com/cricketaustin-group/Pzure/-/issues/34) → [#35](https://gitlab.com/cricketaustin-group/Pzure/-/issues/35); Comms: [#36](https://gitlab.com/cricketaustin-group/Pzure/-/issues/36) → [#37](https://gitlab.com/cricketaustin-group/Pzure/-/issues/37).
+- Frontend: [#57](https://gitlab.com/cricketaustin-group/Pzure/-/issues/57) → [#58](https://gitlab.com/cricketaustin-group/Pzure/-/issues/58) → [#59](https://gitlab.com/cricketaustin-group/Pzure/-/issues/59) → [#61](https://gitlab.com/cricketaustin-group/Pzure/-/issues/61) → [#60](https://gitlab.com/cricketaustin-group/Pzure/-/issues/60) → [#62](https://gitlab.com/cricketaustin-group/Pzure/-/issues/62) — each layer consumes the previous (tokens → components → shells → standards → POS/print).
+
+**Frontend-to-module pairings (a module's real UI cannot complete before its frontend layer):**
+- POS core [#16](https://gitlab.com/cricketaustin-group/Pzure/-/issues/16) UI ⇐ F4 POS shell [#60](https://gitlab.com/cricketaustin-group/Pzure/-/issues/60) (both Sprint 7).
+- Dispensing/labels [#23](https://gitlab.com/cricketaustin-group/Pzure/-/issues/23) + lab [#28](https://gitlab.com/cricketaustin-group/Pzure/-/issues/28) print output ⇐ F6 print templates [#62](https://gitlab.com/cricketaustin-group/Pzure/-/issues/62) (Sprint 13).
+- All module forms/tables/status chips ⇐ F2 components [#58](https://gitlab.com/cricketaustin-group/Pzure/-/issues/58) + F5 standards [#61](https://gitlab.com/cricketaustin-group/Pzure/-/issues/61); start module backend in parallel, but gate UI completion on these.
+- Every module shell ⇐ F3 app shells [#59](https://gitlab.com/cricketaustin-group/Pzure/-/issues/59) (Sprint 4).
+
+**Cross-lane (soft, from the table above):** Pharmacy waits on Inventory batch/expiry + POS; Lab waits on EMR orders; Claims waits on EMR + Lab + Pharmacy attachments; Comms payment prompts [#37](https://gitlab.com/cricketaustin-group/Pzure/-/issues/37) wait on M-Pesa [#17](https://gitlab.com/cricketaustin-group/Pzure/-/issues/17).
 
 ### Convergence (sequential again, single track)
 
@@ -126,4 +171,5 @@ Resolve in Sprint 0; several block the lanes above:
 
 - **Milestones per sprint** (Sprint 0..37): create in GitLab UI and assign each issue above.
 - **Per-module labels** (e.g. `module::pharmacy`, `module::claims`): create in GitLab UI and apply.
-- **Module 10** frontend sprint breakdown once the design-system scope is sized.
+- **Module 10** frontend sprint breakdown — done: F1-F6 created as #57-#62 under #11.
+- **Sprint 2 milestone** ("Design System Foundation"): create in GitLab UI and assign #57-#62 (milestone API not available to the tooling).

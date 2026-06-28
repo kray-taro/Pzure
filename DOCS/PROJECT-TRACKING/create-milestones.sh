@@ -3,6 +3,7 @@
 # setup script swallowed them, which is why milestones were missing).
 #
 # Creates: Sprint 0, Sprint 0A, Sprint 0B, Sprint 0C, Sprint 1 .. Sprint 37.
+# Note: Sprint 2 = "Design System Foundation" (Module 10 F1-F6, #57-#62).
 #
 # Prereq: glab auth login (gitlab.com) + jq. Safe to re-run (skips existing).
 # Usage: bash create-milestones.sh
