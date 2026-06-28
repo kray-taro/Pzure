@@ -82,6 +82,30 @@ describe('ADR-003/ADR-007 PII/PHI field-encryption scope', () => {
     }
   });
 
+  it('does NOT put a deterministic search hash on free-text PHI', () => {
+    // Deterministic HMAC of free-text clinical content leaks equality and
+    // frequency, so free-text PHI must never be searchHash'd (ADR-003).
+    const freeText = [
+      ['emr_clinical_notes', 'note_text'],
+      ['lab_results', 'text_value'],
+    ] as const;
+    for (const [table, column] of freeText) {
+      const c = COLUMN_CLASSIFICATIONS.find((x) => x.table === table && x.column === column);
+      expect(c?.searchHash ?? false, `${table}.${column} must not be deterministically hashed`).toBe(false);
+    }
+  });
+
+  it('classifies core_users.full_name as encrypted PII (regression: review !12)', () => {
+    // full_name is a person's name (PII) but sits outside the patient_*
+    // convention; it previously escaped every gate. Lock it in.
+    const c = COLUMN_CLASSIFICATIONS.find(
+      (x) => x.table === 'core_users' && x.column === 'full_name',
+    );
+    expect(c, 'core_users.full_name must be classified').toBeDefined();
+    expect(c?.dataClass).toBe('pii');
+    expect(c?.fieldEncrypted).toBe(true);
+  });
+
   it('does not over-encrypt non-sensitive columns', () => {
     const overEncrypted = COLUMN_CLASSIFICATIONS.filter(
       (c) => !isSensitive(c) && c.fieldEncrypted,
