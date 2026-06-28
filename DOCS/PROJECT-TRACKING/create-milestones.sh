@@ -11,24 +11,39 @@ set -euo pipefail
 PROJECT="cricketaustin-group/Pzure"
 ENC_PROJECT=$(printf '%s' "$PROJECT" | sed 's#/#%2F#')
 
-# Group that owns the project. GitLab forbids creating a PROJECT milestone
-# whose title already exists as a GROUP milestone in the same hierarchy
-# ("already being used for another group or project milestone"), so we must
-# treat group milestones as existing too.
+# Group that owns the project. Everything must live at PROJECT level, so any
+# GROUP-level milestone with a title we want is DELETED first; otherwise it
+# blocks project creation ("already being used for another group or project
+# milestone", HTTP 400).
 GROUP="${PROJECT%/*}"
 ENC_GROUP=$(printf '%s' "$GROUP" | sed 's#/#%2F#')
 
 command -v glab >/dev/null || { echo "glab not found"; exit 1; }
 command -v jq   >/dev/null || { echo "jq not found";   exit 1; }
 
-# Existing milestone titles (so we can skip them). Include BOTH project and
-# group (with ancestors) milestones; either kind triggers the 400 conflict.
-mapfile -t EXISTING < <(
-  {
-    glab api --paginate "projects/$ENC_PROJECT/milestones?per_page=100"
-    glab api --paginate "groups/$ENC_GROUP/milestones?include_ancestors=true&per_page=100"
-  } | jq -r '.[].title'
-)
+# Titles we manage at project level.
+WANTED=("Sprint 0" "Sprint 0A" "Sprint 0B" "Sprint 0C")
+for i in $(seq 1 37); do WANTED+=("Sprint $i"); done
+wanted() { local t="$1"; for w in "${WANTED[@]}"; do [ "$w" = "$t" ] && return 0; done; return 1; }
+
+# --- Remove conflicting GROUP-level milestones first ----------------------
+echo "Removing conflicting group-level milestones in '$GROUP' (if any)..."
+while IFS=$'\t' read -r gid gtitle; do
+  [ -z "${gtitle:-}" ] && continue
+  if wanted "$gtitle"; then
+    if out=$(glab api --method DELETE "groups/$ENC_GROUP/milestones/$gid" 2>&1); then
+      echo "  deleted group milestone: $gtitle (id $gid)"
+    else
+      echo "  FAILED to delete group milestone: $gtitle (id $gid)"
+      echo "    -> $out"
+    fi
+  fi
+done < <(glab api --paginate "groups/$ENC_GROUP/milestones?per_page=100" \
+          | jq -r '.[] | "\(.id)\t\(.title)"')
+
+# Existing PROJECT milestone titles (so we can skip them). Project level only.
+mapfile -t EXISTING < <(glab api --paginate "projects/$ENC_PROJECT/milestones?per_page=100" \
+                        | jq -r '.[].title')
 
 exists() { local t="$1"; for e in "${EXISTING[@]:-}"; do [ "$e" = "$t" ] && return 0; done; return 1; }
 
