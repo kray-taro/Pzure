@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "lint": "eslint .",
-    "typecheck": "tsc -b --noEmit packages/design-tokens || tsc --noEmit -p packages/design-tokens/tsconfig.json",
+    "typecheck": "tsc --noEmit -p packages/design-tokens/tsconfig.json && tsc --noEmit -p packages/security/tsconfig.json",
     "test": "vitest run --coverage",
     "guard:branch": "bash scripts/check-branch-name.sh",
     "guard:hex": "bash scripts/check-no-raw-hex.sh",
