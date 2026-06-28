@@ -98,18 +98,41 @@ integration-tenancy:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "develop"'
+  image: docker:24
   services:
-    - name: mcr.microsoft.com/mssql/server:2022-latest
-      alias: sqlserver
+    - docker:24-dind
   variables:
-    ACCEPT_EULA: "Y"
-    MSSQL_SA_PASSWORD: "$CI_MSSQL_SA_PASSWORD"
-    DB_HOST: sqlserver
-    CI_MSSQL_SA_PASSWORD: "$CI_MSSQL_SA_PASSWORD"
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: "tcp://docker:2375"
+    MSSQL_IMAGE: "mcr.microsoft.com/mssql/server:2022-latest"
+    NODE_IMAGE: "node:20"
+  before_script: []
   script:
-    # Fail closed: this is a security gate. It must not pass by skipping.
-    - 'test -n "$DB_HOST" || { echo "DB_HOST not set"; exit 1; }'
+    # Fail closed: this is a security gate; it must never pass by skipping.
     - 'test -n "$CI_MSSQL_SA_PASSWORD" || { echo "CI_MSSQL_SA_PASSWORD not set; tenancy isolation cannot be verified"; exit 1; }'
-    # connect() retries with backoff until SQL Server is ready (tests/tenancy/db.ts).
-    # --passWithNoTests=false ensures an empty/all-skipped run is a FAILURE.
-    - npx vitest run tests/tenancy/rls-isolation.test.ts --passWithNoTests=false --reporter=verbose
+    - docker network create pzure-ci
+    # Start SQL Server ourselves — no 30s GitLab health-check race. We control readiness.
+    - >
+      docker run -d --name mssql --network pzure-ci
+      -e ACCEPT_EULA=Y -e "MSSQL_SA_PASSWORD=$CI_MSSQL_SA_PASSWORD"
+      "$MSSQL_IMAGE"
+    # Poll until SQL Server accepts a login (up to ~120s), then run the suite.
+    - |
+      echo "Waiting for SQL Server to accept connections..."
+      ready=0
+      for i in $(seq 1 60); do
+        if docker exec mssql /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$CI_MSSQL_SA_PASSWORD" -Q "SELECT 1" >/dev/null 2>&1 \
+           || docker exec mssql /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$CI_MSSQL_SA_PASSWORD" -Q "SELECT 1" >/dev/null 2>&1; then
+          ready=1; echo "SQL Server ready after ${i} attempt(s)."; break
+        fi
+        sleep 2
+      done
+      test "$ready" = "1" || { echo "SQL Server did not become ready"; docker logs mssql | tail -50; exit 1; }
+    # Run the live T1–T6 suite in a node container on the same network; mssql is
+    # reachable by its container name. --passWithNoTests=false => skip is failure.
+    - >
+      docker run --rm --network pzure-ci
+      -e DB_HOST=mssql -e CI_MSSQL_SA_PASSWORD="$CI_MSSQL_SA_PASSWORD"
+      -v "$CI_PROJECT_DIR:/app" -w /app
+      "$NODE_IMAGE"
+      sh -c "npm install --no-audit --no-fund && npx vitest run tests/tenancy/rls-isolation.test.ts --passWithNoTests=false --reporter=verbose"
