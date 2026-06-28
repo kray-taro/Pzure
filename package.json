@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit -p packages/design-tokens/tsconfig.json && tsc --noEmit -p packages/security/tsconfig.json && tsc --noEmit -p packages/ui/tsconfig.json",</PLACEHOLDER>
+    "typecheck": "for cfg in packages/*/tsconfig.json; do echo \"typecheck $cfg\"; tsc --noEmit -p \"$cfg\" || exit 1; done",
     "test": "vitest run --coverage",
     "guard:branch": "bash scripts/check-branch-name.sh",
     "guard:hex": "bash scripts/check-no-raw-hex.sh",
