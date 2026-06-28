@@ -5,3 +5,5 @@ export {
   isSensitiveByConvention,
 } from './pii-registry';
 export type { ColumnClassification, DataClass } from './pii-registry';
+export { ERD_SENSITIVE_COLUMNS, isSensitiveTableByConvention } from './erd-schema';
+export type { ErdColumn } from './erd-schema';

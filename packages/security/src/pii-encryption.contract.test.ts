@@ -13,6 +13,7 @@ import {
   isSensitive,
   isSensitiveByConvention,
 } from './pii-registry';
+import { ERD_SENSITIVE_COLUMNS } from './erd-schema';
 
 describe('ADR-003/ADR-007 PII/PHI field-encryption scope', () => {
   it('flags every PII/PHI column for field-level encryption', () => {
@@ -22,6 +23,24 @@ describe('ADR-003/ADR-007 PII/PHI field-encryption scope', () => {
     expect(
       unencrypted,
       `sensitive columns missing field encryption: ${unencrypted
+        .map((c) => `${c.table}.${c.column}`)
+        .join(', ')}`,
+    ).toEqual([]);
+  });
+
+  // The core gap fix: the registry must cover every sensitive column the ERD
+  // actually declares. A new sensitive column in Unified_ERD.md that nobody
+  // registers must FAIL here, instead of silently passing.
+  it('classifies every ERD sensitive column as encrypted (no unregistered column)', () => {
+    const missing = ERD_SENSITIVE_COLUMNS.filter((erd) => {
+      const c = COLUMN_CLASSIFICATIONS.find(
+        (x) => x.table === erd.table && x.column === erd.column,
+      );
+      return !c || !isSensitive(c) || !c.fieldEncrypted;
+    });
+    expect(
+      missing,
+      `ERD sensitive columns not registered+classified+encrypted: ${missing
         .map((c) => `${c.table}.${c.column}`)
         .join(', ')}`,
     ).toEqual([]);
@@ -41,8 +60,8 @@ describe('ADR-003/ADR-007 PII/PHI field-encryption scope', () => {
 
   it('covers the ADR-003 designated columns explicitly', () => {
     const required = [
-      ['patient_demographics', 'national_id'],
-      ['patient_demographics', 'phone_primary'],
+      ['patient_patients', 'patient_number'],
+      ['patient_patients', 'phone_primary'],
       ['emr_clinical_notes', 'note_text'],
     ] as const;
     for (const [table, column] of required) {
@@ -53,11 +72,11 @@ describe('ADR-003/ADR-007 PII/PHI field-encryption scope', () => {
   });
 
   it('requires an HMAC search hash on encrypted columns used for lookup', () => {
-    // national_id and phone_primary are searched by exact match, so per ADR-003
-    // they must carry a deterministic search hash.
-    for (const column of ['national_id', 'phone_primary']) {
+    // patient_number and phone_primary are searched by exact match, so per
+    // ADR-003 they must carry a deterministic search hash.
+    for (const column of ['patient_number', 'phone_primary']) {
       const c = COLUMN_CLASSIFICATIONS.find(
-        (x) => x.table === 'patient_demographics' && x.column === column,
+        (x) => x.table === 'patient_patients' && x.column === column,
       );
       expect(c?.searchHash, `${column} needs a search hash`).toBe(true);
     }

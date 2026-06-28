@@ -27,27 +27,35 @@ export interface ColumnClassification {
 }
 
 /**
- * The classified columns. Tables prefixed `patient_*` and the
+ * The classified columns. Table/column names match `DOCS/Unified_ERD.md`
+ * exactly (see `erd-schema.ts`). Tables prefixed `patient_*` and the
  * `emr_clinical_notes` table hold the most sensitive PII/PHI and are the focus
- * of the Gate 0B (#55) encryption-scope assertion.
+ * of the Gate 0B (#55) encryption-scope assertion; other tables with PII/PHI
+ * (e.g. `core_users`, `billing_payments`, `lab_results`) are classified too.
  */
 export const COLUMN_CLASSIFICATIONS: readonly ColumnClassification[] = [
-  // patient_* (PII)
-  { table: 'patient_demographics', column: 'national_id', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
-  { table: 'patient_demographics', column: 'phone_primary', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
-  { table: 'patient_demographics', column: 'full_name', dataClass: 'pii', fieldEncrypted: true },
-  { table: 'patient_demographics', column: 'date_of_birth', dataClass: 'pii', fieldEncrypted: true },
-  { table: 'patient_contacts', column: 'email', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
-  { table: 'patient_contacts', column: 'physical_address', dataClass: 'pii', fieldEncrypted: true },
-  { table: 'patient_next_of_kin', column: 'phone', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
+  // patient_patients (PII) - the real ERD patient table.
+  { table: 'patient_patients', column: 'patient_number', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
+  { table: 'patient_patients', column: 'phone_primary', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
+  { table: 'patient_patients', column: 'first_name', dataClass: 'pii', fieldEncrypted: true },
+  { table: 'patient_patients', column: 'last_name', dataClass: 'pii', fieldEncrypted: true },
+  { table: 'patient_patients', column: 'dob', dataClass: 'pii', fieldEncrypted: true },
 
-  // emr_clinical_notes (PHI)
+  // patient_allergies (PHI) - clinical content tied to a patient.
+  { table: 'patient_allergies', column: 'severity', dataClass: 'phi', fieldEncrypted: true },
+
+  // emr_clinical_notes (PHI).
   { table: 'emr_clinical_notes', column: 'note_text', dataClass: 'phi', fieldEncrypted: true },
-  { table: 'emr_clinical_notes', column: 'diagnosis_summary', dataClass: 'phi', fieldEncrypted: true },
 
-  // non-sensitive examples (must NOT be over-encrypted: keeps the test honest)
-  { table: 'patient_demographics', column: 'preferred_language', dataClass: 'internal', fieldEncrypted: false },
-  { table: 'branch', column: 'name', dataClass: 'public', fieldEncrypted: false },
+  // Other PII/PHI outside the convention tables (still in encryption scope).
+  { table: 'core_users', column: 'email', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
+  { table: 'billing_payments', column: 'mpesa_receipt_number', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
+  { table: 'lab_results', column: 'numeric_value', dataClass: 'phi', fieldEncrypted: true },
+  { table: 'lab_results', column: 'text_value', dataClass: 'phi', fieldEncrypted: true },
+
+  // Non-sensitive columns (must NOT be over-encrypted: keeps the test honest).
+  { table: 'core_branches', column: 'name', dataClass: 'public', fieldEncrypted: false },
+  { table: 'inventory_products', column: 'name', dataClass: 'public', fieldEncrypted: false },
 ] as const;
 
 /** A column is in PII/PHI scope when classified as `pii` or `phi`. */
