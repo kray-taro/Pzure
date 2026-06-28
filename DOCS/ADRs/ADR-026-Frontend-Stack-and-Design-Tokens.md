@@ -7,16 +7,19 @@
 > Closes D-005. Owning umbrella: [#11](https://gitlab.com/cricketaustin-group/Pzure/-/issues/11) Module 10. Delivery work item: [#57](https://gitlab.com/cricketaustin-group/Pzure/-/issues/57) F1. Source of truth: `DOCS/Modules/Module_10` (sections 1-3, 5, 12, 21).
 
 ## 1. Context and Problem Statement
+
 Pzure is a component-heavy, workflow-heavy, design-system-heavy clinic-pharmacy-retail platform spanning admin, POS, pharmacy, EMR, lab, claims, reporting and communication shells. The frontend stack, state/data layer, and the design-token foundation must be locked before full UI build so every shell shares one safety, speed, compliance and consistency layer. Vite is a build tool only; it does not define framework, routing, forms, state or design system, so a deliberate decision is required.
 
 ## 2. Decision Drivers
-* Enterprise ecosystem for complex forms, data grids, offline/PWA and healthcare admin screens.
-* A dedicated, touch-optimised POS shell distinct from admin CRUD.
-* Semantic design tokens as code (not just Figma styles) so the Tailwind theme and components consume them with **no raw hex in components**.
-* Long-term hiring, supportability and accessibility (WCAG AA).
-* Shared tokens/components across shells, with workflow-specific layouts.
+
+- Enterprise ecosystem for complex forms, data grids, offline/PWA and healthcare admin screens.
+- A dedicated, touch-optimised POS shell distinct from admin CRUD.
+- Semantic design tokens as code (not just Figma styles) so the Tailwind theme and components consume them with **no raw hex in components**.
+- Long-term hiring, supportability and accessibility (WCAG AA).
+- Shared tokens/components across shells, with workflow-specific layouts.
 
 ## 3. Considered Options
+
 1. **Vite + React + TypeScript** with Tailwind + Radix + internal design system.
 2. Vue - viable but smaller enterprise healthcare ecosystem; fewer mature headless component/data-grid combinations.
 3. Svelte - excellent DX but higher hiring/support risk for a large internal enterprise team.
@@ -46,15 +49,17 @@ Pzure is a component-heavy, workflow-heavy, design-system-heavy clinic-pharmacy-
 | Layout | Dedicated touch-optimised POS shell; responsive app shells per workflow |
 
 ### Design tokens (as code)
+
 Ship `packages/design-tokens` with: `tokens.json`, `colors.ts`, `typography.ts`, `spacing.ts`, `radii.ts`, `shadows.ts`, `breakpoints.ts`, `z-index.ts`, `motion.ts`.
 
 **Rule:** semantic tokens only - components never use raw hex. Required semantic colour groups:
-* `status` (success, warning, danger, info, neutral)
-* `clinical` (critical, warning, normal, sensitive)
-* `finance` (paid, unpaid, refunded, credit)
-* `inventory` (available, low, expired, quarantined, recalled)
-* `claims` (draft, ready, submitted, rejected, paid)
-* `sync` (online, offline, queued, conflict)
+
+- `status` (success, warning, danger, info, neutral)
+- `clinical` (critical, warning, normal, sensitive)
+- `finance` (paid, unpaid, refunded, credit)
+- `inventory` (available, low, expired, quarantined, recalled)
+- `claims` (draft, ready, submitted, rejected, paid)
+- `sync` (online, offline, queued, conflict)
 
 Plus `touch` (`target.min` 48px, `posButton` 64px, `keypad` 64px) and `layout` (sidebar/header/cart dimensions). Statuses are represented as machine code + display label + semantic colour.
 
@@ -62,8 +67,9 @@ Plus `touch` (`target.min` 48px, `posButton` 64px, `keypad` 64px) and `layout` (
 One shared token/component layer enforces consistency and accessibility across shells while each shell keeps a workflow-specific, device-appropriate layout. POS stays touch- and keyboard-first and is not polluted by admin forms. Banning raw hex makes theming, dark mode and clinical/finance state colours centrally governed. Cost: discipline to keep tokens authoritative and to route all colour/spacing through tokens; AG Grid only where justified to limit bundle size.
 
 ## 6. Implementation Notes
-* `packages/design-tokens` is the source of truth; the Tailwind theme (`theme.extend`) imports the token modules - no colours defined inline in `tailwind.config`.
-* Lint/CI guard to reject raw hex in component source (semantic-tokens-only rule).
-* Token consumers: `packages/ui`, all app shells; see Module 10 section 3 monorepo layout.
-* Touch targets enforce 48px minimum (POS larger) per Module 10 section 12 and ADR-018.
-* Offline/PWA token (`sync.*`, `z.offlineBanner`) aligns with ADR-006/008/009.
+
+- `packages/design-tokens` is the source of truth; the Tailwind theme (`theme.extend`) imports the token modules - no colours defined inline in `tailwind.config`.
+- Lint/CI guard to reject raw hex in component source (semantic-tokens-only rule).
+- Token consumers: `packages/ui`, all app shells; see Module 10 section 3 monorepo layout.
+- Touch targets enforce 48px minimum (POS larger) per Module 10 section 12 and ADR-018.
+- Offline/PWA token (`sync.*`, `z.offlineBanner`) aligns with ADR-006/008/009.
