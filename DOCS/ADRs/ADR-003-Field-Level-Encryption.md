@@ -37,17 +37,17 @@ For the MVP, we will use a single strong AES-256-GCM symmetric key injected via 
 
 ### Positive Consequences
 
-* **Zero Infrastructure Cost:** No dependency on Azure Key Vault or AWS KMS for the MVP.
-* **Simple Implementation:** Easily managed via standard Node.js `crypto` library.
-* **Data Security:** DB backups and direct SQL queries will not expose the most sensitive PHI.
+- **Zero Infrastructure Cost:** No dependency on Azure Key Vault or AWS KMS for the MVP.
+- **Simple Implementation:** Easily managed via standard Node.js `crypto` library.
+- **Data Security:** DB backups and direct SQL queries will not expose the most sensitive PHI.
 
 ### Negative Consequences
 
-* **Key Rotation:** Rotating a single master key requires decrypting and re-encrypting the entire database. (This is acceptable for the MVP scale but must be upgraded to Envelope Encryption in Phase 3).
-* **Searchability:** We cannot do `LIKE '%text%'` searches on encrypted fields. If we must search by phone number, we will store a deterministic HMAC hash of the phone number alongside the encrypted value for exact-match lookups.
+- **Key Rotation:** Rotating a single master key requires decrypting and re-encrypting the entire database. (This is acceptable for the MVP scale but must be upgraded to Envelope Encryption in Phase 3).
+- **Searchability:** We cannot do `LIKE '%text%'` searches on encrypted fields. If we must search by phone number, we will store a deterministic HMAC hash of the phone number alongside the encrypted value for exact-match lookups.
 
 ## 5. Implementation Notes
 
-* Implement a `CryptoService` in NestJS.
-* Use deterministic encryption (or store the IV alongside the ciphertext) for fields that require exact-match querying.
-* Ensure the master key is strictly managed via GitHub Secrets during CI/CD and is never committed to source control.
+- Implement a `CryptoService` in NestJS.
+- Use deterministic encryption (or store the IV alongside the ciphertext) for fields that require exact-match querying.
+- Ensure the master key is strictly managed via GitHub Secrets during CI/CD and is never committed to source control.

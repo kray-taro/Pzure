@@ -22,6 +22,7 @@ Branches face connectivity drops. Allowing arbitrary offline editing of clinical
 3. Narrow, per-entity offline scope (append-only) with degraded-mode tiers.
 
 ## 4. Decision Outcome
+
 **Chosen (proposed):** Per-entity offline matrix — POS sales append-only; pharmacy dispense/stock movement limited append-only; clinical notes draft-only; lab results draft-only; claims and communication online-only; controlled meds strongly limited. Duration tiers: 0-4h normal, 4-24h restricted+alert, >24h critical-only, >48h escalation.
 
 ## 5. Per-entity offline matrix

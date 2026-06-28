@@ -40,4 +40,5 @@ Health data is sensitive personal data (Data Protection Act). ADR-003 set field-
 - **Runbooks:** key-rotation runbook and key-compromise runbook required before production.
 
 ## 7. Compliance
+
 Kenya Data Protection Act (data confidentiality, security safeguards). Pairs with ADR-019 (retention) and ADR-020 (masking/export).

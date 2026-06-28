@@ -12,10 +12,10 @@ We need to select an authentication provider and define the token lifecycle, bal
 
 ## 2. Decision Drivers
 
-* **Zero Licensing Cost MVP:** The client explicitly mandated open-source/free-tier services only.
-* **OIDC Compliance:** The system must use standard OAuth2/OIDC flows for security and future interoperability.
-* **Role-Based Access Control (RBAC):** Needs to map users to roles (Pharmacist, Cashier, Doctor, Admin) and specific branches.
-* **Regulated Actions:** Actions like dispensing controlled medicines require a "PIN override" or secondary verification step.
+- **Zero Licensing Cost MVP:** The client explicitly mandated open-source/free-tier services only.
+- **OIDC Compliance:** The system must use standard OAuth2/OIDC flows for security and future interoperability.
+- **Role-Based Access Control (RBAC):** Needs to map users to roles (Pharmacist, Cashier, Doctor, Admin) and specific branches.
+- **Regulated Actions:** Actions like dispensing controlled medicines require a "PIN override" or secondary verification step.
 
 ## 3. Considered Options
 
@@ -31,14 +31,14 @@ Keycloak provides enterprise-grade OIDC, RBAC, and session management out-of-the
 
 ### Positive Consequences
 
-* **Zero Licensing Cost:** 100% free and open-source.
-* **Standard Protocols:** Fully supports OIDC, SAML, and OAuth2.
-* **Custom Mappers:** We can easily map custom claims like `active_branch_id` and `allowed_branches` into the JWT payload.
+- **Zero Licensing Cost:** 100% free and open-source.
+- **Standard Protocols:** Fully supports OIDC, SAML, and OAuth2.
+- **Custom Mappers:** We can easily map custom claims like `active_branch_id` and `allowed_branches` into the JWT payload.
 
 ### Negative Consequences
 
-* **Operational Overhead:** Requires running a Keycloak container, managing a dedicated PostgreSQL database for it, and handling version upgrades.
-* **Resource Usage:** Keycloak is Java-based and requires a reasonable amount of memory to run smoothly.
+- **Operational Overhead:** Requires running a Keycloak container, managing a dedicated PostgreSQL database for it, and handling version upgrades.
+- **Resource Usage:** Keycloak is Java-based and requires a reasonable amount of memory to run smoothly.
 
 ## 5. Token Lifecycle & Implementation Notes
 

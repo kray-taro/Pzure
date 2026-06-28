@@ -11,6 +11,7 @@
 Health data has long retention expectations (Digital Health regs reference ≥20 years) that differ from operational/audit logs.
 
 ## 4. Decision Outcome
+
 **Chosen (Approved):** Retention matrix by data class.
 
 | Data class | Retention |
