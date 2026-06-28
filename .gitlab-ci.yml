@@ -95,6 +95,9 @@ test:
 # fails red, which correctly blocks merge rather than passing silently.
 integration-tenancy:
   stage: integration
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
   services:
     - name: mcr.microsoft.com/mssql/server:2022-latest
       alias: sqlserver
@@ -104,5 +107,9 @@ integration-tenancy:
     DB_HOST: sqlserver
     CI_MSSQL_SA_PASSWORD: "$CI_MSSQL_SA_PASSWORD"
   script:
-    # connect() retries with backoff until SQL Server is ready (see tests/tenancy/db.ts).
-    - npm run test:tenancy
+    # Fail closed: this is a security gate. It must not pass by skipping.
+    - 'test -n "$DB_HOST" || { echo "DB_HOST not set"; exit 1; }'
+    - 'test -n "$CI_MSSQL_SA_PASSWORD" || { echo "CI_MSSQL_SA_PASSWORD not set; tenancy isolation cannot be verified"; exit 1; }'
+    # connect() retries with backoff until SQL Server is ready (tests/tenancy/db.ts).
+    # --passWithNoTests=false ensures an empty/all-skipped run is a FAILURE.
+    - npx vitest run tests/tenancy/rls-isolation.test.ts --passWithNoTests=false --reporter=verbose
