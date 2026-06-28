@@ -62,3 +62,31 @@ CREATE TABLE dbo.audit_event (
     occurred_at     DATETIME2(3)        NOT NULL CONSTRAINT DF_audit_occurred DEFAULT SYSUTCDATETIME()
 );
 GO
+
+-- Enforce append-only / immutability on audit_event (CONCURRENCY §5, COMPLIANCE.md).
+-- The rule is no longer just a comment: it is enforced at two layers.
+--
+-- Layer 1 — least-privilege grants. The application connects as pzure_app, which
+-- may INSERT and SELECT audit rows but is explicitly DENIED UPDATE/DELETE. DENY
+-- overrides any future GRANT, so a later permission change cannot silently
+-- re-enable mutation. Retention purges (if ever needed) must run as a separate,
+-- audited privileged principal — never the application role.
+IF DATABASE_PRINCIPAL_ID('pzure_app') IS NULL
+    CREATE ROLE pzure_app;
+GO
+GRANT INSERT, SELECT ON dbo.audit_event TO pzure_app;
+DENY UPDATE, DELETE ON dbo.audit_event TO pzure_app;
+GO
+
+-- Layer 2 — defense-in-depth trigger. INSTEAD OF intercepts UPDATE/DELETE before
+-- any row changes and fails loudly, so even a principal that bypasses the role
+-- grants (short of ALTER/CONTROL on the table) cannot tamper with the log.
+CREATE TRIGGER dbo.trg_audit_event_immutable
+ON dbo.audit_event
+INSTEAD OF UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    THROW 50001, 'audit_event is append-only; UPDATE/DELETE is not permitted.', 1;
+END;
+GO
