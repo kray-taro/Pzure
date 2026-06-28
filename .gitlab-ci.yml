@@ -76,3 +76,14 @@ test:
   script:
     - npm test
   coverage: '/All files[^|]*\|[^|]*\s+([\d.]+)/'
+
+# Storybook build must stay green: it proves every component + story compiles
+# against the token preset and the a11y addon config (Module 10 F2 acceptance).
+storybook-build:
+  stage: test
+  script:
+    - npm run build-storybook
+  artifacts:
+    paths:
+      - packages/ui/storybook-static
+    expire_in: 1 week
