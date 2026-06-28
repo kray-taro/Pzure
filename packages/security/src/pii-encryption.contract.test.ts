@@ -72,9 +72,11 @@ describe('ADR-003/ADR-007 PII/PHI field-encryption scope', () => {
   });
 
   it('requires an HMAC search hash on encrypted columns used for lookup', () => {
-    // patient_number and phone_primary are searched by exact match, so per
-    // ADR-003 they must carry a deterministic search hash.
-    for (const column of ['patient_number', 'phone_primary']) {
+    // patient_number, phone_primary and dob are searched by exact match, so per
+    // ADR-003 they must carry a deterministic search hash. dob is included
+    // because name + DOB disambiguation is a standard patient-lookup path; a
+    // missing hash here would invite a later plaintext DOB index.
+    for (const column of ['patient_number', 'phone_primary', 'dob']) {
       const c = COLUMN_CLASSIFICATIONS.find(
         (x) => x.table === 'patient_patients' && x.column === column,
       );
@@ -103,6 +105,19 @@ describe('ADR-003/ADR-007 PII/PHI field-encryption scope', () => {
     );
     expect(c, 'core_users.full_name must be classified').toBeDefined();
     expect(c?.dataClass).toBe('pii');
+    expect(c?.fieldEncrypted).toBe(true);
+  });
+
+  it('classifies lab_samples.specimen_type as encrypted PHI (regression: review !12)', () => {
+    // specimen_type is clinical content tied to a patient but sits outside the
+    // patient_* convention and the lab_results table; it previously escaped
+    // every gate. Lock it in so the lab schema can't ship sensitive content
+    // unguarded.
+    const c = COLUMN_CLASSIFICATIONS.find(
+      (x) => x.table === 'lab_samples' && x.column === 'specimen_type',
+    );
+    expect(c, 'lab_samples.specimen_type must be classified').toBeDefined();
+    expect(c?.dataClass).toBe('phi');
     expect(c?.fieldEncrypted).toBe(true);
   });
 

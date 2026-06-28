@@ -94,19 +94,20 @@ test:
 # than every MR. The cheap `scripts/check-no-secrets.sh` guard stays as the
 # per-MR fast-fail, so MR velocity is preserved while deep scans still gate
 # what lands on develop.
-.scan-rules: &scan-rules
+#
+# `.scan-base` is a hidden base job consumed via `extends:` (more discoverable
+# than a YAML anchor and composable with the templates' own job definitions).
+.scan-base:
+  stage: scan
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
 
 sast:
-  stage: scan
-  <<: *scan-rules
+  extends: .scan-base
 
 gemnasium-dependency_scanning:
-  stage: scan
-  <<: *scan-rules
+  extends: .scan-base
 
 secret_detection:
-  stage: scan
-  <<: *scan-rules
+  extends: .scan-base

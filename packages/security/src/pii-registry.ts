@@ -42,7 +42,10 @@ export const COLUMN_CLASSIFICATIONS: readonly ColumnClassification[] = [
   { table: 'patient_patients', column: 'phone_primary', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
   { table: 'patient_patients', column: 'first_name', dataClass: 'pii', fieldEncrypted: true },
   { table: 'patient_patients', column: 'last_name', dataClass: 'pii', fieldEncrypted: true },
-  { table: 'patient_patients', column: 'dob', dataClass: 'pii', fieldEncrypted: true },
+  // dob is searched (name + DOB disambiguation is a standard patient-lookup
+  // path), so it carries a deterministic search hash (ADR-003) rather than
+  // forcing a later plaintext DOB index.
+  { table: 'patient_patients', column: 'dob', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
 
   // patient_allergies (PHI) - clinical content tied to a patient.
   { table: 'patient_allergies', column: 'severity', dataClass: 'phi', fieldEncrypted: true },
@@ -57,9 +60,16 @@ export const COLUMN_CLASSIFICATIONS: readonly ColumnClassification[] = [
   { table: 'lab_results', column: 'numeric_value', dataClass: 'phi', fieldEncrypted: true },
   { table: 'lab_results', column: 'text_value', dataClass: 'phi', fieldEncrypted: true },
 
+  // lab_samples (PHI) - specimen type is clinical content tied to a patient.
+  { table: 'lab_samples', column: 'specimen_type', dataClass: 'phi', fieldEncrypted: true },
+
   // Non-sensitive columns (must NOT be over-encrypted: keeps the test honest).
+  // Includes the deliberate lab-schema out-of-scope decisions (see erd-schema.ts):
+  // a lab-internal accession barcode and a derived boolean flag are not PII/PHI.
   { table: 'core_branches', column: 'name', dataClass: 'public', fieldEncrypted: false },
   { table: 'inventory_products', column: 'name', dataClass: 'public', fieldEncrypted: false },
+  { table: 'lab_samples', column: 'sample_barcode', dataClass: 'internal', fieldEncrypted: false },
+  { table: 'lab_results', column: 'abnormal_flag', dataClass: 'internal', fieldEncrypted: false },
 ] as const;
 
 /** A column is in PII/PHI scope when classified as `pii` or `phi`. */

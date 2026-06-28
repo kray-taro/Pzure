@@ -33,6 +33,19 @@ export interface ErdColumn {
  * intentionally excluded - they are identifiers, not protected content.
  * Anything carrying a person's identity, contact, demographic or clinical
  * content is listed, across ALL tables (not just the convention tables).
+ *
+ * Deliberate out-of-scope decisions (recorded so they are choices, not gaps):
+ *   * lab_samples.sample_barcode  - lab-internal accession identifier, not a
+ *     person identifier or clinical content; classified `internal`, not
+ *     encrypted.
+ *   * lab_orders.*                - only FKs + `status` (no PII/PHI content).
+ *   * lab_results.abnormal_flag   - boolean derived flag, not clinical content.
+ * These appear in COLUMN_CLASSIFICATIONS with their non-sensitive class so the
+ * over-encryption guard keeps them honest, but they are not listed here.
+ *
+ * TODO(#40): replace this hand-transcription with an introspector that derives
+ * the manifest directly from the SQL migrations (Phase 1 / !1), at which point
+ * this constant becomes generated and ADR/ERD/registry drift is impossible.
  */
 export const ERD_SENSITIVE_COLUMNS: readonly ErdColumn[] = [
   // patient_patients (PII) - the real ERD patient table.
@@ -48,6 +61,9 @@ export const ERD_SENSITIVE_COLUMNS: readonly ErdColumn[] = [
 
   // emr_clinical_notes (PHI).
   { table: 'emr_clinical_notes', column: 'note_text', note: 'free-text clinical note' },
+
+  // lab_samples (PHI) - specimen type is clinical content tied to a patient.
+  { table: 'lab_samples', column: 'specimen_type', note: 'specimen type (clinical PHI)' },
 
   // Sensitive columns OUTSIDE the convention tables - in encryption scope too.
   { table: 'core_users', column: 'full_name', note: 'staff name (PII)' },
