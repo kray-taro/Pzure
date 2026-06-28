@@ -71,6 +71,8 @@ Mapped to the 5 squads in the Master Plan (Platform & Security, Commerce & Inven
 ```text
 #12 Sprint 0 (mobilisation + close blockers #48-#53)
         ↓
+#54 / #55 / #56 Sprint 0A/0B/0C architecture (Gate 0 baseline approval)
+        ↓
 #13 Sprint 3 DevSecOps skeleton (auth, RBAC, audit, CI/CD)
         ↓
 #14 Sprint 4 Core master data & branch foundation
@@ -78,7 +80,7 @@ Mapped to the 5 squads in the Master Plan (Platform & Security, Commerce & Inven
    (all module lanes unlock here)
 ```
 
-Nothing in the module lanes should start before **#14** lands, because every record is branch-scoped and every action is RBAC + audit gated.
+**Gate 0** ([#54](https://gitlab.com/cricketaustin-group/Pzure/-/issues/54), [#55](https://gitlab.com/cricketaustin-group/Pzure/-/issues/55), [#56](https://gitlab.com/cricketaustin-group/Pzure/-/issues/56)) must be approved before #13 build proceeds (per Module_X). Nothing in the module lanes should start before **#14** lands, because every record is branch-scoped and every action is RBAC + audit gated.
 
 ### Concurrent lanes after #14
 
