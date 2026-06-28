@@ -26,6 +26,7 @@ Approved architectural decisions live as ADRs in `DOCS/ADRs/`. This log indexes 
 | ADR-018 | Device/printer/scanner support model (device registry, test matrix) | Approved |
 | ADR-019 | Data retention & archival policy (health data ≥20yrs, retention matrix) | Approved |
 | ADR-020 | Patient data masking & export control (role masking, export approval) | Approved |
+| ADR-026 | Frontend stack (Vite + React + TS + Tailwind + Radix + RHF/Zod + TanStack Query + Zustand/RTK + React Router + Storybook + Vitest/TL/Playwright) & design tokens as code | Approved |
 
 > ADR-007..020 fleshed out and **Approved** as the Gate 0 architecture baseline. Owned by Sprint 0A ([#54](https://gitlab.com/cricketaustin-group/Pzure/-/issues/54)), 0B ([#55](https://gitlab.com/cricketaustin-group/Pzure/-/issues/55)), 0C ([#56](https://gitlab.com/cricketaustin-group/Pzure/-/issues/56)). Gate 0 baseline approval is satisfied; module lanes may begin once #14 lands.
 
