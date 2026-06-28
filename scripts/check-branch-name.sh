@@ -12,6 +12,11 @@
 # branch, so they are collision-safe.
 set -euo pipefail
 
+# Single source of truth for the allowed branch-name pattern. Keep this in sync
+# with the server-side push rule (Settings -> Repository -> Push rules), which
+# is enforced independently of this CI guard.
+readonly PATTERN='^(feat|fix|phase-[0-9]+)/[a-z0-9._-]+$'
+
 branch="${1:-}"
 
 if [ -z "$branch" ]; then
@@ -19,8 +24,8 @@ if [ -z "$branch" ]; then
   exit 1
 fi
 
-if printf '%s' "$branch" | grep -Eq '^(feat|fix|phase-[0-9]+)/[a-z0-9._-]+$'; then
-  echo "OK: branch '$branch' matches feat/*, fix/* or phase-<n>/* (target: develop)."
+if printf '%s' "$branch" | grep -Eq "$PATTERN"; then
+  echo "OK: branch '$branch' matches $PATTERN (target: develop)."
   exit 0
 fi
 
@@ -28,7 +33,8 @@ cat >&2 <<EOF
 ERROR: branch '$branch' targets 'develop' but does not match the required
        convention.
 
-  Required: feat/<name>, fix/<name> or phase-<n>/<name>   (lowercase, [a-z0-9._-])
+  Required pattern: $PATTERN
+  (lowercase [a-z0-9._-]; prefix feat/, fix/ or phase-<n>/)
   Examples: feat/ui-component-library, fix/token-drift, phase-1/scaffold
 
   Do NOT prefix with an existing branch name (e.g. 'docs/...'), which causes a
