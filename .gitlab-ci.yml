@@ -13,7 +13,7 @@ workflow:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "DOCS"'
     - if: '$CI_COMMIT_BRANCH == "DOCS"'
 
-# --- consistency stage: cheap, fast-failing policy checks ---------------------
+# --- consistency stage: fast-failing policy checks ---------------------------
 
 dr-consistency:
   stage: consistency
@@ -35,5 +35,7 @@ markdownlint:
   stage: lint
   image: node:20-alpine
   script:
-    - npx --yes markdownlint-cli2 "DOCS/**/*.md" "#DOCS/**/node_modules" || true
-  allow_failure: true
+    # Pinned for reproducible CI; no '|| true' so lint errors fail the job,
+    # and no allow_failure so broken markdown blocks the DOCS pipeline.
+    # Rule set is fixed by .markdownlint.jsonc at the repo root.
+    - npx --yes markdownlint-cli2@0.13.0 "DOCS/**/*.md" "#DOCS/**/node_modules"

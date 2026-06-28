@@ -35,16 +35,25 @@ check_contains() {
 # 1. The canonical token must appear in ADR-016 (authoritative source).
 check_contains "$ADR016" 'ADR-016'
 
-# 2. The B-004 row must carry the canonical token.
-if grep -q '^| B-004 ' "$BLOCKERS" && grep -F "$CANONICAL" "$BLOCKERS" | grep -q 'B-004\|backup/DR'; then
-  echo "OK: B-004 / blockers file contains canonical DR token."
+# 2. The B-004 row itself must carry the canonical token. We filter to the
+#    actual table row first, THEN look for the token within that row, so this
+#    assertion cannot be satisfied by any other line (e.g. the Gate 0
+#    checklist line) that happens to contain the token.
+if ! grep -q '^| B-004 ' "$BLOCKERS"; then
+  echo "ERROR: B-004 row not found in $BLOCKERS" >&2
+  fail=1
+elif grep '^| B-004 ' "$BLOCKERS" | grep -qF "$CANONICAL"; then
+  echo "OK: B-004 row contains canonical DR token."
 else
-  check_contains "$BLOCKERS" 'B-004 / blockers'
+  echo "ERROR: B-004 row in $BLOCKERS is missing the canonical DR token: '$CANONICAL'" >&2
+  fail=1
 fi
 
-# 3. The Gate 0 checklist (same blockers file) must carry the canonical token
-#    on the backup/DR line.
-if grep -F "$CANONICAL" "$BLOCKERS" | grep -qi 'deployment design'; then
+# 3. The Gate 0 checklist backup/DR line must carry the canonical token. We
+#    anchor to the checklist bullet itself (a '- ...backup/DR...' line) rather
+#    than relying on a loose match, so this is an independent assertion from the
+#    B-004 row check above.
+if grep -E '^- .*backup/DR' "$BLOCKERS" | grep -qF "$CANONICAL"; then
   echo "OK: Gate 0 checklist backup/DR line contains canonical DR token."
 else
   echo "ERROR: Gate 0 checklist backup/DR line in $BLOCKERS is missing the canonical DR token: '$CANONICAL'" >&2
