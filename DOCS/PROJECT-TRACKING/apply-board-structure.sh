@@ -19,13 +19,15 @@ ENC_PROJECT=$(printf '%s' "$PROJECT" | sed 's#/#%2F#')
 command -v glab >/dev/null || { echo "glab not found"; exit 1; }
 command -v jq   >/dev/null || { echo "jq not found";   exit 1; }
 
-# --- Resolve milestone titles -> ids at runtime ---------------------------
-# Builds an associative array MILESTONE_ID["Sprint 7"]=123
-declare -A MILESTONE_ID
-while IFS=$'\t' read -r mid mtitle; do
-  [ -n "$mtitle" ] && MILESTONE_ID["$mtitle"]="$mid"
-done < <(glab api --paginate "projects/$ENC_PROJECT/milestones?per_page=100" \
-          | jq -r '.[] | "\(.id)\t\(.title)"')
+# --- Resolve a milestone title -> id at runtime ---------------------------
+# Looks up the id on demand via the API and matches .title exactly. This
+# avoids prebuilding a bash associative array, which on Git Bash/MINGW64
+# picked up trailing CR characters and never matched ("Sprint 0\r").
+milestone_id() { # $1=title  -> prints id or empty
+  local title="$1"
+  glab api "projects/$ENC_PROJECT/milestones?search=$(jq -rn --arg t "$title" '$t|@uri')&per_page=100" \
+    | jq -r --arg t "$title" 'first(.[] | select(.title == $t) | .id) // empty'
+}
 
 # --- Helpers --------------------------------------------------------------
 # Apply one or more labels (comma-separated names) to an issue by iid.
@@ -38,7 +40,8 @@ apply_labels() { # $1=iid  $2=comma,separated,label,names
 # Assign a milestone (by title) to an issue via the API (glab issue update
 # also supports --milestone with a title on recent versions).
 apply_milestone() { # $1=iid  $2=milestone title
-  local title="$2" id="${MILESTONE_ID[$2]:-}"
+  local title="$2" id
+  id=$(milestone_id "$title")
   if [ -z "$id" ]; then echo "  #$1 milestone '$title' NOT FOUND (create it first)"; return; fi
   glab api --method PUT "projects/$ENC_PROJECT/issues/$1" -f "milestone_id=$id" >/dev/null \
     && echo "  #$1 milestone: $title" || echo "  #$1 milestone FAILED"
@@ -116,7 +119,12 @@ ROWS
 
 echo "Applying board structure to $PROJECT ..."
 while IFS='|' read -r iid labels milestone parent; do
-  [ -z "${iid:-}" ] && continue
+  # Trim surrounding whitespace and any trailing CR (Git Bash/CRLF safety).
+  iid=$(printf '%s' "${iid:-}"        | tr -d '\r' | xargs)
+  labels=$(printf '%s' "${labels:-}"  | tr -d '\r' | xargs)
+  milestone=$(printf '%s' "${milestone:-}" | tr -d '\r' | xargs)
+  parent=$(printf '%s' "${parent:-}"  | tr -d '\r' | xargs)
+  [ -z "$iid" ] && continue
   echo "Issue #$iid"
   [ "$labels"    != "-" ] && apply_labels    "$iid" "$labels"
   [ "$milestone" != "-" ] && apply_milestone "$iid" "$milestone"
