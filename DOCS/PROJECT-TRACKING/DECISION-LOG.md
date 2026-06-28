@@ -21,7 +21,7 @@ Approved architectural decisions live as ADRs in `DOCS/ADRs/`. This log indexes 
 | ADR-013 | WhatsApp/SMS communication strategy (consent-led, adapter-based, templates) | Approved |
 | ADR-014 | Reporting architecture (separate read models/snapshots from MVP) | Approved |
 | ADR-015 | Azure deployment topology (client tenant, Azure SQL DB, Container Apps, private-first) | Approved |
-| ADR-016 | Backup & DR (RPO ≤15min, RTO ≤4h, 35-day PITR, restore drills) — **authoritative DR targets** | Approved |
+| ADR-016 | Backup & DR; **authoritative DR target `RPO <= 15 min / RTO <= 4h`** (35-day PITR, restore drills); **ratified Gate 0C**, contradiction with B-004 resolved, enforced by `scripts/check-dr-consistency.sh` | Approved (ratified) |
 | ADR-017 | Rollout & rollback (feature flags, blue-green, branch-wave canary) | Approved |
 | ADR-018 | Device/printer/scanner support model (device registry, test matrix) | Approved |
 | ADR-019 | Data retention & archival policy (health data ≥20yrs, retention matrix) | Approved |
