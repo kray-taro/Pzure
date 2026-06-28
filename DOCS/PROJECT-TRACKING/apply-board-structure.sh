@@ -69,6 +69,12 @@ MAP=$(cat <<'ROWS'
 9|module::reporting,type::epic-umbrella|-|-
 10|module::communication,type::epic-umbrella|-|-
 11|module::frontend,type::epic-umbrella|-|-
+57|module::frontend,workflow::todo|Sprint 2|11
+58|module::frontend,workflow::todo|Sprint 3|11
+59|module::frontend,workflow::todo|Sprint 4|11
+61|module::frontend,workflow::todo|Sprint 5|11
+60|module::frontend,workflow::todo|Sprint 7|11
+62|module::frontend,workflow::todo|Sprint 13|11
 12|module::foundation,workflow::todo|Sprint 0|1
 54|module::foundation,workflow::todo|Sprint 0A|1
 55|module::foundation,workflow::todo|Sprint 0B|1

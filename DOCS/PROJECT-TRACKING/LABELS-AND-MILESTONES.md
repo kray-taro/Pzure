@@ -18,7 +18,7 @@ Scoped labels (`module::x`) are mutually exclusive per issue.
 | `module::claims` | `#9400D3` | #8, #30, #31, #32, #33 |
 | `module::reporting` | `#666666` | #9, #34, #35 |
 | `module::communication` | `#00B140` | #10, #36, #37 |
-| `module::frontend` | `#FC9403` | #11 |
+| `module::frontend` | `#FC9403` | #11, #57, #58, #59, #60, #61, #62 |
 
 ## Workflow & type labels (optional but recommended)
 
@@ -43,13 +43,16 @@ One milestone per sprint: **Sprint 0**, **Sprint 0A/0B/0C** (architecture gate),
 | Sprint 0A | #54 (data architecture & tenancy — Gate 0) |
 | Sprint 0B | #55 (security/identity architecture — Gate 0) |
 | Sprint 0C | #56 (offline/integration/NFR/deployment/DR — Gate 0) |
-| Sprint 3 | #13 |
+| Sprint 2 — Design System Foundation | #57 (F1 tokens/ADR-026) |
+| Sprint 3 | #13; #58 (F2 component library) |
+| Sprint 4 | #14; #59 (F3 app shells) |
+| Sprint 5 | #15; #61 (F5 responsive/a11y/forms/status) |
 | Sprint 4 | #14 |
 | Sprint 5 | #15 |
 | Sprint 6 | #38 |
-| Sprint 7-9 | #16, #17, #18 |
+| Sprint 7-9 | #16, #17, #18; #60 (F4 POS touch shell, Sprint 7) |
 | Sprint 10-12 | #19, #20, #21 |
-| Sprint 13-16 | #22, #23, #24, #25 |
+| Sprint 13-16 | #22, #23, #24, #25; #62 (F6 print/labels & testing, Sprint 13) |
 | Sprint 17-18 | #26, #27 |
 | Sprint 19-20 | #28, #29 |
 | Sprint 21-24 | #30, #31, #32, #33 |
