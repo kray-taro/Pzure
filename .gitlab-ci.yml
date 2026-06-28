@@ -1,10 +1,18 @@
-# Pzure CI. Mandatory gates before merge: lint, unit tests, integration tests,
-# and security scanning must all pass. No secrets in code (COMPLIANCE.md);
-# configuration is environment-based. Nothing here deploys to or targets main.
+# Pzure CI - unified pipeline (reconciles !1 scaffold with develop !7/#13).
+#
+# Single source of truth: one pipeline preserves every correctness invariant
+# from both predecessors with no duplicated job (DRY). Design goals follow DDIA
+# (Reliability/Scalability/Maintainability):
+#   - Reliability: each invariant is a required, automated gate; red blocks merge.
+#   - Maintainability: small, single-responsibility, cacheable stages.
+#   - Scalability: jobs are independent; the matrix grows by adding Nx projects,
+#     not by rewriting the pipeline.
+#
+# No secrets in code (COMPLIANCE.md); configuration is environment-based.
+# Nothing here deploys to or targets main.
 
 # Run one pipeline per change: a merge-request pipeline when an MR is open,
-# otherwise a branch pipeline. Prevents the empty/failed MR pipeline seen on
-# MR !1 (no workflow rules meant custom jobs had no merge_request_event rule).
+# otherwise a branch pipeline.
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -13,7 +21,7 @@ workflow:
     - if: '$CI_COMMIT_BRANCH'
 
 stages:
-  - install
+  - guard
   - quality
   - test
   - security
@@ -30,43 +38,65 @@ default:
       files:
         - package-lock.json
     paths:
-      - node_modules/
+      - .npm/
+  before_script:
+    # Interim: fall back to `npm install` until package-lock.json is committed,
+    # at which point `npm ci` becomes the reproducible default.
+    - if [ -f package-lock.json ]; then npm ci --cache .npm --prefer-offline || npm install; else npm install; fi
 
-install:
-  stage: install
+# --- guard: cheap, fast-failing policy checks (from develop !7) ---------------
+
+branch-name:
+  stage: guard
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"'
+  before_script: []
+  image: alpine:3.20
   script:
-    # Interim: `npm install` until a generated package-lock.json is committed,
-    # at which point this reverts to `npm ci` for reproducible installs.
-    - npm install
-  artifacts:
-    paths:
-      - node_modules/
-    expire_in: 1 hour
+    - apk add --no-cache bash >/dev/null
+    - bash scripts/check-branch-name.sh "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"
+
+no-raw-hex:
+  stage: guard
+  before_script: []
+  image: alpine:3.20
+  script:
+    - apk add --no-cache bash grep >/dev/null
+    - bash scripts/check-no-raw-hex.sh
+
+secret-guard:
+  stage: guard
+  before_script: []
+  image: alpine:3.20
+  script:
+    - apk add --no-cache bash grep >/dev/null
+    - bash scripts/check-no-secrets.sh
+
+# --- quality: lint + typecheck across all Nx projects ------------------------
 
 lint:
   stage: quality
-  needs: [install]
   script:
     - npm run lint
 
 typecheck:
   stage: quality
-  needs: [install]
   script:
     - npm run typecheck
 
+# --- test: unit (required) + integration (informational until specs exist) ---
+
 unit-tests:
   stage: test
-  needs: [install]
   script:
-    - npm run test
+    - npm test
+  coverage: '/All files[^|]*\|[^|]*\s+([\d.]+)/'
 
 integration-tests:
   stage: test
-  needs: [install]
   # Allowed to fail until real integration tests exist AND the project-level
-  # CI_MSSQL_SA_PASSWORD variable is configured. The infrastructure package has
-  # no *.integration.spec.ts yet, so this gate is informational in Phase 1.
+  # CI_MSSQL_SA_PASSWORD variable is configured. No *.integration.spec.ts yet,
+  # so this gate is informational in Phase 1.
   allow_failure: true
   services:
     - name: mcr.microsoft.com/mssql/server:2022-latest
@@ -82,11 +112,10 @@ integration-tests:
     DB_HOST: sqlserver
     REDIS_URL: redis://redis-cache:6379
   script:
-    # Seed a disposable DB (baseline migration), run integration tests, tear down.
-    # No shared mutable state between runs.
     - npm run test:integration
 
-# Security gates. Uses GitLab-managed templates; runs as required gates.
+# --- security: GitLab-managed scanners as required gates ----------------------
+
 include:
   - template: Security/SAST.gitlab-ci.yml
   - template: Security/Dependency-Scanning.gitlab-ci.yml
