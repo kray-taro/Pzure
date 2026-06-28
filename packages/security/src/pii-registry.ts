@@ -38,6 +38,7 @@ export interface ColumnClassification {
 export const COLUMN_CLASSIFICATIONS: readonly ColumnClassification[] = [
   // patient_patients (PII) - the real ERD patient table.
   { table: 'patient_patients', column: 'patient_number', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
+  { table: 'patient_patients', column: 'national_id', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
   { table: 'patient_patients', column: 'phone_primary', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
   { table: 'patient_patients', column: 'first_name', dataClass: 'pii', fieldEncrypted: true },
   { table: 'patient_patients', column: 'last_name', dataClass: 'pii', fieldEncrypted: true },

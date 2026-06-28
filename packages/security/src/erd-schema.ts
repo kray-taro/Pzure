@@ -37,6 +37,7 @@ export interface ErdColumn {
 export const ERD_SENSITIVE_COLUMNS: readonly ErdColumn[] = [
   // patient_patients (PII) - the real ERD patient table.
   { table: 'patient_patients', column: 'patient_number', note: 'direct patient identifier' },
+  { table: 'patient_patients', column: 'national_id', note: 'national ID (high-sensitivity PII), searchable' },
   { table: 'patient_patients', column: 'first_name', note: 'name' },
   { table: 'patient_patients', column: 'last_name', note: 'name' },
   { table: 'patient_patients', column: 'dob', note: 'date of birth' },
