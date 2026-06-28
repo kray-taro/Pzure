@@ -1,0 +1,11 @@
+# DOCS-branch CI. Keeps the documentation source of truth DRY and renderable.
+# (The develop branch has its own .gitlab-ci.yml with code gates.)
+stages:
+  - guard
+
+docs-hygiene:
+  stage: guard
+  image: alpine:3.20
+  script:
+    - apk add --no-cache bash git grep sed coreutils >/dev/null
+    - bash scripts/check-docs-hygiene.sh
