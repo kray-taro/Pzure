@@ -1,0 +1,45 @@
+// Test-only SQL Server helper. Connects when DB credentials are present;
+// otherwise reports unavailable so suites can SKIP EXPLICITLY (never silently
+// pass). No application code depends on this.
+import sql from 'mssql';
+
+export interface Db {
+  pool: sql.ConnectionPool;
+  /** Run a statement under a given branch session context (or bypass). */
+  asBranch<T = unknown>(
+    branchId: string | null,
+    query: string,
+    opts?: { bypass?: boolean },
+  ): Promise<sql.IResult<T>>;
+  raw(query: string): Promise<sql.IResult<unknown>>;
+}
+
+export function dbConfigured(): boolean {
+  return Boolean(process.env.DB_HOST && (process.env.CI_MSSQL_SA_PASSWORD || process.env.MSSQL_SA_PASSWORD));
+}
+
+export async function connect(): Promise<Db> {
+  const pool = await new sql.ConnectionPool({
+    server: process.env.DB_HOST as string,
+    user: 'sa',
+    password: (process.env.CI_MSSQL_SA_PASSWORD || process.env.MSSQL_SA_PASSWORD) as string,
+    options: { trustServerCertificate: true, encrypt: false },
+    pool: { max: 4, min: 0 },
+  }).connect();
+
+  async function asBranch<T>(branchId: string | null, query: string, opts?: { bypass?: boolean }) {
+    // SESSION_CONTEXT must be set on the same connection/request that runs the
+    // query. Use a dedicated request and a single batch.
+    const setBranch = branchId
+      ? `EXEC sp_set_session_context @key=N'branch_id', @value='${branchId}';`
+      : `EXEC sp_set_session_context @key=N'branch_id', @value=NULL;`;
+    const setBypass = `EXEC sp_set_session_context @key=N'tenancy_bypass', @value=${opts?.bypass ? '1' : 'NULL'};`;
+    return pool.request().query<T>(`${setBranch}\n${setBypass}\n${query}`);
+  }
+
+  return {
+    pool,
+    asBranch,
+    raw: (query: string) => pool.request().query(query),
+  };
+}
