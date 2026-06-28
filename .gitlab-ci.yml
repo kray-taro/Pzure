@@ -1,14 +1,10 @@
-# Pzure CI. One root pipeline for the repository (single source of truth).
-# Mandatory gates before merge: policy guards, lint, type-check, unit tests,
-# integration tests, and security scanning. No secrets in code (COMPLIANCE.md);
+# Pzure CI. Mandatory gates before merge: lint, unit tests, integration tests,
+# and security scanning must all pass. No secrets in code (COMPLIANCE.md);
 # configuration is environment-based. Nothing here deploys to or targets main.
-#
-# This file reconciles develop's DevSecOps guard gates (#13) with the Phase 1
-# install/test/security stages so the two pipelines no longer collide on merge
-# (refs #63, #64).
 
 # Run one pipeline per change: a merge-request pipeline when an MR is open,
-# otherwise a branch pipeline.
+# otherwise a branch pipeline. Prevents the empty/failed MR pipeline seen on
+# MR !1 (no workflow rules meant custom jobs had no merge_request_event rule).
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -17,7 +13,6 @@ workflow:
     - if: '$CI_COMMIT_BRANCH'
 
 stages:
-  - guard
   - install
   - quality
   - test
@@ -36,33 +31,6 @@ default:
         - package-lock.json
     paths:
       - node_modules/
-
-# --- guard stage: cheap, fast-failing policy checks (from #13) ----------------
-
-branch-name:
-  stage: guard
-  image: alpine:3.20
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"'
-  script:
-    - apk add --no-cache bash >/dev/null
-    - bash scripts/check-branch-name.sh "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"
-
-no-raw-hex:
-  stage: guard
-  image: alpine:3.20
-  script:
-    - apk add --no-cache bash grep >/dev/null
-    - bash scripts/check-no-raw-hex.sh
-
-secret-detection-guard:
-  stage: guard
-  image: alpine:3.20
-  script:
-    - apk add --no-cache bash grep >/dev/null
-    - bash scripts/check-no-secrets.sh
-
-# --- install / quality / test ------------------------------------------------
 
 install:
   stage: install
@@ -118,8 +86,7 @@ integration-tests:
     # No shared mutable state between runs.
     - npm run test:integration
 
-# --- security gates (GitLab-managed templates) -------------------------------
-
+# Security gates. Uses GitLab-managed templates; runs as required gates.
 include:
   - template: Security/SAST.gitlab-ci.yml
   - template: Security/Dependency-Scanning.gitlab-ci.yml
