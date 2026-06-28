@@ -1,0 +1,78 @@
+# Pzure CI - DevSecOps foundation (#13)
+#
+# Design goals (Designing Data-Intensive Applications - Reliability,
+# Scalability, Maintainability):
+# - Reliability: every correctness invariant is a required, automated gate; a
+#   red pipeline blocks merge. No invariant relies on human/agent discipline.
+# - Maintainability: stages are small, single-responsibility and cacheable;
+#   failures point at one cause.
+# - Scalability: jobs are independent and run in parallel; the matrix grows by
+#   adding packages, not by rewriting the pipeline.
+#
+# SOLID/DRY: tokens.json is the single source of truth (DRY). The drift test
+# enforces it. The raw-hex guard enforces Dependency Inversion: components
+# depend on the semantic token abstraction, never on primitive hex.
+
+stages:
+  - guard
+  - lint
+  - typecheck
+  - test
+
+default:
+  image: node:20-alpine
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .npm/
+  before_script:
+    - corepack enable || true
+    - if [ -f package-lock.json ]; then npm ci --cache .npm --prefer-offline || npm install; else npm install; fi
+
+# --- guard stage: cheap, fast-failing policy checks ---------------------------
+
+branch-name:
+  stage: guard
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"'
+  before_script: []
+  image: alpine:3.20
+  script:
+    - apk add --no-cache bash >/dev/null
+    - bash scripts/check-branch-name.sh "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"
+
+no-raw-hex:
+  stage: guard
+  before_script: []
+  image: alpine:3.20
+  script:
+    - apk add --no-cache bash grep >/dev/null
+    - bash scripts/check-no-raw-hex.sh
+
+secret-detection:
+  stage: guard
+  before_script: []
+  image: alpine:3.20
+  script:
+    - apk add --no-cache bash grep >/dev/null
+    - bash scripts/check-no-secrets.sh
+
+# --- lint / typecheck / test -------------------------------------------------
+
+lint:
+  stage: lint
+  script:
+    - npm run lint
+
+typecheck:
+  stage: typecheck
+  script:
+    - npm run typecheck
+
+test:
+  stage: test
+  script:
+    - npm test
+  coverage: '/All files[^|]*\|[^|]*\s+([\d.]+)/'
