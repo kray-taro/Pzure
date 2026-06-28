@@ -11,6 +11,8 @@
  * for exact-match lookup (encrypted fields cannot be queried directly).
  */
 
+import { isSensitiveTableByConvention } from './erd-schema';
+
 export type DataClass = 'pii' | 'phi' | 'internal' | 'public';
 
 export interface ColumnClassification {
@@ -48,6 +50,7 @@ export const COLUMN_CLASSIFICATIONS: readonly ColumnClassification[] = [
   { table: 'emr_clinical_notes', column: 'note_text', dataClass: 'phi', fieldEncrypted: true },
 
   // Other PII/PHI outside the convention tables (still in encryption scope).
+  { table: 'core_users', column: 'full_name', dataClass: 'pii', fieldEncrypted: true },
   { table: 'core_users', column: 'email', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
   { table: 'billing_payments', column: 'mpesa_receipt_number', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
   { table: 'lab_results', column: 'numeric_value', dataClass: 'phi', fieldEncrypted: true },
@@ -63,7 +66,11 @@ export function isSensitive(c: ColumnClassification): boolean {
   return c.dataClass === 'pii' || c.dataClass === 'phi';
 }
 
-/** Naming convention: patient_* tables and emr_clinical_notes are sensitive by location. */
+/**
+ * Naming convention: patient_* tables and emr_clinical_notes are sensitive by
+ * location. Re-exported from the single definition in `erd-schema.ts` so the
+ * registry and the manifest cannot drift (DRY).
+ */
 export function isSensitiveByConvention(table: string): boolean {
-  return table.startsWith('patient_') || table === 'emr_clinical_notes';
+  return isSensitiveTableByConvention(table);
 }
