@@ -1,0 +1,48 @@
+{
+  "$schema": "./tenancy-scoping.schema.json",
+  "description": "Machine-readable tenancy classification for every table in DOCS/Unified_ERD.md. Single source of truth behind ADR-001 Section 6.1/6.4. The migration guard (scripts/check-tenancy-scoping.mjs, ADR-001 test 7) fails CI if any ERD table is missing here, or if a transactional table lacks an RLS policy once migrations exist.",
+  "sessionContextKey": "branch_id",
+  "classes": {
+    "master": "Org-scoped reference/master data: carries organisation_id (or is global). Not branch-partitioned; readable across an org's branches.",
+    "direct": "Transactional, owns a branch_id column. RLS: filter + block predicate on branch_id = SESSION_CONTEXT('branch_id').",
+    "inheritance": "Transactional, no branch_id column. Reaches the owning branch via the documented FK chain. RLS: denormalised branch_id (preferred) OR a join-based security predicate function."
+  },
+  "tables": {
+    "core_organisations": { "class": "master", "note": "top-level tenant root" },
+    "core_branches": { "class": "direct", "branchColumn": "id", "note": "the branch itself; RLS scopes a user to their allowed branch ids" },
+    "core_users": { "class": "master", "scopeColumn": "organisation_id" },
+    "core_roles": { "class": "master", "note": "global lookup" },
+    "core_user_roles": { "class": "master", "note": "join over org-scoped users/roles" },
+    "core_branch_users": { "class": "direct", "branchColumn": "branch_id" },
+    "patient_patients": { "class": "master", "scopeColumn": "organisation_id", "note": "patient may roam across branches within an org" },
+    "patient_allergies": { "class": "inheritance", "fk": "patient_id", "parent": "patient_patients", "resolvesTo": "organisation_id", "note": "org-scoped via patient, not branch-scoped" },
+
+    "terminology_code_systems": { "class": "master" },
+    "terminology_diagnosis_codes": { "class": "master", "fk": "code_system_id", "parent": "terminology_code_systems" },
+    "pharmacy_drug_ingredients": { "class": "master" },
+    "inventory_products": { "class": "master" },
+    "pharmacy_product_ingredient_map": { "class": "master", "fk": "product_id", "parent": "inventory_products" },
+
+    "emr_visits": { "class": "direct", "branchColumn": "branch_id" },
+    "emr_clinical_notes": { "class": "inheritance", "fk": "visit_id", "parent": "emr_visits", "resolvesTo": "branch_id" },
+    "emr_diagnoses": { "class": "inheritance", "fk": "visit_id", "parent": "emr_visits", "resolvesTo": "branch_id" },
+    "pharmacy_prescriptions": { "class": "inheritance", "fk": "visit_id", "parent": "emr_visits", "resolvesTo": "branch_id" },
+    "pharmacy_dispenses": { "class": "direct", "branchColumn": "branch_id" },
+
+    "lab_tests": { "class": "master", "note": "global test catalogue" },
+    "lab_orders": { "class": "inheritance", "fk": "visit_id", "parent": "emr_visits", "resolvesTo": "branch_id" },
+    "lab_samples": { "class": "inheritance", "fk": "order_id", "parent": "lab_orders", "resolvesTo": "branch_id" },
+    "lab_results": { "class": "inheritance", "fk": "sample_id", "parent": "lab_samples", "resolvesTo": "branch_id" },
+
+    "billing_sales": { "class": "direct", "branchColumn": "branch_id" },
+    "billing_invoices": { "class": "inheritance", "fk": "sale_id", "parent": "billing_sales", "resolvesTo": "branch_id" },
+    "billing_payments": { "class": "inheritance", "fk": "sale_id", "parent": "billing_sales", "resolvesTo": "branch_id" },
+    "claims_tariffs": { "class": "master", "fk": "payer_id", "note": "payer tariff catalogue, org/global" },
+    "claims_claims": { "class": "inheritance", "fk": "visit_id", "parent": "emr_visits", "resolvesTo": "branch_id", "note": "analytical reads eventual-consistent; submission online-only (ADR-008/012)" },
+
+    "inventory_suppliers": { "class": "master" },
+    "inventory_purchase_orders": { "class": "direct", "branchColumn": "branch_id" },
+    "inventory_stock_batches": { "class": "direct", "branchColumn": "branch_id" },
+    "inventory_stock_movements": { "class": "inheritance", "fk": "batch_id", "parent": "inventory_stock_batches", "resolvesTo": "branch_id" }
+  }
+}
