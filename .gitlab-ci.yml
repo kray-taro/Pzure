@@ -1,0 +1,57 @@
+# Pzure DOCS branch CI - documentation verification loop (#56)
+#
+# DDIA reliability: documentation invariants (consistent DR targets, valid
+# links, lintable markdown) are machine-checked gates, not human discipline.
+# This pipeline runs on the DOCS branch and on MRs targeting DOCS.
+
+stages:
+  - consistency
+  - lint
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "DOCS"'
+    - if: '$CI_COMMIT_BRANCH == "DOCS"'
+
+# --- consistency stage: fast-failing policy checks ---------------------------
+
+dr-consistency:
+  stage: consistency
+  image: alpine:3.20
+  script:
+    - apk add --no-cache bash grep >/dev/null
+    - bash scripts/check-dr-consistency.sh
+
+link-check:
+  stage: consistency
+  image: alpine:3.20
+  script:
+    - apk add --no-cache bash grep coreutils >/dev/null
+    - bash scripts/check-docs-links.sh
+
+# --- lint stage --------------------------------------------------------------
+
+# Lint ONLY the markdown files changed in this MR, and BLOCK on any violation.
+# Rationale: the legacy DOCS corpus carries pre-existing violations that are
+# being burned down separately (#68 / !23). Until that lands, scoping to
+# changed files keeps the gate a real signal for new/edited docs without
+# blocking on unrelated debt and without disabling rules. Full-tree blocking
+# is enabled in !23 once the corpus is clean. Rule set: .markdownlint.jsonc.
+markdownlint:changed:
+  stage: lint
+  image: node:20-alpine
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "DOCS"'
+  script:
+    - apk add --no-cache git >/dev/null
+    - git fetch --depth=50 origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+    - |
+      CHANGED=$(git diff --name-only --diff-filter=ACMR \
+        "origin/${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}...HEAD" -- '*.md' | grep '\.md$' || true)
+      if [ -z "$CHANGED" ]; then
+        echo "No changed markdown files; nothing to lint."
+        exit 0
+      fi
+      echo "Linting changed markdown files:"
+      echo "$CHANGED"
+      echo "$CHANGED" | xargs npx --yes markdownlint-cli2@0.13.0
