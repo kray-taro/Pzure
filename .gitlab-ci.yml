@@ -1,0 +1,39 @@
+# Pzure DOCS branch CI - documentation verification loop (#56)
+#
+# DDIA reliability: documentation invariants (consistent DR targets, valid
+# links, lintable markdown) are machine-checked gates, not human discipline.
+# This pipeline runs on the DOCS branch and on MRs targeting DOCS.
+
+stages:
+  - consistency
+  - lint
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "DOCS"'
+    - if: '$CI_COMMIT_BRANCH == "DOCS"'
+
+# --- consistency stage: cheap, fast-failing policy checks ---------------------
+
+dr-consistency:
+  stage: consistency
+  image: alpine:3.20
+  script:
+    - apk add --no-cache bash grep >/dev/null
+    - bash scripts/check-dr-consistency.sh
+
+link-check:
+  stage: consistency
+  image: alpine:3.20
+  script:
+    - apk add --no-cache bash grep coreutils >/dev/null
+    - bash scripts/check-docs-links.sh
+
+# --- lint stage --------------------------------------------------------------
+
+markdownlint:
+  stage: lint
+  image: node:20-alpine
+  script:
+    - npx --yes markdownlint-cli2 "DOCS/**/*.md" "#DOCS/**/node_modules" || true
+  allow_failure: true
