@@ -29,6 +29,7 @@ GO
 CREATE TABLE dbo.processed_message (
     message_id      UNIQUEIDENTIFIER    NOT NULL,
     consumer        NVARCHAR(200)       NOT NULL,
+    branch_id       NVARCHAR(64)        NOT NULL,
     processed_at    DATETIME2(3)        NOT NULL CONSTRAINT DF_processed_at DEFAULT SYSUTCDATETIME(),
     expires_at      DATETIME2(3)        NOT NULL,
     CONSTRAINT PK_processed_message PRIMARY KEY (message_id, consumer)
@@ -57,7 +58,7 @@ CREATE TABLE dbo.audit_event (
     subject_type    NVARCHAR(120)       NOT NULL,
     subject_id      NVARCHAR(128)       NOT NULL,
     branch_id       NVARCHAR(64)        NOT NULL,
-    authorized_pin  NVARCHAR(64)        NULL,
+    authorized_by_subject_id NVARCHAR(64) NULL,  -- pharmacist who PIN-authorized (ADR-004); never the PIN/hash
     occurred_at     DATETIME2(3)        NOT NULL CONSTRAINT DF_audit_occurred DEFAULT SYSUTCDATETIME()
 );
 GO

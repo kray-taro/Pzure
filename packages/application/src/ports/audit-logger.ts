@@ -10,8 +10,14 @@ export interface AuditEvent {
   readonly subjectId: string;
   readonly branchId: string;
   readonly occurredAt: Date;
-  /** Set when a pharmacist PIN authorized the action (ADR-004). */
-  readonly authorizedByPin?: string;
+  /**
+   * Set when a pharmacist PIN step-up authorized the action (ADR-004).
+   * Holds the authorizing pharmacist's subject id (a non-secret reference) —
+   * NEVER the PIN or its hash. The PIN exists only as a bcrypt `pin_hash` in
+   * `core_users`; the audit log records the fact of authorization, not the
+   * secret, so the append-only log can never leak a credential.
+   */
+  readonly authorizedBySubjectId?: string;
 }
 
 export interface AuditLogger {
