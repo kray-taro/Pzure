@@ -13,6 +13,7 @@ import {
   buildDenormBranchTrigger,
   buildBranchSetPolicy,
   buildOrgInheritanceTvfPredicate,
+  buildOrgScopedPolicy,
 } from '../../scripts/lib/rls-sql.mjs';
 import { connect, dbConfigured, type Db } from './db';
 
@@ -54,6 +55,9 @@ run('ADR-001 §6.4 RLS isolation (live SQL Server)', () => {
       IF OBJECT_ID('dbo.fn_rls_t_allergy','IF') IS NOT NULL DROP FUNCTION dbo.fn_rls_t_allergy;
       IF OBJECT_ID('dbo.t_child','U') IS NOT NULL DROP TABLE dbo.t_child;
       IF OBJECT_ID('dbo.t_denorm','U') IS NOT NULL DROP TABLE dbo.t_denorm;
+      IF OBJECT_ID('dbo.sp_t_orgmaster','SP') IS NOT NULL DROP SECURITY POLICY dbo.sp_t_orgmaster;
+      IF OBJECT_ID('dbo.fn_rls_t_orgmaster','IF') IS NOT NULL DROP FUNCTION dbo.fn_rls_t_orgmaster;
+      IF OBJECT_ID('dbo.t_orgmaster','U') IS NOT NULL DROP TABLE dbo.t_orgmaster;
       IF OBJECT_ID('dbo.t_allergy','U') IS NOT NULL DROP TABLE dbo.t_allergy;
       IF OBJECT_ID('dbo.t_patients','U') IS NOT NULL DROP TABLE dbo.t_patients;
       IF OBJECT_ID('dbo.t_branch_users','U') IS NOT NULL DROP TABLE dbo.t_branch_users;
@@ -257,5 +261,28 @@ run('ADR-001 §6.4 RLS isolation (live SQL Server)', () => {
     // No org context -> fail-closed (zero rows), never cross-org leak.
     const none = await db.asOrg(null, 'SELECT COUNT(*) AS n FROM dbo.t_allergy;');
     expect(none.recordset[0].n).toBe(0);
+  });
+
+  it('T10 org-private master: org-scoped reference PII (e.g. patient_patients/core_users) is NOT cross-org readable', async () => {
+    // The leak finding: a `master` table that OWNS organisation_id must carry an
+    // org RLS policy, not be globally visible. t_orgmaster models that.
+    const ORG1 = '77777777-7777-7777-7777-777777777777';
+    const ORG2 = '88888888-8888-8888-8888-888888888888';
+    await db.raw(`
+      IF OBJECT_ID('dbo.sp_t_orgmaster','SP') IS NOT NULL DROP SECURITY POLICY dbo.sp_t_orgmaster;
+      IF OBJECT_ID('dbo.fn_rls_t_orgmaster','IF') IS NOT NULL DROP FUNCTION dbo.fn_rls_t_orgmaster;
+      IF OBJECT_ID('dbo.t_orgmaster','U') IS NOT NULL DROP TABLE dbo.t_orgmaster;
+      CREATE TABLE dbo.t_orgmaster (id uniqueidentifier NOT NULL PRIMARY KEY, organisation_id uniqueidentifier NOT NULL, label nvarchar(50) NULL);
+      INSERT INTO dbo.t_orgmaster (id, organisation_id, label) VALUES (NEWID(), '${ORG1}', 'org1-pii'), (NEWID(), '${ORG2}', 'org2-pii');
+    `);
+    // It OWNS organisation_id, so it uses buildOrgScopedPolicy (not a TVF).
+    await db.raw(buildOrgScopedPolicy({ table: 't_orgmaster', orgColumn: 'organisation_id' }));
+    const seen = await db.asOrg(ORG1, 'SELECT label FROM dbo.t_orgmaster;');
+    expect(seen.recordset.map((x: { label: string }) => x.label)).toEqual(['org1-pii']);
+    // Org-2 must see zero of org-1's rows (no cross-org leak).
+    const cross = await db.asOrg(ORG1, `SELECT COUNT(*) AS n FROM dbo.t_orgmaster WHERE label = 'org2-pii';`);
+    expect(cross.recordset[0].n).toBe(0);
+    const nullOrg = await db.asOrg(null, 'SELECT COUNT(*) AS n FROM dbo.t_orgmaster;');
+    expect(nullOrg.recordset[0].n).toBe(0);
   });
 });

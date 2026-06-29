@@ -3,18 +3,18 @@
   "description": "Machine-readable tenancy classification for every table in DOCS/Unified_ERD.md. Single source of truth behind ADR-001 Section 6.1/6.4. The migration guard (scripts/check-tenancy-scoping.mjs, ADR-001 test 7) fails CI if any ERD table is missing here, or if a transactional table lacks an RLS policy once migrations exist.",
   "sessionContextKey": "branch_id",
   "classes": {
-    "master": "Org-scoped reference/master data: carries organisation_id (or is global). Not branch-partitioned; readable across an org's branches.",
+    "master": "Reference/master data, NOT branch-partitioned. Two sub-kinds, distinguished by scopeColumn: (a) GLOBAL lookup (no scopeColumn) — instance-wide, needs no RLS; (b) ORG-PRIVATE (scopeColumn: organisation_id) — readable across an org's branches but MUST be org-isolated via an org RLS policy (the guard requires one), never globally readable.",
     "direct": "Transactional, owns a branch_id column. RLS: filter + block predicate on branch_id = SESSION_CONTEXT('branch_id').",
     "inheritance": "Transactional, no branch_id column. Reaches the owning branch via the documented FK chain. RLS: denormalised branch_id (preferred) OR a join-based security predicate function."
   },
   "tables": {
     "core_organisations": { "class": "master", "note": "top-level tenant root" },
     "core_branches": { "class": "direct", "branchColumn": "id", "scopeBy": "grant_set", "grantTable": "core_branch_users", "note": "the branch itself; visibility is the user's branch GRANT SET (core_branch_users), not the single session branch — a user may span multiple branches (buildBranchSetPolicy)" },
-    "core_users": { "class": "master", "scopeColumn": "organisation_id" },
+    "core_users": { "class": "master", "scopeColumn": "organisation_id", "note": "org-private: each org's users must NOT be visible to other orgs; requires an org RLS policy (buildOrgScopedPolicy)" },
     "core_roles": { "class": "master", "note": "global lookup" },
     "core_user_roles": { "class": "master", "note": "join over org-scoped users/roles" },
     "core_branch_users": { "class": "direct", "branchColumn": "branch_id" },
-    "patient_patients": { "class": "master", "scopeColumn": "organisation_id", "note": "patient may roam across branches within an org" },
+    "patient_patients": { "class": "master", "scopeColumn": "organisation_id", "note": "patient PII; may roam across branches WITHIN an org but is org-private — requires an org RLS policy (buildOrgScopedPolicy), never cross-org readable" },
     "patient_allergies": { "class": "inheritance", "fk": "patient_id", "parent": "patient_patients", "resolvesTo": "organisation_id", "orgVia": "tvf", "note": "org-scoped via patient (no own organisation_id column); RLS reaches organisation_id through patient_id -> patient_patients via buildOrgInheritanceTvfPredicate" },
 
     "terminology_code_systems": { "class": "master" },

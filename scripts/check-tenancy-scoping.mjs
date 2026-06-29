@@ -110,18 +110,48 @@ function tableHasPolicy(ddl, table) {
 // org table. The function body is captured deterministically up to a GO batch
 // separator on its OWN line (multiline), not the first word 'go' anywhere.
 const SESSION_KEY_FOR_SCOPE = { org: 'organisation_id', branch: 'branch_id' };
-function policyScopesByKind(ddl, table, scope) {
-  const sessionKey = SESSION_KEY_FOR_SCOPE[scope];
-  if (!sessionKey) return false;
-  const t = escapeRe(table);
-  const fnMatch = new RegExp(
-    `create\\s+function\\s+(?:\\[?dbo\\]?\\.)?\\[?fn_rls_${t}\\]?[\\s\\S]*?^\\s*go\\s*$`,
+
+// Extract the body of a named CREATE FUNCTION up to a GO on its own line.
+function functionBody(ddl, fnName) {
+  const f = escapeRe(fnName);
+  const m = new RegExp(
+    `create\\s+function\\s+(?:\\[?dbo\\]?\\.)?\\[?${f}\\]?[\\s\\S]*?^\\s*go\\s*$`,
     'im',
   ).exec(ddl);
-  if (!fnMatch) return false;
-  // Match SESSION_CONTEXT(N'<key>') tolerant of whitespace/quote style.
-  const keyRe = new RegExp(`session_context\\s*\\(\\s*n?['"]${escapeRe(sessionKey)}['"]\\s*\\)`, 'i');
-  return keyRe.test(fnMatch[0]);
+  return m ? m[0] : null;
+}
+
+function readsSessionKey(body, key) {
+  return new RegExp(`session_context\\s*\\(\\s*n?['"]${escapeRe(key)}['"]\\s*\\)`, 'i').test(body);
+}
+
+// Verify the table's CREATE SECURITY POLICY binds a predicate function whose
+// body (a) reads the EXPECTED scope's session key and (b) does NOT read the
+// other scope's key (exclusive-or), so scope kind is enforced, not inferred.
+// The function checked is the one the policy actually binds (parsed from
+// ADD FILTER PREDICATE <fn>(...)), not merely a same-named function nearby.
+function policyScopesByKind(ddl, table, scope) {
+  const expectedKey = SESSION_KEY_FOR_SCOPE[scope];
+  const otherKey = SESSION_KEY_FOR_SCOPE[scope === 'org' ? 'branch' : 'org'];
+  if (!expectedKey) return false;
+  const t = escapeRe(table);
+  // The function bound by this table's security policy.
+  const bind = new RegExp(
+    `create\\s+security\\s+policy[\\s\\S]*?add\\s+filter\\s+predicate\\s+(?:\\[?dbo\\]?\\.)?\\[?([A-Za-z0-9_]+)\\]?\\s*\\([\\s\\S]*?on\\s+(?:\\[?dbo\\]?\\.)?\\[?${t}\\]?(?![A-Za-z0-9_])`,
+    'i',
+  ).exec(ddl);
+  if (!bind) return false;
+  const body = functionBody(ddl, bind[1]);
+  if (!body) return false;
+  return readsSessionKey(body, expectedKey) && !readsSessionKey(body, otherKey);
+}
+
+// A table needs an org-scoped policy if it owns organisation_id (declared via
+// scopeColumn), regardless of class. This catches org-private `master` tables
+// (patient_patients, core_users) that would otherwise ship with NO RLS and
+// leak across organisations.
+function requiresOrgPolicy(entry) {
+  return entry.scopeColumn === 'organisation_id';
 }
 
 function escapeRe(s) {
@@ -217,31 +247,33 @@ function main() {
     }
   }
 
-  // 6. RLS policy attachment (only once migrations exist). resolvesTo-aware:
-  //    a branch-resolving transactional table must carry a BRANCH policy; an
-  //    org-resolving inheritance table (e.g. patient_allergies) must carry an
-  //    ORG policy and must NOT be forced into a branch policy.
+  // 6. RLS policy attachment (only once migrations exist). A table needs a
+  //    policy if it is transactional (branch/org-resolving) OR it owns
+  //    organisation_id (org-private reference data, e.g. patient_patients,
+  //    core_users — these are `master` but MUST be org-isolated, not global).
+  //    Genuinely-global masters (no organisation_id) need none.
   const sqlFiles = findSqlMigrations(ROOT);
   if (sqlFiles.length > 0) {
     const ddl = sqlFiles.map((f) => readFileSync(f, 'utf8')).join('\n');
     for (const [name, entry] of Object.entries(map.tables)) {
-      if (!TRANSACTIONAL.has(entry.class)) continue;
+      const needsPolicy = TRANSACTIONAL.has(entry.class) || requiresOrgPolicy(entry);
+      if (!needsPolicy) continue;
       if (!erd.tables[name]) continue;
       // A table is "present in schema" if a CREATE TABLE for it exists; only then
       // do we require an RLS policy (tables not yet migrated are not yet a risk).
       if (!tableIsCreated(ddl, name)) continue;
-      const scope = scopeTarget(name, map);
+      // org-private master/reference data is org-scoped; everything else here is
+      // branch- or org-resolving per its classification.
+      const scope = requiresOrgPolicy(entry) ? 'org' : scopeTarget(name, map);
       if (!tableHasPolicy(ddl, name)) {
         errors.push(
-          `transactional table '${name}' is created in a migration but has no CREATE SECURITY POLICY ` +
-            `(ADR-001 §6.4; expected a ${scope}-scoped policy)`,
+          `table '${name}' is created in a migration but has no CREATE SECURITY POLICY ` +
+            `(ADR-001 §6.4; expected a ${scope}-scoped policy` +
+            `${requiresOrgPolicy(entry) ? ' — org-private reference data must not be globally readable' : ''})`,
         );
       } else if (!policyScopesByKind(ddl, name, scope)) {
-        // A policy exists but its predicate reads the WRONG session key — e.g. an
-        // org table given a branch policy (both bind the same FK column, so this
-        // is the only reliable discriminator).
         errors.push(
-          `transactional table '${name}' has a security policy that does not read ` +
+          `table '${name}' has a security policy that does not read ` +
             `SESSION_CONTEXT(N'${SESSION_KEY_FOR_SCOPE[scope]}') (expected a ${scope}-scoped predicate; ADR-001 §6.4)`,
         );
       }
