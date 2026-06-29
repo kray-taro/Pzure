@@ -10,7 +10,7 @@
 A regulated health platform needs defined RPO/RTO and tested restores before pilot.
 
 ## 4. Decision Outcome
-**Chosen (Approved — authoritative DR targets):**
+**Chosen (Approved — authoritative DR targets):** `RPO <= 15 min / RTO <= 4h`.
 - **RPO ≤ 15 min** via Azure SQL point-in-time restore.
 - **RTO ≤ 4h** for production restoration.
 - Automated SQL backups; **PITR retention ≥ 35 days** (longer if compliance requires); **geo-redundant** backup storage.
