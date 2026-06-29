@@ -251,12 +251,11 @@ run('ADR-001 §6.4 RLS isolation (live SQL Server)', () => {
     await db.raw(
       buildOrgInheritanceTvfPredicate({ table: 't_allergy', fkColumn: 'patient_id', parentTable: 't_patients', parentKey: 'id', parentOrgColumn: 'organisation_id' }),
     );
-    const setOrg = (org: string | null, q: string) =>
-      db.raw(`EXEC sp_set_session_context @key=N'organisation_id', @value=${org ? `'${org}'` : 'NULL'};\n${q}`);
-    const r1 = await setOrg(ORG1, 'SELECT label FROM dbo.t_allergy;');
+    // Route through the parameterised asOrg helper (no interpolated SQL).
+    const r1 = await db.asOrg(ORG1, 'SELECT label FROM dbo.t_allergy;');
     expect(r1.recordset.map((x: { label: string }) => x.label)).toEqual(['org1-allergy']);
     // No org context -> fail-closed (zero rows), never cross-org leak.
-    const none = await setOrg(null, 'SELECT COUNT(*) AS n FROM dbo.t_allergy;');
+    const none = await db.asOrg(null, 'SELECT COUNT(*) AS n FROM dbo.t_allergy;');
     expect(none.recordset[0].n).toBe(0);
   });
 });

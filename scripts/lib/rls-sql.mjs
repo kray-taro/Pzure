@@ -198,27 +198,10 @@ export function buildOrgInheritanceTvfPredicate({
   parentKey = 'id',
   parentOrgColumn = 'organisation_id',
 }) {
-  for (const [v, role] of [
-    [schema, 'schema'], [table, 'table'], [fkColumn, 'fkColumn'],
-    [parentTable, 'parentTable'], [parentKey, 'parentKey'], [parentOrgColumn, 'parentOrgColumn'],
-  ]) assertIdent(v, role);
-  const fn = `${schema}.fn_rls_${table}`;
-  return [
-    `CREATE FUNCTION ${fn}(@${fkColumn} uniqueidentifier)`,
-    `    RETURNS TABLE WITH SCHEMABINDING`,
-    `AS RETURN`,
-    `    SELECT 1 AS rls_ok`,
-    `    FROM ${schema}.${parentTable} AS p`,
-    `    WHERE p.${parentKey} = @${fkColumn}`,
-    `      AND (p.${parentOrgColumn} = ${SESSION_ORG} OR ${SESSION_BYPASS} = 1);`,
-    `GO`,
-    `CREATE SECURITY POLICY ${schema}.sp_${table}`,
-    `    ADD FILTER PREDICATE ${fn}(${fkColumn}) ON ${schema}.${table},`,
-    `    ADD BLOCK PREDICATE ${fn}(${fkColumn}) ON ${schema}.${table} AFTER INSERT,`,
-    `    ADD BLOCK PREDICATE ${fn}(${fkColumn}) ON ${schema}.${table} AFTER UPDATE`,
-    `    WITH (STATE = ON);`,
-    `GO`,
-  ].join('\n');
+  return buildInheritanceTvf({
+    schema, table, fkColumn, parentTable, parentKey,
+    parentScopeColumn: parentOrgColumn, sessionFn: SESSION_ORG,
+  });
 }
 
 /**
@@ -308,17 +291,22 @@ export function buildBranchSetPolicy({
  * that deliberately opt out of a denormalised column.
  * @param {{ schema?: string, table: string, fkColumn: string, parentTable: string, parentKey?: string, parentBranchColumn?: string }} o
  */
-export function buildInheritanceTvfPredicate({
+// Internal: join-based TVF predicate that resolves a scope column on the FK
+// parent against a session function. Both the branch and org inheritance TVFs
+// are this exact shape; they differ only in the session function and the parent
+// scope column, so they share one implementation (SOLID/DRY) and can't drift.
+function buildInheritanceTvf({
   schema = 'dbo',
   table,
   fkColumn,
   parentTable,
   parentKey = 'id',
-  parentBranchColumn = 'branch_id',
+  parentScopeColumn,
+  sessionFn,
 }) {
   for (const [v, role] of [
     [schema, 'schema'], [table, 'table'], [fkColumn, 'fkColumn'],
-    [parentTable, 'parentTable'], [parentKey, 'parentKey'], [parentBranchColumn, 'parentBranchColumn'],
+    [parentTable, 'parentTable'], [parentKey, 'parentKey'], [parentScopeColumn, 'parentScopeColumn'],
   ]) assertIdent(v, role);
   const fn = `${schema}.fn_rls_${table}`;
   return [
@@ -328,7 +316,7 @@ export function buildInheritanceTvfPredicate({
     `    SELECT 1 AS rls_ok`,
     `    FROM ${schema}.${parentTable} AS p`,
     `    WHERE p.${parentKey} = @${fkColumn}`,
-    `      AND (p.${parentBranchColumn} = ${SESSION_BRANCH} OR ${SESSION_BYPASS} = 1);`,
+    `      AND (p.${parentScopeColumn} = ${sessionFn} OR ${SESSION_BYPASS} = 1);`,
     `GO`,
     `CREATE SECURITY POLICY ${schema}.sp_${table}`,
     `    ADD FILTER PREDICATE ${fn}(${fkColumn}) ON ${schema}.${table},`,
@@ -337,4 +325,18 @@ export function buildInheritanceTvfPredicate({
     `    WITH (STATE = ON);`,
     `GO`,
   ].join('\n');
+}
+
+export function buildInheritanceTvfPredicate({
+  schema = 'dbo',
+  table,
+  fkColumn,
+  parentTable,
+  parentKey = 'id',
+  parentBranchColumn = 'branch_id',
+}) {
+  return buildInheritanceTvf({
+    schema, table, fkColumn, parentTable, parentKey,
+    parentScopeColumn: parentBranchColumn, sessionFn: SESSION_BRANCH,
+  });
 }

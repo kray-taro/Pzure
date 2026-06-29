@@ -102,23 +102,26 @@ function tableHasPolicy(ddl, table) {
   ).test(ddl);
 }
 
-// Verify the policy actually scopes on the EXPECTED column, not merely that
-// some policy exists. The predicate function fn_rls_<table> must reference the
-// scope column (organisation_id for org tables, branch_id for branch tables),
-// so an org table mistakenly given a branch policy is caught.
-// `expectedColumns` is one or more acceptable scope columns (an org-inheritance
-// table binds its FK column, not organisation_id, since it has no such column).
-// The function body is captured deterministically up to a GO batch separator on
-// its OWN line (multiline), not the first word 'go' anywhere in the text.
-function policyScopesOn(ddl, table, expectedColumns) {
-  const cols = Array.isArray(expectedColumns) ? expectedColumns : [expectedColumns];
+// Verify the policy enforces the EXPECTED SCOPE KIND, not merely that some
+// policy exists. The discriminator is the SESSION CONTEXT KEY the predicate
+// function reads (N'organisation_id' for org, N'branch_id' for branch) — NOT a
+// column name: an org-inheritance table and a (wrong) branch TVF on it both
+// bind the same FK column, so column matching would pass a branch policy on an
+// org table. The function body is captured deterministically up to a GO batch
+// separator on its OWN line (multiline), not the first word 'go' anywhere.
+const SESSION_KEY_FOR_SCOPE = { org: 'organisation_id', branch: 'branch_id' };
+function policyScopesByKind(ddl, table, scope) {
+  const sessionKey = SESSION_KEY_FOR_SCOPE[scope];
+  if (!sessionKey) return false;
   const t = escapeRe(table);
   const fnMatch = new RegExp(
     `create\\s+function\\s+(?:\\[?dbo\\]?\\.)?\\[?fn_rls_${t}\\]?[\\s\\S]*?^\\s*go\\s*$`,
     'im',
   ).exec(ddl);
   if (!fnMatch) return false;
-  return cols.some((c) => new RegExp(`\\b${escapeRe(c)}\\b`, 'i').test(fnMatch[0]));
+  // Match SESSION_CONTEXT(N'<key>') tolerant of whitespace/quote style.
+  const keyRe = new RegExp(`session_context\\s*\\(\\s*n?['"]${escapeRe(sessionKey)}['"]\\s*\\)`, 'i');
+  return keyRe.test(fnMatch[0]);
 }
 
 function escapeRe(s) {
@@ -228,25 +231,18 @@ function main() {
       // do we require an RLS policy (tables not yet migrated are not yet a risk).
       if (!tableIsCreated(ddl, name)) continue;
       const scope = scopeTarget(name, map);
-      // An org-resolving INHERITANCE table has no organisation_id column; its
-      // predicate binds the FK column it reaches the org through. Accept either
-      // the scope column or that FK so the guard demands a creatable policy.
-      const entryT = map.tables[name];
-      const expectedColumns =
-        scope === 'org'
-          ? (entryT.class === 'inheritance' ? [entryT.fk, 'organisation_id'] : ['organisation_id'])
-          : [entryT.branchColumn ?? 'branch_id'];
       if (!tableHasPolicy(ddl, name)) {
         errors.push(
           `transactional table '${name}' is created in a migration but has no CREATE SECURITY POLICY ` +
             `(ADR-001 §6.4; expected a ${scope}-scoped policy)`,
         );
-      } else if (!policyScopesOn(ddl, name, expectedColumns)) {
-        // A policy exists but its predicate does not reference any expected
-        // scope column — e.g. an org table mistakenly given a branch policy.
+      } else if (!policyScopesByKind(ddl, name, scope)) {
+        // A policy exists but its predicate reads the WRONG session key — e.g. an
+        // org table given a branch policy (both bind the same FK column, so this
+        // is the only reliable discriminator).
         errors.push(
-          `transactional table '${name}' has a security policy that does not scope on ` +
-            `${expectedColumns.map((c) => `'${c}'`).join(' or ')} (expected a ${scope}-scoped predicate; ADR-001 §6.4)`,
+          `transactional table '${name}' has a security policy that does not read ` +
+            `SESSION_CONTEXT(N'${SESSION_KEY_FOR_SCOPE[scope]}') (expected a ${scope}-scoped predicate; ADR-001 §6.4)`,
         );
       }
     }

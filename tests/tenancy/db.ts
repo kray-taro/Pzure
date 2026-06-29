@@ -9,8 +9,10 @@ export interface Db {
   asBranch<T = unknown>(
     branchId: string | null,
     query: string,
-    opts?: { bypass?: boolean; userId?: string | null },
+    opts?: { bypass?: boolean; userId?: string | null; orgId?: string | null },
   ): Promise<sql.IResult<T>>;
+  /** Run a statement under a given organisation session context (no branch). */
+  asOrg<T = unknown>(orgId: string | null, query: string): Promise<sql.IResult<T>>;
   raw(query: string): Promise<sql.IResult<unknown>>;
 }
 
@@ -64,17 +66,28 @@ export async function connect(): Promise<Db> {
     const request = pool.request();
     request.input('p_branch_id', sql.UniqueIdentifier, branchId);
     request.input('p_user_id', sql.UniqueIdentifier, opts?.userId ?? null);
+    request.input('p_org_id', sql.UniqueIdentifier, opts?.orgId ?? null);
     request.input('p_bypass', sql.Bit, opts?.bypass ? 1 : null);
     const preamble =
       "EXEC sp_set_session_context @key=N'branch_id', @value=@p_branch_id;\n" +
       "EXEC sp_set_session_context @key=N'user_id', @value=@p_user_id;\n" +
+      "EXEC sp_set_session_context @key=N'organisation_id', @value=@p_org_id;\n" +
       "EXEC sp_set_session_context @key=N'tenancy_bypass', @value=@p_bypass;\n";
     return request.query<T>(`${preamble}${query}`);
+  }
+
+  async function asOrg<T>(orgId: string | null, query: string) {
+    const request = pool.request();
+    request.input('p_org_id', sql.UniqueIdentifier, orgId);
+    return request.query<T>(
+      `EXEC sp_set_session_context @key=N'organisation_id', @value=@p_org_id;\n${query}`,
+    );
   }
 
   return {
     pool,
     asBranch,
+    asOrg,
     raw: (query: string) => pool.request().query(query),
   };
 }
