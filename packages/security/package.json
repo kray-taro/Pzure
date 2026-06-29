@@ -1,0 +1,12 @@
+{
+  "name": "@pzure/security",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Pzure security invariants. Branch-tenancy scoping-class registry + RLS contract tests (ADR-001 §6.4, #70).",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  }
+}
