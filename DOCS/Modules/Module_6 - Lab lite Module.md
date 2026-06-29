@@ -23,7 +23,7 @@ For Kenya, the module should respect the fact that medical laboratory practice i
 
 ---
 
-# 1. Purpose of the module
+## 1. Purpose of the module
 
 The Lab-lite Module should:
 
@@ -44,7 +44,7 @@ The Lab-lite Module should:
 
 ---
 
-# 2. Kenya-specific design basis
+## 2. Kenya-specific design basis
 
 ## A. Laboratory professional and facility control
 
@@ -85,7 +85,7 @@ HL7 FHIR’s ServiceRequest is used for orders or requests for services such as 
 
 ---
 
-# 3. What “Lab-lite” means
+## 3. What “Lab-lite” means
 
 A Lab-lite module is not a full enterprise LIS. It should avoid unnecessary complexity, but still handle the core outpatient lab workflow.
 
@@ -121,7 +121,7 @@ A Lab-lite module is not a full enterprise LIS. It should avoid unnecessary comp
 
 ---
 
-# 4. Core users
+## 4. Core users
 
 | User                         | Main actions                                                      |
 | ---------------------------- | ----------------------------------------------------------------- |
@@ -138,7 +138,7 @@ A Lab-lite module is not a full enterprise LIS. It should avoid unnecessary comp
 
 ---
 
-# 5. Relationship with other modules
+## 5. Relationship with other modules
 
 ## Module 1: Organisation and Licensing
 
@@ -187,7 +187,7 @@ A Lab-lite module is not a full enterprise LIS. It should avoid unnecessary comp
 
 ---
 
-# 6. Core lab transaction types
+## 6. Core lab transaction types
 
 | Transaction               | Description                                     |
 | ------------------------- | ----------------------------------------------- |
@@ -206,7 +206,7 @@ A Lab-lite module is not a full enterprise LIS. It should avoid unnecessary comp
 
 ---
 
-# 7. Feature-by-feature design
+## 7. Feature-by-feature design
 
 ## A. Test catalogue
 
@@ -672,7 +672,7 @@ Corrected by external lab
 
 ---
 
-# 8. Required screens
+## 8. Required screens
 
 ## Screen 1: Lab dashboard
 
@@ -855,7 +855,7 @@ Filters:
 
 ---
 
-# 9. Workflows
+## 9. Workflows
 
 ## A. Clinician-ordered test
 
@@ -979,7 +979,7 @@ Filters:
 
 ---
 
-# 10. Rules engine
+## 10. Rules engine
 
 ## Test ordering
 
@@ -1070,7 +1070,7 @@ AND notify clinician if already reviewed/released
 
 ---
 
-# 11. Data model
+## 11. Data model
 
 ## Main tables
 
@@ -1337,7 +1337,7 @@ AND notify clinician if already reviewed/released
 
 ---
 
-# 12. API design
+## 12. API design
 
 ## Test catalogue endpoints
 
@@ -1409,7 +1409,7 @@ AND notify clinician if already reviewed/released
 
 ---
 
-# 13. Integration points
+## 13. Integration points
 
 | Integration             | Purpose                                                 |
 | ----------------------- | ------------------------------------------------------- |
@@ -1427,7 +1427,7 @@ AND notify clinician if already reviewed/released
 
 ---
 
-# 14. Permissions
+## 14. Permissions
 
 | Permission               |       Reception | Clinician |   Lab tech | Lab in-charge | Billing | Manager | Auditor |
 | ------------------------ | --------------: | --------: | ---------: | ------------: | ------: | ------: | ------: |
@@ -1448,7 +1448,7 @@ AND notify clinician if already reviewed/released
 
 ---
 
-# 15. Reports
+## 15. Reports
 
 ## Operational reports
 
@@ -1492,7 +1492,7 @@ Average turnaround time
 
 ---
 
-# 16. Quality and safety controls
+## 16. Quality and safety controls
 
 Even a Lab-lite module needs basic quality controls.
 
@@ -1513,7 +1513,7 @@ Even a Lab-lite module needs basic quality controls.
 
 ---
 
-# 17. Privacy and security
+## 17. Privacy and security
 
 Lab results are health data and can be sensitive. The module should follow the same privacy posture as the EMR.
 
@@ -1533,7 +1533,7 @@ Lab results are health data and can be sensitive. The module should follow the s
 
 ---
 
-# 18. Edge cases
+## 18. Edge cases
 
 | Edge case                              | Correct handling                                                        |
 | -------------------------------------- | ----------------------------------------------------------------------- |
@@ -1559,7 +1559,7 @@ Lab results are health data and can be sensitive. The module should follow the s
 
 ---
 
-# 19. MVP versus later versions
+## 19. MVP versus later versions
 
 ## MVP
 
@@ -1619,7 +1619,7 @@ Add:
 
 ---
 
-# 20. Acceptance criteria
+## 20. Acceptance criteria
 
 The Lab-lite Module is ready when it passes these tests:
 
@@ -1645,7 +1645,7 @@ The Lab-lite Module is ready when it passes these tests:
 
 ---
 
-# 21. Final product behaviour
+## 21. Final product behaviour
 
 The Lab-lite Module should behave like this:
 
@@ -1676,7 +1676,7 @@ I would close this as:
 ADR-023: Laboratory Test Catalogue, LOINC Mapping, Kenya KEDL Alignment, and Result Terminology Strategy
 ```
 
-# 1. Architecture decision
+## 1. Architecture decision
 
 For this Kenyan 10-branch implementation, use a **hybrid lab catalogue**:
 
@@ -1712,7 +1712,7 @@ LOINC is a universal code system for tests, measurements, and observations, and 
 
 ---
 
-# 2. Why not use LOINC as the only catalogue?
+## 2. Why not use LOINC as the only catalogue?
 
 LOINC is powerful, but it is not a complete operational lab catalogue by itself.
 
@@ -1742,7 +1742,7 @@ Use LOINC codes to interoperate, report, and exchange data.
 
 ---
 
-# 3. Kenya-specific source layer
+## 3. Kenya-specific source layer
 
 The Kenya Essential Diagnostics List 2023 should be used as a **local alignment reference** for what diagnostics are essential in Kenya’s health system context. The KEDL 2023 describes 249 essential in-vitro diagnostics for clinical management, public-health surveillance, and forensic testing for Kenya’s priority communicable and non-communicable diseases. ([prescribingcompanion.com][2])
 
@@ -1760,7 +1760,7 @@ Do **not** treat KEDL as a result-code system. It is a diagnostics list/referenc
 
 ---
 
-# 4. Lab code systems needed
+## 4. Lab code systems needed
 
 The lab module needs multiple code systems, not one.
 
@@ -1792,7 +1792,7 @@ External lab code: not applicable
 
 ---
 
-# 5. Data model additions
+## 5. Data model additions
 
 Add a `terminology` layer for lab codes and a `lab` operational catalogue.
 
@@ -1965,7 +1965,7 @@ For reference labs.
 
 ---
 
-# 6. Import strategy
+## 6. Import strategy
 
 ## MVP import
 
@@ -2013,7 +2013,7 @@ Recommended MVP approach:
 
 ---
 
-# 7. LOINC mapping strategy
+## 7. LOINC mapping strategy
 
 ## Mapping rule
 
@@ -2047,7 +2047,7 @@ No LOINC mapping should be marked high confidence until reviewed by lab in-charg
 
 ---
 
-# 8. Search UX for test catalogue
+## 8. Search UX for test catalogue
 
 Lab test search should work for both clinicians and lab users.
 
@@ -2097,7 +2097,7 @@ LOINC: mapped / pending
 
 ---
 
-# 9. Lab ordering and result model
+## 9. Lab ordering and result model
 
 ## FHIR-aligned design
 
@@ -2115,7 +2115,7 @@ FHIR ServiceRequest represents an order/request for a service such as a diagnost
 
 ---
 
-# 10. Result template design
+## 10. Result template design
 
 ## Single result test
 
@@ -2175,7 +2175,7 @@ Example: urinalysis
 
 ---
 
-# 11. Kenya reporting and KHIS/DHIS2 mapping
+## 11. Kenya reporting and KHIS/DHIS2 mapping
 
 The lab module should support aggregate reporting groups, not just individual tests. Kenya’s Ministry of Health Virtual Academy describes KHIS Aggregate as powered by DHIS2, with data entry, reporting, and visualizations. ([MOH-VA][4])
 
@@ -2210,7 +2210,7 @@ External send-outs by category
 
 ---
 
-# 12. Claims integration
+## 12. Claims integration
 
 Each lab test must map to billable service and payer tariff.
 
@@ -2236,7 +2236,7 @@ and required attachment rules must be satisfied.
 
 ---
 
-# 13. Inventory integration
+## 13. Inventory integration
 
 Lab tests consume stock.
 
@@ -2268,7 +2268,7 @@ Lab tests consume stock.
 
 ---
 
-# 14. Governance model
+## 14. Governance model
 
 Lab catalogue governance should be owned by the lab in-charge and clinical governance team.
 
@@ -2308,7 +2308,7 @@ Activate
 
 ---
 
-# 15. Architecture principle
+## 15. Architecture principle
 
 Replace:
 
@@ -2324,7 +2324,7 @@ The lab catalogue must be an operational internal catalogue aligned to Kenya dia
 
 ---
 
-# 16. Sprint addition
+## 16. Sprint addition
 
 Add a dedicated terminology sprint before Lab-lite implementation.
 
@@ -2366,7 +2366,7 @@ Add a dedicated terminology sprint before Lab-lite implementation.
 
 ---
 
-# 17. Final recommendation
+## 17. Final recommendation
 
 For Module 6, implement:
 
@@ -2407,7 +2407,7 @@ The important rule is:
 [3]: https://fhir.hl7.org/fhir/servicerequest.html?utm_source=chatgpt.com "ServiceRequest - FHIR v5.0.0 - fhir.hl7.org"
 [4]: https://elearning.health.go.ke/course/index.php?categoryid=5&utm_source=chatgpt.com "KHIS/DHIS2 Aggregate - Ministry of Health"
 
-# Module 6 Gap Closure: Lab-lite — Developer Handoff Addendum
+## Module 6 Gap Closure: Lab-lite — Developer Handoff Addendum
 
 ## Updated handoff status
 
@@ -2429,11 +2429,11 @@ which sample was tested, what template and reference range were used,
 who entered the result, who verified it, and how it was delivered.
 ```
 
-KMLTTB has statutory mandate over training, business, practice and employment of medical laboratory technicians and technologists in Kenya, and KMLTTB states that every Medical Laboratory Science professional practising in Kenya must be registered and licensed with the Board. The software should therefore treat lab verification as a regulated professional action, not a normal clerical action. ([kmlttb.org][1])
+KMLTTB has statutory mandate over training, business, practice and employment of medical laboratory technicians and technologists in Kenya, and KMLTTB states that every Medical Laboratory Science professional practising in Kenya must be registered and licensed with the Board. The software should therefore treat lab verification as a regulated professional action, not a normal clerical action. ([kmlttb.org][g6-1])
 
 ---
 
-# 1. Final developer decisions
+## 1. Final developer decisions
 
 | Gap                         | Final decision                                                                                                                                                                                                                                |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -2448,11 +2448,11 @@ KMLTTB has statutory mandate over training, business, practice and employment of
 | Clinical safety             | Critical results create clinician alert and notification log; sensitive results use restricted access and neutral patient communication.                                                                                                      |
 | Interoperability            | Store LOINC-ready codes and FHIR-ready mappings for ServiceRequest, Specimen, Observation, and DiagnosticReport.                                                                                                                              |
 
-LOINC should be used as the preferred external code system where mapped because it is a universal code system for laboratory tests, measurements and clinical observations. FHIR ServiceRequest should represent lab orders, while DiagnosticReport and Observation should represent released lab results and component values. ([Regenstrief Institute][2])
+LOINC should be used as the preferred external code system where mapped because it is a universal code system for laboratory tests, measurements and clinical observations. FHIR ServiceRequest should represent lab orders, while DiagnosticReport and Observation should represent released lab results and component values. ([Regenstrief Institute][g6-2])
 
 ---
 
-# 2. Final Lab-lite scope
+## 2. Final Lab-lite scope
 
 ## 2.1 In scope for MVP
 
@@ -2484,7 +2484,7 @@ LOINC should be used as the preferred external code system where mapped because 
 
 ---
 
-# 3. Seed test catalogue v1
+## 3. Seed test catalogue v1
 
 ## 3.1 Catalogue design rule
 
@@ -2549,7 +2549,7 @@ test can be:
 
 ---
 
-# 4. Result templates
+## 4. Result templates
 
 ## 4.1 Template types
 
@@ -2604,7 +2604,7 @@ test can be:
 
 ---
 
-# 5. Starter result templates by test
+## 5. Starter result templates by test
 
 ## 5.1 Malaria RDT
 
@@ -2655,7 +2655,7 @@ Positive result → abnormal flag
 | Basophils         | `basophils`   | % or ×10⁹/L | Numeric |
 | Comment           | `comment`     | —           | Text    |
 
-CBC reference ranges vary by analyser, age, sex, and lab policy; the seed table should be treated as a template requiring facility approval, not as universal clinical truth. MedlinePlus and Merck both emphasize that normal/reference ranges vary by lab and patient factors. ([MedlinePlus][3])
+CBC reference ranges vary by analyser, age, sex, and lab policy; the seed table should be treated as a template requiring facility approval, not as universal clinical truth. MedlinePlus and Merck both emphasize that normal/reference ranges vary by lab and patient factors. ([MedlinePlus][g6-3])
 
 ---
 
@@ -2678,7 +2678,7 @@ CBC reference ranges vary by analyser, age, sex, and lab policy; the seed table 
 | Method         | Coded   | Glucometer, laboratory analyser |
 | Comment        | Text    | —                               |
 
-MedlinePlus states that fasting blood glucose of 70–99 mg/dL, equivalent to about 3.9–5.5 mmol/L, is considered normal, while random glucose depends on when the patient last ate; it also notes normal ranges may vary between laboratories. Use such values as seed guidance only and allow facility-specific configuration. ([MedlinePlus][4])
+MedlinePlus states that fasting blood glucose of 70–99 mg/dL, equivalent to about 3.9–5.5 mmol/L, is considered normal, while random glucose depends on when the patient last ate; it also notes normal ranges may vary between laboratories. Use such values as seed guidance only and allow facility-specific configuration. ([MedlinePlus][g6-4])
 
 ---
 
@@ -2700,7 +2700,7 @@ MedlinePlus states that fasting blood glucose of 70–99 mg/dL, equivalent to ab
 | Urobilinogen     | Semi-quant/numeric | Normal, increased                       |
 | Comment          | Text               | —                                       |
 
-MedlinePlus describes urinalysis as physical, chemical and microscopic examination of urine and notes that it detects or measures compounds in urine; exact component interpretation should be configured by the lab and clinician governance team. ([MedlinePlus][5])
+MedlinePlus describes urinalysis as physical, chemical and microscopic examination of urine and notes that it detects or measures compounds in urine; exact component interpretation should be configured by the lab and clinician governance team. ([MedlinePlus][g6-5])
 
 ---
 
@@ -2761,7 +2761,7 @@ Use “Your clinic update is ready.”
 
 ---
 
-# 6. Reference ranges and units
+## 6. Reference ranges and units
 
 ## 6.1 Final reference-range policy
 
@@ -2773,7 +2773,7 @@ Do not interpret results solely by generic internet ranges.
 Do not use one adult range for children, pregnancy, or method-specific tests.
 ```
 
-Lab-result reference ranges vary by laboratory, patient factors, specimen, method, and instrument. The system should therefore ship seed ranges only as editable defaults requiring facility approval before release. ([MedlinePlus][6])
+Lab-result reference ranges vary by laboratory, patient factors, specimen, method, and instrument. The system should therefore ship seed ranges only as editable defaults requiring facility approval before release. ([MedlinePlus][g6-6])
 
 ---
 
@@ -2865,11 +2865,11 @@ These are **starter templates**, not clinical-authority final values.
 | Pregnancy test            | Qual    | Negative/positive/invalid       | No numeric range           |
 | Malaria RDT               | Qual    | Negative/positive/invalid       | No numeric range           |
 
-The fasting-glucose seed is consistent with MedlinePlus’ common fasting blood glucose range, but the system should still allow lab-specific units and ranges. ([MedlinePlus][4])
+The fasting-glucose seed is consistent with MedlinePlus’ common fasting blood glucose range, but the system should still allow lab-specific units and ranges. ([MedlinePlus][g6-4])
 
 ---
 
-# 7. Sample barcode and label format
+## 7. Sample barcode and label format
 
 ## 7.1 Final barcode format
 
@@ -2956,7 +2956,7 @@ Avoid printing sensitive test names such as HIV, pregnancy, STI, or similar on o
 
 ---
 
-# 8. Sample status lifecycle
+## 8. Sample status lifecycle
 
 ## 8.1 Final sample/order status model
 
@@ -3031,7 +3031,7 @@ invalid_repeat_required
 
 ---
 
-# 9. Billing-before-test and exception policy
+## 9. Billing-before-test and exception policy
 
 ## 9.1 Default policy
 
@@ -3098,7 +3098,7 @@ Every exception should appear in a daily report:
 
 ---
 
-# 10. Partner-lab contract and send-out handling
+## 10. Partner-lab contract and send-out handling
 
 ## 10.1 Partner-lab master
 
@@ -3222,7 +3222,7 @@ corrected_by_external_lab
 
 ---
 
-# 11. Verification roles and permissions
+## 11. Verification roles and permissions
 
 ## 11.1 Final verification role model
 
@@ -3269,7 +3269,7 @@ ELSE block
 
 ---
 
-# 12. Data model additions and refinements
+## 12. Data model additions and refinements
 
 ## 12.1 `lab_tests`
 
@@ -3400,7 +3400,7 @@ Add:
 
 ---
 
-# 13. API additions and refinements
+## 13. API additions and refinements
 
 ## 13.1 Catalogue endpoints
 
@@ -3461,7 +3461,7 @@ Add:
 
 ---
 
-# 14. Workflows finalized
+## 14. Workflows finalized
 
 ## 14.1 In-house paid lab test
 
@@ -3532,7 +3532,7 @@ Add:
 
 ---
 
-# 15. Developer acceptance criteria
+## 15. Developer acceptance criteria
 
 ## 15.1 Test catalogue
 
@@ -3609,7 +3609,7 @@ Add:
 
 ---
 
-# 16. Implementation sequence
+## 16. Implementation sequence
 
 ## Phase 1: Catalogue and templates
 
@@ -3684,7 +3684,7 @@ FHIR-ready ServiceRequest/Specimen/Observation/DiagnosticReport mapping
 
 ---
 
-# 17. Final handoff summary
+## 17. Final handoff summary
 
 Module 6 is now developer-ready with these final decisions:
 
@@ -3718,9 +3718,9 @@ critical or sensitive results were handled safely,
 and every print, correction, share, or send-out was audited.
 ```
 
-[1]: https://www.kmlttb.org/?utm_source=chatgpt.com "KMLTTB | Kenya Medical Laboratory Technicians & Technologist Board"
-[2]: https://www.regenstrief.org/real-world-solutions/loinc/?utm_source=chatgpt.com "LOINC Data Standards - Regenstrief Institute"
-[3]: https://medlineplus.gov/laboratorytests.html?utm_source=chatgpt.com "Laboratory Tests - MedlinePlus"
-[4]: https://medlineplus.gov/ency/article/003482.htm?utm_source=chatgpt.com "Blood sugar test: MedlinePlus Medical Encyclopedia"
-[5]: https://medlineplus.gov/ency/article/003579.htm?utm_source=chatgpt.com "Urinalysis: MedlinePlus Medical Encyclopedia"
-[6]: https://medlineplus.gov/lab-tests/how-to-understand-your-lab-results/?utm_source=chatgpt.com "How to Understand Your Lab Results: MedlinePlus Medical Test"
+[g6-1]: https://www.kmlttb.org/?utm_source=chatgpt.com "KMLTTB | Kenya Medical Laboratory Technicians & Technologist Board"
+[g6-2]: https://www.regenstrief.org/real-world-solutions/loinc/?utm_source=chatgpt.com "LOINC Data Standards - Regenstrief Institute"
+[g6-3]: https://medlineplus.gov/laboratorytests.html?utm_source=chatgpt.com "Laboratory Tests - MedlinePlus"
+[g6-4]: https://medlineplus.gov/ency/article/003482.htm?utm_source=chatgpt.com "Blood sugar test: MedlinePlus Medical Encyclopedia"
+[g6-5]: https://medlineplus.gov/ency/article/003579.htm?utm_source=chatgpt.com "Urinalysis: MedlinePlus Medical Encyclopedia"
+[g6-6]: https://medlineplus.gov/lab-tests/how-to-understand-your-lab-results/?utm_source=chatgpt.com "How to Understand Your Lab Results: MedlinePlus Medical Test"

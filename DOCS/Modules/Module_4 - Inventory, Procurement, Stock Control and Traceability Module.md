@@ -17,7 +17,7 @@ PPB’s Good Storage and Distribution Practices guidance emphasizes that pharmac
 
 ---
 
-# 1. Purpose of the module
+## 1. Purpose of the module
 
 The Inventory and Procurement Module should:
 
@@ -38,7 +38,7 @@ The Inventory and Procurement Module should:
 
 ---
 
-# 2. Core users
+## 2. Core users
 
 | User                      | Main actions                                                               |
 | ------------------------- | -------------------------------------------------------------------------- |
@@ -55,7 +55,7 @@ The Inventory and Procurement Module should:
 
 ---
 
-# 3. Relationship with modules 1, 2, and 3
+## 3. Relationship with modules 1, 2, and 3
 
 ## Module 1 dependency: Organisation and Licensing
 
@@ -100,7 +100,7 @@ Dispensing requires medicine-specific inventory controls.
 
 ---
 
-# 4. Core inventory transaction types
+## 4. Core inventory transaction types
 
 | Transaction type          | Example                                       | Stock direction                                 |
 | ------------------------- | --------------------------------------------- | ----------------------------------------------- |
@@ -124,7 +124,7 @@ Dispensing requires medicine-specific inventory controls.
 
 ---
 
-# 5. Feature-by-feature design
+## 5. Feature-by-feature design
 
 ## A. Purchase orders
 
@@ -920,7 +920,7 @@ Cold-chain items require stricter storage and transport controls. Kenya’s Tran
 
 ---
 
-# 6. Required screens
+## 6. Required screens
 
 ## Screen 1: Inventory dashboard
 
@@ -1138,7 +1138,7 @@ Sections:
 
 ---
 
-# 7. Workflows
+## 7. Workflows
 
 ## A. Normal procurement workflow
 
@@ -1288,7 +1288,7 @@ Direct GRN should be allowed for operational reality, but reported as an excepti
 
 ---
 
-# 8. Rules engine
+## 8. Rules engine
 
 ## Purchase order approval
 
@@ -1396,7 +1396,7 @@ THEN flag as dead_or_slow_moving
 
 ---
 
-# 9. Data model
+## 9. Data model
 
 ## Main tables
 
@@ -1775,7 +1775,7 @@ THEN flag as dead_or_slow_moving
 
 ---
 
-# 10. API design
+## 10. API design
 
 ## Product and supplier endpoints
 
@@ -1867,7 +1867,7 @@ THEN flag as dead_or_slow_moving
 
 ---
 
-# 11. Integration points
+## 11. Integration points
 
 | Integration                 | Purpose                                                            |
 | --------------------------- | ------------------------------------------------------------------ |
@@ -1886,7 +1886,7 @@ THEN flag as dead_or_slow_moving
 
 ---
 
-# 12. Permissions
+## 12. Permissions
 
 | Permission               | Cashier | Storekeeper |        Pharmacist | Branch manager |  Procurement | Accountant |   Owner | Auditor |
 | ------------------------ | ------: | ----------: | ----------------: | -------------: | -----------: | ---------: | ------: | ------: |
@@ -1909,7 +1909,7 @@ THEN flag as dead_or_slow_moving
 
 ---
 
-# 13. Reports
+## 13. Reports
 
 ## Inventory control reports
 
@@ -1960,7 +1960,7 @@ Cold-chain incidents
 
 ---
 
-# 14. Stock valuation
+## 14. Stock valuation
 
 The system should support multiple valuation methods, but for small Kenyan pharmacy/clinic operations, **weighted average cost** is usually practical. Larger businesses may prefer FIFO.
 
@@ -1982,7 +1982,7 @@ This means the system can sell the batch expiring first while still valuing stoc
 
 ---
 
-# 15. Product categories and control levels
+## 15. Product categories and control levels
 
 Not all stock needs the same strictness.
 
@@ -2001,7 +2001,7 @@ Not all stock needs the same strictness.
 
 ---
 
-# 16. Audit logs
+## 16. Audit logs
 
 Every stock-sensitive action must be logged.
 
@@ -2028,7 +2028,7 @@ Every stock-sensitive action must be logged.
 
 ---
 
-# 17. Edge cases
+## 17. Edge cases
 
 | Edge case                          | Correct handling                                                        |
 | ---------------------------------- | ----------------------------------------------------------------------- |
@@ -2053,7 +2053,7 @@ Every stock-sensitive action must be logged.
 
 ---
 
-# 18. MVP versus later versions
+## 18. MVP versus later versions
 
 ## MVP
 
@@ -2120,7 +2120,7 @@ Add:
 
 ---
 
-# 19. Acceptance criteria
+## 19. Acceptance criteria
 
 The module is ready when it passes these tests:
 
@@ -2146,7 +2146,7 @@ The module is ready when it passes these tests:
 
 ---
 
-# 20. Final product behaviour
+## 20. Final product behaviour
 
 The Inventory and Procurement Module should behave like this:
 
@@ -2170,7 +2170,7 @@ The key design principle is:
 
 **No medicine stock should enter, move, sell, dispense, return, or disappear without a batch, expiry, source, status, value, and audit trail.**
 
-# Module 4 Gap Closure: Inventory, Procurement and Traceability — Developer Handoff Addendum
+## Module 4 Gap Closure: Inventory, Procurement and Traceability — Developer Handoff Addendum
 
 ## Updated handoff status
 
@@ -2193,7 +2193,7 @@ PPB’s Good Storage and Distribution Practices guidance says pharmaceuticals re
 
 ---
 
-# 1. Final developer decisions
+## 1. Final developer decisions
 
 | Gap                                  | Final decision                                                                                                                                                                                                                           |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -2209,7 +2209,7 @@ PPB’s Good Storage and Distribution Practices guidance says pharmaceuticals re
 
 ---
 
-# 2. Final normalized product master
+## 2. Final normalized product master
 
 ## 2.1 Product master hierarchy
 
@@ -2261,7 +2261,7 @@ Stock lot:
 
 ---
 
-# 3. Product master tables
+## 3. Product master tables
 
 ## 3.1 `product_families`
 
@@ -2402,7 +2402,7 @@ Only for medicine/health-product SKUs.
 
 ---
 
-# 4. Unit-of-measure model
+## 4. Unit-of-measure model
 
 ## 4.1 Final UOM principle
 
@@ -2474,7 +2474,7 @@ Conversions must be product-specific, not global.
 
 ---
 
-# 5. Unit conversion rules
+## 5. Unit conversion rules
 
 ## 5.1 General rules
 
@@ -2519,7 +2519,7 @@ Conversions must be product-specific, not global.
 
 ---
 
-# 6. Stock lot model
+## 6. Stock lot model
 
 ## 6.1 Final decision
 
@@ -2582,7 +2582,7 @@ Manufacturer batch: ABC123
 
 ---
 
-# 7. Costing policy decision
+## 7. Costing policy decision
 
 ## 7.1 Final costing policy
 
@@ -2679,7 +2679,7 @@ landed_unit_cost =
 
 ---
 
-# 8. Accounting integration for supplier returns and write-offs
+## 8. Accounting integration for supplier returns and write-offs
 
 ## 8.1 Core accounting accounts
 
@@ -2775,7 +2775,7 @@ If using one inventory account, no accounting entry is required; only stock stat
 
 ---
 
-# 9. Supplier return workflow
+## 9. Supplier return workflow
 
 ## 9.1 Supplier return statuses
 
@@ -2851,7 +2851,7 @@ other
 
 ---
 
-# 10. Write-off and disposal workflow
+## 10. Write-off and disposal workflow
 
 ## 10.1 Write-off statuses
 
@@ -2934,7 +2934,7 @@ other
 
 ---
 
-# 11. Serialization and GS1 implementation phase decision
+## 11. Serialization and GS1 implementation phase decision
 
 ## 11.1 Final decision
 
@@ -3043,7 +3043,7 @@ corrected
 
 ---
 
-# 12. Stock movement ledger
+## 12. Stock movement ledger
 
 ## 12.1 Final rule
 
@@ -3110,7 +3110,7 @@ correction_reversal
 
 ---
 
-# 13. Product master approval workflow
+## 13. Product master approval workflow
 
 ## 13.1 Product status lifecycle
 
@@ -3165,7 +3165,7 @@ ELSE keep blocked
 
 ---
 
-# 14. API endpoints to add or adjust
+## 14. API endpoints to add or adjust
 
 ## 14.1 Product master endpoints
 
@@ -3224,7 +3224,7 @@ ELSE keep blocked
 
 ---
 
-# 15. Updated workflows
+## 15. Updated workflows
 
 ## 15.1 Product creation workflow
 
@@ -3306,7 +3306,7 @@ ELSE keep blocked
 
 ---
 
-# 16. Developer acceptance criteria
+## 16. Developer acceptance criteria
 
 ## 16.1 Product master
 
@@ -3374,7 +3374,7 @@ ELSE keep blocked
 
 ---
 
-# 17. Final developer implementation sequence
+## 17. Final developer implementation sequence
 
 ## Phase 1: Product master and UOM
 
@@ -3464,7 +3464,7 @@ future regulator adapter
 
 ---
 
-# 18. Final handoff summary
+## 18. Final handoff summary
 
 Module 4 is now developer-ready with these final decisions:
 

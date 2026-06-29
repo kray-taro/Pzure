@@ -3,6 +3,9 @@
   // Real structural problems fail CI; only the noisy line-length rule is
   // relaxed so existing long-form prose and wide tables are not punished.
   "default": true,
+  // MD004 (unordered list marker): fixed to dash. The corpus standard is '-';
+  // a fixed style (rather than 'consistent') keeps every file uniform.
+  "MD004": { "style": "dash" },
   // MD013 (line length): off. Our ADRs and tables intentionally use long lines.
   "MD013": false,
   // MD024 (duplicate headings): siblings_only. Docs legitimately repeat

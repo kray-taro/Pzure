@@ -10,9 +10,9 @@
 
 ## 2. Decision Drivers
 
-* [Driver 1, e.g., "Must comply with Kenya Data Protection Act"]
-* [Driver 2, e.g., "Must operate effectively in low-bandwidth branch environments"]
-* [Driver 3, e.g., "Must support 10 branches at launch with horizontal scalability"]
+- [Driver 1, e.g., "Must comply with Kenya Data Protection Act"]
+- [Driver 2, e.g., "Must operate effectively in low-bandwidth branch environments"]
+- [Driver 3, e.g., "Must support 10 branches at launch with horizontal scalability"]
 
 ## 3. Considered Options
 
@@ -26,26 +26,26 @@
 
 ### Positive Consequences
 
-* [e.g., Simplifies development workflow]
-* [e.g., Reduces cloud infrastructure costs]
+- [e.g., Simplifies development workflow]
+- [e.g., Reduces cloud infrastructure costs]
 
 ### Negative Consequences
 
-* [e.g., Increases initial setup time]
-* [e.g., Requires third-party licensing]
+- [e.g., Increases initial setup time]
+- [e.g., Requires third-party licensing]
 
 ## 5. Pros and Cons of the Options
 
 ### [Option 1]
 
-* Good, because [argument]
-* Bad, because [argument]
+- Good, because [argument]
+- Bad, because [argument]
 
 ### [Option 2]
 
-* Good, because [argument]
-* Bad, because [argument]
+- Good, because [argument]
+- Bad, because [argument]
 
 ## 6. Implementation Notes
 
-* [Any specific notes for the development team on how to implement this decision, e.g., "Use the `Outbox` table pattern for offline-ready queueing."]
+- [Any specific notes for the development team on how to implement this decision, e.g., "Use the `Outbox` table pattern for offline-ready queueing."]
