@@ -32,18 +32,24 @@ pharmacy/claim data.
 ## 2. Patient data-access log (asynchronous pipeline)
 - **Requirement:** viewing a sensitive patient record is logged **without
   slowing EMR/POS screens**.
-- **Design:** read interceptor emits an access event → queue → audit worker →
-  persistence → risk scoring (anomaly detection). Async so the read path is not
-  blocked (ADR-005 outbox/queue pattern).
+- **Design:** read interceptor emits an access event into the transactional
+  outbox, then an audit worker drains the outbox → persistence → risk scoring
+  (anomaly detection). Two distinct phases (ADR-005 outbox/queue pattern):
+  - **Enqueue is synchronous and transactional (fail-closed).** The access
+    event is written to the outbox **in the same local DB transaction** as the
+    read authorization, *before* the record is served. This phase is **not**
+    fire-and-forget.
+  - **Downstream processing is asynchronous.** Worker drain, persistence to the
+    access-log store, and risk scoring run off the read path, so EMR/POS screens
+    are **not** slowed by audit processing.
 - **Delivery guarantee (required):** access events are persisted **at-least-once**
   via the transactional outbox (ADR-005), never best-effort fire-and-forget.
-  The read may proceed once the event is durably enqueued in the same
-  transaction as (or transactionally linked to) the read authorization; if the
-  outbox write itself fails, the access is **denied** (fail-closed) so that no
-  sensitive record is served without a guaranteed audit trail. The outbox write
-  is performed **in the same local DB transaction** as the read authorization,
-  so it fails only when the database itself is unavailable (in which case the
-  read fails regardless); this is fail-closed without introducing a new
+  The read may proceed only once the event is durably committed to the outbox in
+  the same transaction as the read authorization; if that outbox write fails the
+  access is **denied** (fail-closed) so no sensitive record is served without a
+  guaranteed audit trail. Because the write shares the read's local DB
+  transaction, it fails only when the database itself is unavailable (in which
+  case the read fails regardless) — fail-closed without introducing a new
   availability single-point-of-failure beyond the database the read already
   depends on. Duplicate events are tolerated and de-duplicated downstream by the
   composite key `(request_id, target_entity, target_id)` (a single request may
@@ -55,7 +61,12 @@ pharmacy/claim data.
   retention matrix; this document does not restate the figures so they cannot
   drift from the ADR.
 
-## 3. Acceptance (mirrors #40)
+## 3. Acceptance (aligned with #40)
+
+> This list is a **superset** of #40's acceptance criteria (it adds the
+> break-glass/export items); it does not silently diverge — #40 remains the
+> implementation-owning issue and should be kept in sync if either side changes.
+
 - Sensitive-record view is logged.
 - Bulk export requires approval + reason and is logged.
 - Break-glass access creates a **critical** audit event and notifies the

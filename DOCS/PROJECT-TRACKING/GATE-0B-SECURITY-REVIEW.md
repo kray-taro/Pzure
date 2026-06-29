@@ -51,8 +51,8 @@ remain authoritative and override this record if they diverge.
 | Check | Where | Status |
 | --- | --- | --- |
 | STRIDE threat-model checklist | `THREAT-MODEL.md` (this MR) | Done |
-| Secret-detection gate upgraded to **full SAST + dependency scanning** | `.gitlab-ci.yml` on `develop` (`feat/security-gate-sast`) | Done (companion MR) |
-| Automated test asserting `patient_*` / `emr_clinical_notes` columns are flagged for field encryption | `packages/security` on `develop` (`feat/security-gate-sast`) | Done (companion MR) |
+| Secret-detection gate upgraded to **full SAST + dependency scanning** | `.gitlab-ci.yml` on `develop` (`feat/security-gate-sast`) | Pending (companion MR) |
+| Automated test asserting `patient_*` / `emr_clinical_notes` columns are flagged for field encryption | `packages/security` on `develop` (`feat/security-gate-sast`) | Pending (companion MR) |
 | Audit + patient data-access-log requirement documented | `AUDIT-AND-DATA-ACCESS-LOG.md` (this MR) | Done |
 
 > The CI + automated-test items live on `develop` (where `.gitlab-ci.yml` and the

@@ -2,7 +2,7 @@
 
 **Scope:** authentication/identity, authorization, PII/PHI confidentiality, audit
 integrity, regulated-action non-repudiation. **Owning issue:** [#55](https://gitlab.com/cricketaustin-group/Pzure/-/issues/55).
-**Method:** STRIDE per trust boundary. **Status:** Approved (Gate 0B).
+**Method:** STRIDE per trust boundary. **Status:** Conditionally approved (Gate 0B — pending companion CI MR).
 
 **Legend:** `[x]` = control **implemented and verified**; `[ ]` = control
 **designed/ratified but not yet implemented** (implementation tracked in the
