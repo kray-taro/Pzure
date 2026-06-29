@@ -31,27 +31,17 @@ link-check:
 
 # --- lint stage --------------------------------------------------------------
 
-# Lint ONLY the markdown files changed in this MR, and BLOCK on any violation.
-# Rationale: the legacy DOCS corpus carries pre-existing violations that are
-# being burned down separately (#68 / !23). Until that lands, scoping to
-# changed files keeps the gate a real signal for new/edited docs without
-# blocking on unrelated debt and without disabling rules. Full-tree blocking
-# is enabled in !23 once the corpus is clean. Rule set: .markdownlint.jsonc.
-markdownlint:changed:
+# Lint the WHOLE DOCS markdown tree and BLOCK on any violation.
+# The legacy corpus has been burned down (#68): ADRs, WORK-ITEMS, and the
+# module specs are all clean, and the module MD025 file-scoping exclusion has
+# been removed from .markdownlint-cli2.jsonc. This is the final #68 step -
+# full-tree blocking with no rule disabled. Rule set: .markdownlint.jsonc;
+# file globs/ignores: .markdownlint-cli2.jsonc.
+markdownlint:
   stage: lint
   image: node:20-alpine
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "DOCS"'
+    - if: '$CI_COMMIT_BRANCH == "DOCS"'
   script:
-    - apk add --no-cache git >/dev/null
-    - git fetch --depth=50 origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
-    - |
-      CHANGED=$(git diff --name-only --diff-filter=ACMR \
-        "origin/${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}...HEAD" -- '*.md' | grep '\.md$' || true)
-      if [ -z "$CHANGED" ]; then
-        echo "No changed markdown files; nothing to lint."
-        exit 0
-      fi
-      echo "Linting changed markdown files:"
-      echo "$CHANGED"
-      echo "$CHANGED" | xargs npx --yes markdownlint-cli2@0.13.0
+    - npx --yes markdownlint-cli2@0.13.0 "**/*.md"

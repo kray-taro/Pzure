@@ -4,14 +4,12 @@
   // which files the full-tree run lints.
   //
   // The legacy module specifications under DOCS/Modules/Module_* and
-  // Modul_Master intentionally use many top-level (#) headings as section
-  // markers. That triggers MD025 en masse. Rewriting their heading hierarchy
-  // would change in-document section anchors, so they are excluded from
-  // linting here rather than weakening MD025 for the whole repository.
-  // All other DOCS markdown remains fully linted and blocking.
+  // Modul_Master used many top-level (#) headings as section markers, which
+  // tripped MD025 en masse. Those section markers have now been demoted to
+  // ## (one H1 per file), so the modules lint cleanly and no longer need to
+  // be excluded. The full DOCS tree is now linted and blocking; only
+  // node_modules is ignored.
   "ignores": [
-    "**/node_modules/**",
-    "DOCS/Modules/Module_*",
-    "DOCS/Modules/Modul_Master*"
+    "**/node_modules/**"
   ]
 }
