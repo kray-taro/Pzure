@@ -127,6 +127,25 @@ describe('rls-sql generated DDL', () => {
     expect(sql).toMatch(/AFTER UPDATE/);
     expect(sql).not.toMatch(/AFTER INSERT/);
     expect(sql).toMatch(/IF UPDATE\(sale_id\)/);
+    // Default PK join is on `id`.
+    expect(sql).toMatch(/JOIN inserted AS i ON i\.id = t\.id/);
+  });
+
+  it('denorm builders honour a non-`id` primary key (#71 B3, no silent no-op)', () => {
+    // UPDATE trigger must join on the declared PK, not a hardcoded `id`.
+    const trg = buildDenormBranchTrigger({
+      table: 'claims_line_items', pkColumn: 'line_id',
+      fkColumn: 'claim_id', parentTable: 'claims_claims',
+    });
+    expect(trg).toMatch(/JOIN inserted AS i ON i\.line_id = t\.line_id/);
+    expect(trg).not.toMatch(/i\.id = t\.id/);
+    // INSTEAD OF INSERT must carry the declared PK column, never inject `id`.
+    const pol = buildInheritanceDenormPolicy({
+      table: 'claims_line_items', pkColumn: 'line_id', columns: ['claim_id', 'amount'],
+      fkColumn: 'claim_id', parentTable: 'claims_claims',
+    });
+    expect(pol).toMatch(/INSERT INTO dbo\.claims_line_items \(line_id, claim_id, amount, branch_id\)/);
+    expect(pol).toMatch(/SELECT i\.line_id, i\.claim_id, i\.amount, p\.branch_id/);
   });
 
   it('branch-set policy keys the grant row by the USER, not by branch = session branch', () => {
