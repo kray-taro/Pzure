@@ -2916,7 +2916,7 @@ The important rule is:
 
 **Clinicians should experience diagnosis entry as a fast common-diagnosis search, but the system must store a full, versioned, standard ICD-10 diagnosis code behind the visit, claim, report, and referral.**
 
-# Module 5 Gap Closure: Clinic EMR — Developer Handoff Addendum
+## Module 5 Gap Closure: Clinic EMR — Developer Handoff Addendum
 
 ## Updated handoff status
 

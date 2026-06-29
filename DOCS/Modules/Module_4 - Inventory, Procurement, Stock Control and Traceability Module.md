@@ -2170,7 +2170,7 @@ The key design principle is:
 
 **No medicine stock should enter, move, sell, dispense, return, or disappear without a batch, expiry, source, status, value, and audit trail.**
 
-# Module 4 Gap Closure: Inventory, Procurement and Traceability — Developer Handoff Addendum
+## Module 4 Gap Closure: Inventory, Procurement and Traceability — Developer Handoff Addendum
 
 ## Updated handoff status
 

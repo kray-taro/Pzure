@@ -1952,7 +1952,7 @@ The key design principle is:
 
 **Every important action in the business should either become a useful management report, a compliance record, an audit trail, or an exception alert.**
 
-# Module 8 Gap Closure: Reporting and Analytics — Developer Handoff Addendum
+## Module 8 Gap Closure: Reporting and Analytics — Developer Handoff Addendum
 
 ## Updated handoff status
 

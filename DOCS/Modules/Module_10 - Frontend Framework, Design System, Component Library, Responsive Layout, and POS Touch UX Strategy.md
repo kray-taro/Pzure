@@ -615,7 +615,7 @@ Print templates should be versioned and tested on real devices.
 
 Use clear, safe, non-technical language.
 
-## Examples
+## UX writing examples
 
 Bad:
 

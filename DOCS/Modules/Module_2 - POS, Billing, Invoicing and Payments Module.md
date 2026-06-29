@@ -2457,7 +2457,7 @@ QR for:
     lab report verification
 ```
 
-## Version 2
+## Barcode rollout Version 2
 
 ```text
 GS1 DataMatrix parsing for medicine packs where available
@@ -2468,7 +2468,7 @@ QR delivery workflow
 Printer/device management
 ```
 
-## Version 3
+## Barcode rollout Version 3
 
 ```text
 GS1 DataMatrix as preferred medicine traceability carrier
@@ -2520,7 +2520,7 @@ The key architecture rule is:
 
 **Barcodes should encode stable opaque identifiers or recognised GS1 payloads, never sensitive clinical or patient data directly. The system should resolve the barcode to controlled records, enforce permissions, and audit every print, scan, reprint, and traceability event.**
 
-# Module 2 Gap Closure: POS, Billing, Invoicing and Payments — Developer Handoff Addendum
+## Module 2 Gap Closure: POS, Billing, Invoicing and Payments — Developer Handoff Addendum
 
 ## Updated handoff status
 

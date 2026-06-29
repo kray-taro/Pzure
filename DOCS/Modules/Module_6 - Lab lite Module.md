@@ -2407,7 +2407,7 @@ The important rule is:
 [3]: https://fhir.hl7.org/fhir/servicerequest.html?utm_source=chatgpt.com "ServiceRequest - FHIR v5.0.0 - fhir.hl7.org"
 [4]: https://elearning.health.go.ke/course/index.php?categoryid=5&utm_source=chatgpt.com "KHIS/DHIS2 Aggregate - Ministry of Health"
 
-# Module 6 Gap Closure: Lab-lite — Developer Handoff Addendum
+## Module 6 Gap Closure: Lab-lite — Developer Handoff Addendum
 
 ## Updated handoff status
 

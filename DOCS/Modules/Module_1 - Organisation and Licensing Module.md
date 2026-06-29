@@ -684,7 +684,7 @@ Affected workflows: SHA eligibility checks, pre-authorisations, claim submission
 11. Activate clinic workflows
 ```
 
-## Workflow controls
+## Clinic setup workflow controls
 
 | Step                         | System control                                  |
 | ---------------------------- | ----------------------------------------------- |

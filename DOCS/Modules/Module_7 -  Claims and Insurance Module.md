@@ -324,7 +324,7 @@ Benefit scheme setup defines what a payer covers, at what price, with what rules
 
 ---
 
-## B. Pre-authorisation
+## B. Pre-authorisation (request and workflow)
 
 Pre-authorisation is a formal permission workflow before selected services are provided or claimed.
 
@@ -2850,7 +2850,7 @@ The core rule should be:
       The Social Health Insurance Regulations
     - Kenya Law"
 
-# Module 7 Gap Closure: Claims and Insurance — Developer Handoff Addendum
+## Module 7 Gap Closure: Claims and Insurance — Developer Handoff Addendum
 
 ## Updated handoff status
 
