@@ -110,11 +110,22 @@ test:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"'
 
+# The scanner jobs run in GitLab's managed scanner images, which have no
+# node/npm. They must NOT inherit the project-wide default.before_script
+# (`corepack`/`npm ci`) - that fails with exit 127 before the scanner runs.
+# Neutralise before_script/after_script and the npm cache so each job uses only
+# its scanner image's own entrypoint.
 gemnasium-dependency_scanning:
   stage: scan
+  cache: {}
+  before_script: []
+  after_script: []
   rules: !reference [.scan-rules, rules]
 
 secret_detection:
   stage: scan
+  cache: {}
+  before_script: []
+  after_script: []
   rules: !reference [.scan-rules, rules]
 
