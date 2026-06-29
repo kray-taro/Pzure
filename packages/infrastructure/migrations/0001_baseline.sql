@@ -51,6 +51,10 @@ CREATE INDEX IX_idempotency_key_expires ON dbo.idempotency_key (expires_at);
 GO
 
 -- Immutable audit log (CONCURRENCY §5, COMPLIANCE.md). Append-only; no UPDATE/DELETE grants.
+-- This is the unified audit sink for the platform: it supersedes the
+-- `audit_security_events` table named in ADR-004 §5. PIN authorization/lockout
+-- events are recorded here (see authorized_by_subject_id); ADR-004 to be amended
+-- to point at audit_event. Tracked in #69.
 CREATE TABLE dbo.audit_event (
     audit_id        BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     actor_id        NVARCHAR(64)        NOT NULL,
@@ -58,7 +62,7 @@ CREATE TABLE dbo.audit_event (
     subject_type    NVARCHAR(120)       NOT NULL,
     subject_id      NVARCHAR(128)       NOT NULL,
     branch_id       NVARCHAR(64)        NOT NULL,
-    authorized_by_subject_id NVARCHAR(64) NULL,  -- pharmacist who PIN-authorized (ADR-004); never the PIN/hash
+    authorized_by_subject_id NVARCHAR(128) NULL,  -- pharmacist who PIN-authorized (ADR-004); never the PIN/hash. Width matches subject_id.
     occurred_at     DATETIME2(3)        NOT NULL CONSTRAINT DF_audit_occurred DEFAULT SYSUTCDATETIME()
 );
 GO
