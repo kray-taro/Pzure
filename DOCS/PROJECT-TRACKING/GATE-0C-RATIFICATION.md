@@ -17,21 +17,21 @@ business txn -> audit.integration_outbox (same SQL txn)
             -> callback / status poll -> integration event log -> business state update
 ```
 
-* **ADR-005 (outbox + BullMQ):** the outbox row is written in the *same* SQL transaction as the business entity, giving at-least-once delivery with zero loss; the queue absorbs external-API latency so POS checkout stays sub-2s. Adapters must be **idempotent** (idempotency key) so a redelivery never double-submits an invoice/payment.
-* **BullMQ -> Azure Service Bus migration trigger (made explicit):** BullMQ/Redis is the MVP transport (D-001). The transport is abstracted behind the outbox adapter, so migration is a transport swap, not a rewrite. **Migrate to Azure Service Bus when any one of these triggers fires:**
+- **ADR-005 (outbox + BullMQ):** the outbox row is written in the *same* SQL transaction as the business entity, giving at-least-once delivery with zero loss; the queue absorbs external-API latency so POS checkout stays sub-2s. Adapters must be **idempotent** (idempotency key) so a redelivery never double-submits an invoice/payment.
+- **BullMQ -> Azure Service Bus migration trigger (made explicit):** BullMQ/Redis is the MVP transport (D-001). The transport is abstracted behind the outbox adapter, so migration is a transport swap, not a rewrite. **Migrate to Azure Service Bus when any one of these triggers fires:**
   1. Enterprise/compliance policy mandates a managed broker with audited DLQ retention;
   2. Cross-region or multi-subscription delivery is required (Redis is single-region MVP);
   3. Sustained queue depth or redelivery rates exceed Redis/BullMQ operational headroom (e.g. backlog alert tripping repeatedly under the 10->50 branch growth);
   4. The client's Azure landing zone requires broker-level RBAC / private-endpoint isolation BullMQ cannot satisfy.
   Until a trigger fires, BullMQ remains authoritative (avoids premature cost/ops burden).
-* **ADR-010 (eTIMS), ADR-011 (M-Pesa), ADR-012 (claims):** all ratified as outbox-adapter integrations with callbacks, idempotency, retry/backoff, DLQ, and reconciliation/exception screens. Claims remain **online-only** (ADR-012); eTIMS supports an offline invoice queue reconciled on reconnect.
+- **ADR-010 (eTIMS), ADR-011 (M-Pesa), ADR-012 (claims):** all ratified as outbox-adapter integrations with callbacks, idempotency, retry/backoff, DLQ, and reconciliation/exception screens. Claims remain **online-only** (ADR-012); eTIMS supports an offline invoice queue reconciled on reconnect.
 
 ## 2. Offline scope + conflict matrix - no blind last-write-wins (ADR-006, 008, 009)
 
 **Ratified.** The offline model is the platform's bounded eventual-consistency zone (see also ADR-001 Section 6.3):
 
-* **ADR-006 / ADR-008:** append-only event model in IndexedDB with `idempotency_key`, `branch_id`, `device_id`, `client_timestamp`, `server_timestamp`; narrow per-entity offline matrix (POS append-only; pharmacy dispense/stock movement limited append-only with negative-stock blocked; clinical notes and lab results draft-only; claims and communication online-only; controlled meds strongly limited). Duration tiers 0-4h / 4-24h / >24h / >48h.
-* **ADR-009:** entity-level conflict policies with **no blind last-write-wins** - server-wins for cached reference data; negative-stock block + reconciliation for stock; dispense lock for prescriptions; addendum model for clinical notes; new-version for lab corrections; suspense workflow for payments. Unresolved conflicts route to an admin queue with full audit trail; `idempotency_key` makes replay safe.
+- **ADR-006 / ADR-008:** append-only event model in IndexedDB with `idempotency_key`, `branch_id`, `device_id`, `client_timestamp`, `server_timestamp`; narrow per-entity offline matrix (POS append-only; pharmacy dispense/stock movement limited append-only with negative-stock blocked; clinical notes and lab results draft-only; claims and communication online-only; controlled meds strongly limited). Duration tiers 0-4h / 4-24h / >24h / >48h.
+- **ADR-009:** entity-level conflict policies with **no blind last-write-wins** - server-wins for cached reference data; negative-stock block + reconciliation for stock; dispense lock for prescriptions; addendum model for clinical notes; new-version for lab corrections; suspense workflow for payments. Unresolved conflicts route to an admin queue with full audit trail; `idempotency_key` makes replay safe.
 
 ## 3. Deployment & DR (ADR-015, 016)
 
@@ -69,7 +69,7 @@ Each NFR is restated as an SLO with a metric, target, and how it is verified. Th
 
 ## 6. Cross-references
 
-* **ADR-005 / 010 / 011 / 012** - outbox + adapters (Section 1).
-* **ADR-006 / 008 / 009** - offline scope + conflict policies (Section 2).
-* **ADR-015 / 016** - deployment + DR (Section 3).
-* **ADR-001 Section 6** - tenancy partitioning + consistency basis for the scale SLO (Gate 0A).
+- **ADR-005 / 010 / 011 / 012** - outbox + adapters (Section 1).
+- **ADR-006 / 008 / 009** - offline scope + conflict policies (Section 2).
+- **ADR-015 / 016** - deployment + DR (Section 3).
+- **ADR-001 Section 6** - tenancy partitioning + consistency basis for the scale SLO (Gate 0A).
