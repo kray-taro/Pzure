@@ -4,6 +4,11 @@
 integrity, regulated-action non-repudiation. **Owning issue:** [#55](https://gitlab.com/cricketaustin-group/Pzure/-/issues/55).
 **Method:** STRIDE per trust boundary. **Status:** Approved (Gate 0B).
 
+**Legend:** `[x]` = control **implemented and verified**; `[ ]` = control
+**designed/ratified but not yet implemented** (implementation tracked in the
+referenced issue, typically [#40](https://gitlab.com/cricketaustin-group/Pzure/-/issues/40)). Checkmarks therefore reflect *current* posture,
+not intent.
+
 ## Trust boundaries
 1. Browser SPA ↔ API (NestJS) — public internet, TLS.
 2. API ↔ Keycloak (OIDC) — token issuance/validation.
@@ -16,7 +21,7 @@ integrity, regulated-action non-repudiation. **Owning issue:** [#55](https://git
 ### Spoofing (identity)
 - [x] OIDC via Keycloak; no hand-rolled auth (ADR-002).
 - [x] Access token in memory only (never `localStorage`); refresh token HttpOnly/Secure/SameSite cookie.
-- [x] MFA required for privileged roles (admin, pharmacist) — enforcement tracked in [#40](https://gitlab.com/cricketaustin-group/Pzure/-/issues/40).
+- [ ] MFA required for privileged roles (admin, pharmacist) — **designed, not yet enforced**; rollout tracked in [#40](https://gitlab.com/cricketaustin-group/Pzure/-/issues/40).
 - [x] Pharmacist PIN (bcrypt/Argon2) distinct from password; 5-attempt lockout → 15 min (ADR-004).
 
 ### Tampering (integrity)
@@ -35,6 +40,10 @@ integrity, regulated-action non-repudiation. **Owning issue:** [#55](https://git
 - [x] HMAC-SHA256 search hashes instead of plaintext for searchable encrypted fields.
 - [x] Role/report-based masking; bulk export needs approval + reason; break-glass raises a critical audit event (ADR-020).
 - [x] CORS allowlist; least-privilege DB and Key Vault (managed identity) access.
+- [ ] Global query interceptor enforces row-level `organisation_id`/`branch_id`
+  scoping on **every** transactional read/write; a missing `branch_id` filter is
+  the platform's primary **cross-tenant data-leak** risk (ADR-001). Verified by
+  integration tests — implementation tracked in [#40](https://gitlab.com/cricketaustin-group/Pzure/-/issues/40).
 
 ### Denial of service (availability)
 - [x] API rate limits + request validation.
@@ -46,6 +55,10 @@ integrity, regulated-action non-repudiation. **Owning issue:** [#55](https://git
 - [x] Branch scoping from JWT `active_branch_id` / `allowed_branches` (ADR-001); server re-checks membership.
 - [x] Cashier cannot bypass clinical warnings (PIN override is pharmacist-bound).
 - [x] CI: full SAST + dependency scanning + secret detection block vulnerable code/deps from merging.
+- [ ] Corporate/cross-branch roles that legitimately bypass single-branch
+  scoping are an elevation-of-privilege surface; such access is least-privilege,
+  time-bounded where possible, and **every use is logged** to
+  `audit_security_events` (ADR-001) — enforcement tracked in [#40](https://gitlab.com/cricketaustin-group/Pzure/-/issues/40).
 
 ## Residual risks / follow-ups (→ #40)
 - 4-digit PIN brute-force surface (mitigated by lockout + audit; consider rate-limit per device).
