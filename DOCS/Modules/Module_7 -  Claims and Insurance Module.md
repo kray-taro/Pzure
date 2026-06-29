@@ -2869,7 +2869,7 @@ Claims must not be hard-coded around one SHA form, one insurer format, one tarif
 The system must be payer-configurable, versioned, import-friendly, manual-first, and API-ready.
 ```
 
-As at **23 June 2026**, SHA’s public resources show tariff materials including **L.N. 56 of 2025** and a newer **L.N. 78 SHA – Tariffs for Healthcare Services under SHA, May 8th 2026**. That means the system must treat tariffs as **versioned external rules**, not fixed application code. ([Kenya Law][1])
+As at **23 June 2026**, SHA’s public resources show tariff materials including **L.N. 56 of 2025** and a newer **L.N. 78 SHA – Tariffs for Healthcare Services under SHA, May 8th 2026**. That means the system must treat tariffs as **versioned external rules**, not fixed application code. ([Kenya Law][g7-1])
 
 ---
 
@@ -2892,13 +2892,13 @@ As at **23 June 2026**, SHA’s public resources show tariff materials including
 
 ## 2. Regulatory and operational anchor summary
 
-SHA claims are not ordinary invoices. Under the Social Health Insurance Regulations, benefits are payable where valid claims are lodged and approved, and all claims are to be lodged, reviewed, processed, validated, appraised and paid through the Centralized Digital Platform. Claims must be lodged within seven days from discharge, and the claim information includes SHA number, hospital registration number, patient demographics/contact details, clinical details, and amount claimed. ([Kenya Law][2])
+SHA claims are not ordinary invoices. Under the Social Health Insurance Regulations, benefits are payable where valid claims are lodged and approved, and all claims are to be lodged, reviewed, processed, validated, appraised and paid through the Centralized Digital Platform. Claims must be lodged within seven days from discharge, and the claim information includes SHA number, hospital registration number, patient demographics/contact details, clinical details, and amount claimed. ([Kenya Law][g7-2])
 
-The regulations also define claim-processing outcomes: approved claims, incomplete/error claims returned with reasons for amendment, and rejected claims notified with reasons not later than fourteen days from rejection. Pre-authorisation requests for specialized services are online requests and should include beneficiary details, provider/facility details, and service details; the decision should be immediate but no later than seventy-two hours, and pre-authorisation does not apply to emergency services. ([Kenya Law][2])
+The regulations also define claim-processing outcomes: approved claims, incomplete/error claims returned with reasons for amendment, and rejected claims notified with reasons not later than fourteen days from rejection. Pre-authorisation requests for specialized services are online requests and should include beneficiary details, provider/facility details, and service details; the decision should be immediate but no later than seventy-two hours, and pre-authorisation does not apply to emergency services. ([Kenya Law][g7-2])
 
-The regulations say claim processing is guided by prescribed tariffs, and tariffs are approved/gazetted and may be reviewed based on factors such as technology, economic factors, disease burden, market dynamics, population health risk, and provider feedback. This is the legal reason the application must support tariff versioning, not hard-coded tariff constants. ([Kenya Law][2])
+The regulations say claim processing is guided by prescribed tariffs, and tariffs are approved/gazetted and may be reviewed based on factors such as technology, economic factors, disease burden, market dynamics, population health risk, and provider feedback. This is the legal reason the application must support tariff versioning, not hard-coded tariff constants. ([Kenya Law][g7-2])
 
-SHA has a public provider portal, but the visible public page does not expose a stable developer API contract. Therefore, the correct developer posture is **manual-first, adapter-ready**. ([SHA Provider Portal][3])
+SHA has a public provider portal, but the visible public page does not expose a stable developer API contract. Therefore, the correct developer posture is **manual-first, adapter-ready**. ([SHA Provider Portal][g7-3])
 
 ---
 
@@ -4276,3 +4276,11 @@ the submission reference is captured,
 denials can be corrected or written off,
 and every paid amount can be reconciled to the original claim line.
 ```
+
+[g7-1]: https://new.kenyalaw.org/akn/ke/act/ln/2025/56 "
+      Tariffs for Healthcare Services, 2025
+    - Kenya Law"
+[g7-2]: https://new.kenyalaw.org/akn/ke/act/ln/2024/49 "
+      The Social Health Insurance Regulations
+    - Kenya Law"
+[g7-3]: https://portal.sha.go.ke/ "SHA | Provider Portal"
