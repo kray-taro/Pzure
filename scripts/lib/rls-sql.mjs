@@ -78,8 +78,15 @@ export function buildDirectPolicy({ schema = 'dbo', table, branchColumn = 'branc
  * cannot be paired with an AFTER trigger that derives branch_id — the column
  * would still be NULL and every insert would be rejected. We therefore:
  *   - DERIVE branch_id from the FK parent in an INSTEAD OF INSERT trigger
- *     (so the row already carries the correct branch_id when it lands), and
- *   - apply the FILTER predicate + an AFTER UPDATE BLOCK predicate only.
+ *     (so the row already carries the correct branch_id when it lands),
+ *   - REJECT inside that trigger any derived branch_id that differs from the
+ *     session branch unless the audited bypass flag is set (this is the
+ *     primary cross-branch write defence: a branch-A session must not be able
+ *     to inject a child of a branch-B parent), and
+ *   - apply the FILTER predicate + AFTER INSERT and AFTER UPDATE BLOCK
+ *     predicates. The AFTER INSERT block is safe here because the INSTEAD OF
+ *     trigger has already populated branch_id before the inner INSERT's AFTER
+ *     predicate evaluates; it is a DB backstop to the in-trigger guard.
  * Re-pointing the FK is guarded by buildDenormBranchTrigger (AFTER UPDATE),
  * which keeps branch_id consistent and is itself subject to the UPDATE block.
  *
@@ -141,16 +148,30 @@ export function buildInheritanceDenormPolicy({
     `               LEFT JOIN ${schema}.${parentTable} AS p ON p.${parentKey} = i.${fkColumn}`,
     `               WHERE p.${parentKey} IS NULL)`,
     `        THROW 50001, 'denorm insert: FK parent not found (cannot derive ${branchColumn})', 1;`,
+    // Primary cross-branch write defence: the branch_id derived from the parent
+    // MUST equal the session branch, unless this is the audited bypass path
+    // (ADR-020). A NULL session branch matches nothing, so it is fail-closed.
+    // Set-based (EXISTS over the join) so it holds for multi-row inserts.
+    `    IF (${SESSION_BYPASS} IS NULL OR ${SESSION_BYPASS} = 0)`,
+    `       AND EXISTS (SELECT 1 FROM inserted AS i`,
+    `                   JOIN ${schema}.${parentTable} AS p ON p.${parentKey} = i.${fkColumn}`,
+    `                   WHERE p.${parentBranchColumn} <> ${SESSION_BRANCH}`,
+    `                      OR ${SESSION_BRANCH} IS NULL)`,
+    `        THROW 53000, 'cross-branch write blocked: derived ${branchColumn} <> session branch', 1;`,
     `    INSERT INTO ${schema}.${table} (${insertCols.join(', ')})`,
     `    SELECT ${selectCols.join(', ')}`,
     `    FROM inserted AS i`,
     `    JOIN ${schema}.${parentTable} AS p ON p.${parentKey} = i.${fkColumn};`,
     `END;`,
     `GO`,
-    // No AFTER INSERT block predicate (the INSTEAD OF trigger guarantees the
-    // derived branch_id); FILTER on read + BLOCK on UPDATE.
+    // FILTER on read; BLOCK on INSERT and UPDATE. The AFTER INSERT block is a
+    // DB backstop to the in-trigger guard above: the INSTEAD OF trigger has
+    // already populated branch_id, so by the time the inner INSERT's AFTER
+    // predicate evaluates the row carries the derived value and a legitimate
+    // same-branch insert passes while a cross-branch one is rejected.
     `CREATE SECURITY POLICY ${schema}.sp_${table}`,
     `    ADD FILTER PREDICATE ${fn}(${branchColumn}) ON ${schema}.${table},`,
+    `    ADD BLOCK PREDICATE ${fn}(${branchColumn}) ON ${schema}.${table} AFTER INSERT,`,
     `    ADD BLOCK PREDICATE ${fn}(${branchColumn}) ON ${schema}.${table} AFTER UPDATE`,
     `    WITH (STATE = ON);`,
     `GO`,
