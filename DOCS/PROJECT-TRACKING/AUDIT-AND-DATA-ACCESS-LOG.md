@@ -3,6 +3,10 @@
 **Owning issue:** [#55](https://gitlab.com/cricketaustin-group/Pzure/-/issues/55) · Implementation lane: [#40](https://gitlab.com/cricketaustin-group/Pzure/-/issues/40) · Pairs with ADR-004, ADR-019, ADR-020.
 **Status:** Required (ratified at Gate 0B).
 
+> **ADR values are indicative.** Any ADR parameter referenced below is for
+> readability only; `DECISION-LOG.md` and the ADRs are the authoritative source
+> of truth and override this document if they diverge.
+
 Kenya Data Protection Act and PPB controlled-medicine rules require that
 sensitive actions and patient-record access are traceable. Two complementary,
 **append-only** logs are mandatory before any feature touches patient/payment/
@@ -36,8 +40,14 @@ pharmacy/claim data.
   The read may proceed once the event is durably enqueued in the same
   transaction as (or transactionally linked to) the read authorization; if the
   outbox write itself fails, the access is **denied** (fail-closed) so that no
-  sensitive record is served without a guaranteed audit trail. Duplicate events
-  are tolerated and de-duplicated downstream by `request_id`.
+  sensitive record is served without a guaranteed audit trail. The outbox write
+  is performed **in the same local DB transaction** as the read authorization,
+  so it fails only when the database itself is unavailable (in which case the
+  read fails regardless); this is fail-closed without introducing a new
+  availability single-point-of-failure beyond the database the read already
+  depends on. Duplicate events are tolerated and de-duplicated downstream by the
+  composite key `(request_id, target_entity, target_id)` (a single request may
+  legitimately access multiple records, so `request_id` alone is insufficient).
 - **Captures:** who accessed which patient/record, when, from which branch/
   device, access reason where break-glass/masked-data is involved.
 - **Retention:** governed solely by **ADR-019** (data retention & archival

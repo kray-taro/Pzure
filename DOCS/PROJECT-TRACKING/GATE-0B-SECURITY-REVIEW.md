@@ -20,7 +20,14 @@ data-access-log requirement.
 | **ADR-005** | Transactional Outbox + BullMQ/Redis for external integrations and the async data-access-log pipeline | Confirmed. Security-relevant for **message integrity** and **replay protection** (idempotency keys, signed callbacks) and as the **at-least-once** transport guaranteeing patient data-access events are never silently dropped. |
 
 All six ADRs are already `Approved` in `DECISION-LOG.md`; this Gate 0B review
-formally signs them off as the security baseline.
+formally signs them off as the security baseline. ADR parameter values quoted in
+the table above are **indicative** for readability; `DECISION-LOG.md` / the ADRs
+remain authoritative and override this record if they diverge.
+
+> **Sign-off provenance.** This is a **recovered** record (original !13 metadata,
+> including the approval trail, could not be restored). Recovered and re-ratified
+> by @joykrissa on 2026-06-29 against `DECISION-LOG.md`. A maintainer
+> re-approval on !41 is the authoritative signer of record for audit purposes.
 
 > **ADR numbering note.** `DECISION-LOG.md` is authoritative. Per the log,
 > **ADR-004 = RBAC + PIN**, **ADR-005 = outbox/queue**, and **ADR-006 = degraded
