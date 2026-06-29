@@ -106,15 +106,19 @@ function tableHasPolicy(ddl, table) {
 // some policy exists. The predicate function fn_rls_<table> must reference the
 // scope column (organisation_id for org tables, branch_id for branch tables),
 // so an org table mistakenly given a branch policy is caught.
-function policyScopesOn(ddl, table, expectedColumn) {
+// `expectedColumns` is one or more acceptable scope columns (an org-inheritance
+// table binds its FK column, not organisation_id, since it has no such column).
+// The function body is captured deterministically up to a GO batch separator on
+// its OWN line (multiline), not the first word 'go' anywhere in the text.
+function policyScopesOn(ddl, table, expectedColumns) {
+  const cols = Array.isArray(expectedColumns) ? expectedColumns : [expectedColumns];
   const t = escapeRe(table);
-  const col = escapeRe(expectedColumn);
   const fnMatch = new RegExp(
-    `create\\s+function\\s+(?:\\[?dbo\\]?\\.)?\\[?fn_rls_${t}\\]?[\\s\\S]*?\\bgo\\b`,
-    'i',
+    `create\\s+function\\s+(?:\\[?dbo\\]?\\.)?\\[?fn_rls_${t}\\]?[\\s\\S]*?^\\s*go\\s*$`,
+    'im',
   ).exec(ddl);
   if (!fnMatch) return false;
-  return new RegExp(`\\b${col}\\b`, 'i').test(fnMatch[0]);
+  return cols.some((c) => new RegExp(`\\b${escapeRe(c)}\\b`, 'i').test(fnMatch[0]));
 }
 
 function escapeRe(s) {
@@ -133,6 +137,9 @@ function scopeTarget(name, map) {
 
 function main() {
   const errors = [];
+  // Reset the memo per run so resolutions can't leak across invocations or
+  // across tests that import this module with a different map.
+  _chainMemo = new Map();
 
   if (!existsSync(ERD_PATH)) {
     console.error(`ERROR: ERD not found at ${ERD_PATH}`);
@@ -221,13 +228,20 @@ function main() {
       // do we require an RLS policy (tables not yet migrated are not yet a risk).
       if (!tableIsCreated(ddl, name)) continue;
       const scope = scopeTarget(name, map);
-      const expectedColumn = scope === 'org' ? 'organisation_id' : (map.tables[name].branchColumn ?? 'branch_id');
+      // An org-resolving INHERITANCE table has no organisation_id column; its
+      // predicate binds the FK column it reaches the org through. Accept either
+      // the scope column or that FK so the guard demands a creatable policy.
+      const entryT = map.tables[name];
+      const expectedColumns =
+        scope === 'org'
+          ? (entryT.class === 'inheritance' ? [entryT.fk, 'organisation_id'] : ['organisation_id'])
+          : [entryT.branchColumn ?? 'branch_id'];
       if (!tableHasPolicy(ddl, name)) {
         errors.push(
           `transactional table '${name}' is created in a migration but has no CREATE SECURITY POLICY ` +
             `(ADR-001 §6.4; expected a ${scope}-scoped policy)`,
         );
-      } else if (!policyScopesOn(ddl, name, expectedColumn)) {
+      } else if (!policyScopesOn(ddl, name, expectedColumns)) {
         // A policy exists but its predicate does not reference the expected
         // scope column — e.g. an org table mistakenly given a branch policy.
         errors.push(

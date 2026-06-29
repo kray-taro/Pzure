@@ -12,6 +12,7 @@ import {
   buildInheritanceTvfPredicate,
   buildDenormBranchTrigger,
   buildBranchSetPolicy,
+  buildOrgInheritanceTvfPredicate,
 } from '../../scripts/lib/rls-sql.mjs';
 import { connect, dbConfigured, type Db } from './db';
 
@@ -47,8 +48,16 @@ run('ADR-001 §6.4 RLS isolation (live SQL Server)', () => {
       IF OBJECT_ID('dbo.fn_rls_t_child','IF') IS NOT NULL DROP FUNCTION dbo.fn_rls_t_child;
       IF OBJECT_ID('dbo.fn_rls_t_denorm','IF') IS NOT NULL DROP FUNCTION dbo.fn_rls_t_denorm;
       IF OBJECT_ID('dbo.fn_rls_t_direct','IF') IS NOT NULL DROP FUNCTION dbo.fn_rls_t_direct;
+      IF OBJECT_ID('dbo.sp_t_branches','SP') IS NOT NULL DROP SECURITY POLICY dbo.sp_t_branches;
+      IF OBJECT_ID('dbo.sp_t_allergy','SP') IS NOT NULL DROP SECURITY POLICY dbo.sp_t_allergy;
+      IF OBJECT_ID('dbo.fn_rls_t_branches','IF') IS NOT NULL DROP FUNCTION dbo.fn_rls_t_branches;
+      IF OBJECT_ID('dbo.fn_rls_t_allergy','IF') IS NOT NULL DROP FUNCTION dbo.fn_rls_t_allergy;
       IF OBJECT_ID('dbo.t_child','U') IS NOT NULL DROP TABLE dbo.t_child;
       IF OBJECT_ID('dbo.t_denorm','U') IS NOT NULL DROP TABLE dbo.t_denorm;
+      IF OBJECT_ID('dbo.t_allergy','U') IS NOT NULL DROP TABLE dbo.t_allergy;
+      IF OBJECT_ID('dbo.t_patients','U') IS NOT NULL DROP TABLE dbo.t_patients;
+      IF OBJECT_ID('dbo.t_branch_users','U') IS NOT NULL DROP TABLE dbo.t_branch_users;
+      IF OBJECT_ID('dbo.t_branches','U') IS NOT NULL DROP TABLE dbo.t_branches;
       IF OBJECT_ID('dbo.t_direct','U') IS NOT NULL DROP TABLE dbo.t_direct;
       IF OBJECT_ID('dbo.t_master','U') IS NOT NULL DROP TABLE dbo.t_master;
     `);
@@ -207,10 +216,6 @@ run('ADR-001 §6.4 RLS isolation (live SQL Server)', () => {
     // defect the single-branch predicate would hide.
     const USER = '33333333-3333-3333-3333-333333333333';
     await db.raw(`
-      IF OBJECT_ID('dbo.sp_t_branches','SP') IS NOT NULL DROP SECURITY POLICY dbo.sp_t_branches;
-      IF OBJECT_ID('dbo.fn_rls_t_branches','IF') IS NOT NULL DROP FUNCTION dbo.fn_rls_t_branches;
-      IF OBJECT_ID('dbo.t_branch_users','U') IS NOT NULL DROP TABLE dbo.t_branch_users;
-      IF OBJECT_ID('dbo.t_branches','U') IS NOT NULL DROP TABLE dbo.t_branches;
       CREATE TABLE dbo.t_branches (id uniqueidentifier NOT NULL PRIMARY KEY, label nvarchar(50) NULL);
       CREATE TABLE dbo.t_branch_users (user_id uniqueidentifier NOT NULL, branch_id uniqueidentifier NOT NULL);
       INSERT INTO dbo.t_branches (id, label) VALUES ('${BRANCH_A}', 'branch-A'), ('${BRANCH_B}', 'branch-B');
@@ -224,6 +229,34 @@ run('ADR-001 §6.4 RLS isolation (live SQL Server)', () => {
     expect(seen.recordset.map((x: { label: string }) => x.label)).toEqual(['branch-A', 'branch-B']);
     // A user with no grants sees none (fail-closed), regardless of session branch.
     const none = await db.asBranch(BRANCH_A, 'SELECT COUNT(*) AS n FROM dbo.t_branches;', { userId: '44444444-4444-4444-4444-444444444444' });
+    expect(none.recordset[0].n).toBe(0);
+    // A NULL user_id (dropped/unauth JWT claim) must also see zero (fail-closed),
+    // never widen visibility to the session branch.
+    const nullUser = await db.asBranch(BRANCH_A, 'SELECT COUNT(*) AS n FROM dbo.t_branches;', { userId: null });
+    expect(nullUser.recordset[0].n).toBe(0);
+  });
+
+  it('T9 org-scoped inheritance: a child with no org column is isolated by org via its FK parent', async () => {
+    // patient_allergies-style: t_allergy (FK patient_id) reaches organisation_id
+    // through t_patients. Two orgs; a session scoped to org-1 sees only its row.
+    const ORG1 = '55555555-5555-5555-5555-555555555555';
+    const ORG2 = '66666666-6666-6666-6666-666666666666';
+    await db.raw(`
+      CREATE TABLE dbo.t_patients (id uniqueidentifier NOT NULL PRIMARY KEY, organisation_id uniqueidentifier NOT NULL);
+      CREATE TABLE dbo.t_allergy  (id uniqueidentifier NOT NULL PRIMARY KEY, patient_id uniqueidentifier NOT NULL REFERENCES dbo.t_patients(id), label nvarchar(50) NULL);
+      DECLARE @p1 uniqueidentifier = NEWID(), @p2 uniqueidentifier = NEWID();
+      INSERT INTO dbo.t_patients (id, organisation_id) VALUES (@p1, '${ORG1}'), (@p2, '${ORG2}');
+      INSERT INTO dbo.t_allergy (id, patient_id, label) VALUES (NEWID(), @p1, 'org1-allergy'), (NEWID(), @p2, 'org2-allergy');
+    `);
+    await db.raw(
+      buildOrgInheritanceTvfPredicate({ table: 't_allergy', fkColumn: 'patient_id', parentTable: 't_patients', parentKey: 'id', parentOrgColumn: 'organisation_id' }),
+    );
+    const setOrg = (org: string | null, q: string) =>
+      db.raw(`EXEC sp_set_session_context @key=N'organisation_id', @value=${org ? `'${org}'` : 'NULL'};\n${q}`);
+    const r1 = await setOrg(ORG1, 'SELECT label FROM dbo.t_allergy;');
+    expect(r1.recordset.map((x: { label: string }) => x.label)).toEqual(['org1-allergy']);
+    // No org context -> fail-closed (zero rows), never cross-org leak.
+    const none = await setOrg(null, 'SELECT COUNT(*) AS n FROM dbo.t_allergy;');
     expect(none.recordset[0].n).toBe(0);
   });
 });

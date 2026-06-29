@@ -9,6 +9,7 @@ import {
   buildDenormBranchTrigger,
   buildBranchSetPolicy,
   buildOrgScopedPolicy,
+  buildOrgInheritanceTvfPredicate,
   assertIdent,
   SESSION_BRANCH,
   SESSION_BYPASS,
@@ -88,11 +89,25 @@ describe('rls-sql generated DDL', () => {
     ).toThrow(/'columns'/);
   });
 
-  it('org-scoped policy filters on the session organisation, never a branch', () => {
-    const sql = buildOrgScopedPolicy({ table: 'patient_allergies', orgColumn: 'organisation_id' });
+  it('org-scoped policy (owned column) filters on the session organisation, never a branch', () => {
+    const sql = buildOrgScopedPolicy({ table: 'patient_patients', orgColumn: 'organisation_id' });
     expect(sql).toContain(SESSION_ORG);
     expect(sql).not.toContain(SESSION_BRANCH);
-    expect(sql).toMatch(/CREATE SECURITY POLICY dbo\.sp_patient_allergies/);
+    expect(sql).toMatch(/CREATE SECURITY POLICY dbo\.sp_patient_patients/);
+  });
+
+  it('org-inheritance TVF reaches organisation_id via the FK parent (no org column on the child)', () => {
+    const sql = buildOrgInheritanceTvfPredicate({
+      table: 'patient_allergies', fkColumn: 'patient_id', parentTable: 'patient_patients',
+    });
+    // Binds the FK column the child actually has, joins the parent for org.
+    expect(sql).toMatch(/CREATE FUNCTION dbo\.fn_rls_patient_allergies\(@patient_id uniqueidentifier\)/);
+    expect(sql).toMatch(/FROM dbo\.patient_patients AS p/);
+    expect(sql).toContain(`p.organisation_id = ${SESSION_ORG}`);
+    expect(sql).not.toContain(SESSION_BRANCH);
+    // It must NOT bind a non-existent organisation_id column on the child.
+    expect(sql).not.toMatch(/PREDICATE dbo\.fn_rls_patient_allergies\(organisation_id\)/);
+    expect(sql).toMatch(/PREDICATE dbo\.fn_rls_patient_allergies\(patient_id\)/);
   });
 
   it('denorm UPDATE trigger re-derives branch_id only when the FK changes', () => {
