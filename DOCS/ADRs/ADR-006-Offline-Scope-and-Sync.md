@@ -12,9 +12,9 @@ We need to define exactly what functions remain available offline and how data i
 
 ## 2. Decision Drivers
 
-* **Patient Safety:** We cannot risk two clinicians prescribing interacting drugs simultaneously while offline.
-* **Inventory Integrity:** We cannot sell the same physical box of medicine twice.
-* **Complexity:** Full bidirectional sync is too expensive to build for the MVP.
+- **Patient Safety:** We cannot risk two clinicians prescribing interacting drugs simultaneously while offline.
+- **Inventory Integrity:** We cannot sell the same physical box of medicine twice.
+- **Complexity:** Full bidirectional sync is too expensive to build for the MVP.
 
 ## 3. Considered Options
 
@@ -26,27 +26,28 @@ We need to define exactly what functions remain available offline and how data i
 
 **Chosen option:** Option 3 (Degraded Offline Mode with Append-Only Events).
 
-We will use the browser's `IndexedDB` (via a wrapper like Dexie.js or localForage) to cache essential master data (product catalogues, price lists, active patients). 
+We will use the browser's `IndexedDB` (via a wrapper like Dexie.js or localForage) to cache essential master data (product catalogues, price lists, active patients).
 
 When offline, the system enters a distinct **"Offline Mode"** UI. Complex clinical operations (prescribing new treatments, ordering labs, processing insurance claims) are **blocked**. Operations are restricted to:
-* Cash sales of basic products.
-* Recording temporary clinical notes (saved as drafts).
-* Queuing patients with temporary offline IDs.
+
+- Cash sales of basic products.
+- Recording temporary clinical notes (saved as drafts).
+- Queuing patients with temporary offline IDs.
 
 ### Positive Consequences
 
-* **Safety:** Prevents clinical data conflicts and overselling inventory.
-* **Business Continuity:** The pharmacy can still sell retail items and OTC drugs during an outage.
-* **Simplicity:** The sync logic is unidirectional (Client → Server push of discrete events) rather than bi-directional merging.
+- **Safety:** Prevents clinical data conflicts and overselling inventory.
+- **Business Continuity:** The pharmacy can still sell retail items and OTC drugs during an outage.
+- **Simplicity:** The sync logic is unidirectional (Client → Server push of discrete events) rather than bi-directional merging.
 
 ### Negative Consequences
 
-* **Reduced Functionality:** Insurance claims, eTIMS validation, and complex prescribing are impossible until internet is restored.
-* **Sync Failures:** If a cached price is outdated and a sale is made offline, the server will detect a price discrepancy upon sync.
+- **Reduced Functionality:** Insurance claims, eTIMS validation, and complex prescribing are impossible until internet is restored.
+- **Sync Failures:** If a cached price is outdated and a sale is made offline, the server will detect a price discrepancy upon sync.
 
 ## 5. Implementation Notes
 
-* The frontend will use a Service Worker to detect `navigator.onLine` and API connection drops.
-* Offline actions are serialized as JSON payloads in an `IndexedDB` sync queue.
-* **Idempotency:** Every offline action must generate a UUID v4 on the client. When syncing, the server uses this UUID as an idempotency key to prevent double-processing if the network drops during the sync request.
-* **Conflict Resolution:** In case of an inventory conflict (e.g., offline sale of an item that was sold out online), the server accepts the sale (as the physical item has already left the store) but flags the stock batch as negative, triggering a mandatory stock reconciliation task for the branch manager.
+- The frontend will use a Service Worker to detect `navigator.onLine` and API connection drops.
+- Offline actions are serialized as JSON payloads in an `IndexedDB` sync queue.
+- **Idempotency:** Every offline action must generate a UUID v4 on the client. When syncing, the server uses this UUID as an idempotency key to prevent double-processing if the network drops during the sync request.
+- **Conflict Resolution:** In case of an inventory conflict (e.g., offline sale of an item that was sold out online), the server accepts the sale (as the physical item has already left the store) but flags the stock batch as negative, triggering a mandatory stock reconciliation task for the branch manager.

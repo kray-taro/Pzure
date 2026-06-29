@@ -12,10 +12,10 @@ The key question is how to physically and logically isolate data between branche
 
 ## 2. Decision Drivers
 
-* **Consolidated Reporting:** Management needs real-time views across all branches without complex ETL pipelines.
-* **Patient Mobility:** A patient registered at Branch A may visit Branch B. Their EMR must be accessible, subject to consent rules.
-* **Low Operational Overhead:** The MVP must be built on free-tier/open-source tools; managing 10 separate databases is too costly and operationally complex for a greenfield startup.
-* **Data Privacy:** Branch staff must only see data for the branch they are currently logged into, unless explicitly authorised otherwise.
+- **Consolidated Reporting:** Management needs real-time views across all branches without complex ETL pipelines.
+- **Patient Mobility:** A patient registered at Branch A may visit Branch B. Their EMR must be accessible, subject to consent rules.
+- **Low Operational Overhead:** The MVP must be built on free-tier/open-source tools; managing 10 separate databases is too costly and operationally complex for a greenfield startup.
+- **Data Privacy:** Branch staff must only see data for the branch they are currently logged into, unless explicitly authorised otherwise.
 
 ## 3. Considered Options
 
@@ -31,17 +31,17 @@ For a 10-branch health retail platform, row-level scoping using `organisation_id
 
 ### Positive Consequences
 
-* **Simplified Master Data:** Product catalogues, KEML lists, and ICD-10 codes only need to be imported once.
-* **Unified Patient Record:** A single `patient.patients` record exists, preventing dangerous duplicate clinical histories.
-* **Ease of Deployment:** One set of database migrations. CI/CD pipelines remain simple.
+- **Simplified Master Data:** Product catalogues, KEML lists, and ICD-10 codes only need to be imported once.
+- **Unified Patient Record:** A single `patient.patients` record exists, preventing dangerous duplicate clinical histories.
+- **Ease of Deployment:** One set of database migrations. CI/CD pipelines remain simple.
 
 ### Negative Consequences
 
-* **Query Risk:** Developers must never forget to append `WHERE branch_id = X` in queries. A forgotten filter could leak data across branches.
-* **Blast Radius:** If the database goes down, all 10 branches go down simultaneously.
+- **Query Risk:** Developers must never forget to append `WHERE branch_id = X` in queries. A forgotten filter could leak data across branches.
+- **Blast Radius:** If the database goes down, all 10 branches go down simultaneously.
 
 ## 5. Implementation Notes
 
-* **Mandatory Columns:** Every transactional table must include `branch_id (UNIQUEIDENTIFIER)`. Every top-level master data table must include `organisation_id (UNIQUEIDENTIFIER)`.
-* **ORM/Query Builder Enforcement:** The backend (NestJS) must use global query scopes or interceptors to automatically inject the user's current `branch_id` from their JWT token into all read and write queries.
-* **Cross-Branch Operations:** For inter-branch transfers or corporate reporting, a specific `Corporate` role or system service account will bypass the branch scope.
+- **Mandatory Columns:** Every transactional table must include `branch_id (UNIQUEIDENTIFIER)`. Every top-level master data table must include `organisation_id (UNIQUEIDENTIFIER)`.
+- **ORM/Query Builder Enforcement:** The backend (NestJS) must use global query scopes or interceptors to automatically inject the user's current `branch_id` from their JWT token into all read and write queries.
+- **Cross-Branch Operations:** For inter-branch transfers or corporate reporting, a specific `Corporate` role or system service account will bypass the branch scope.

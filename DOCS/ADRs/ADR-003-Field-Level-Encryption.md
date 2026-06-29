@@ -12,10 +12,10 @@ We need a strategy for field-level encryption that protects highly sensitive dat
 
 ## 2. Decision Drivers
 
-* **Compliance:** Must comply with Kenya Data Protection Act and PPB guidelines.
-* **Cost:** Avoid expensive managed Key Management Services (KMS) for the MVP phase.
-* **Performance:** Encryption/decryption must not introduce noticeable latency to the EMR or POS workflows.
-* **Searchability:** Encrypted fields are generally unsearchable. We must carefully choose which fields to encrypt to avoid breaking core application workflows (e.g., patient search).
+- **Compliance:** Must comply with Kenya Data Protection Act and PPB guidelines.
+- **Cost:** Avoid expensive managed Key Management Services (KMS) for the MVP phase.
+- **Performance:** Encryption/decryption must not introduce noticeable latency to the EMR or POS workflows.
+- **Searchability:** Encrypted fields are generally unsearchable. We must carefully choose which fields to encrypt to avoid breaking core application workflows (e.g., patient search).
 
 ## 3. Considered Options
 
@@ -29,24 +29,25 @@ We need a strategy for field-level encryption that protects highly sensitive dat
 
 For the MVP, we will use a single strong AES-256-GCM symmetric key injected via environment variables. NestJS will intercept specific entity fields (e.g., using TypeORM transformers or Prisma middlewares) to encrypt them on write and decrypt on read.
 
-### Fields Designated for Encryption:
-* `patient.national_id`
-* `patient.phone_primary` (if not used as the primary search index, or we hash a search-friendly version)
-* `emr.clinical_notes.note_text`
+### Fields Designated for Encryption
+
+- `patient.national_id`
+- `patient.phone_primary` (if not used as the primary search index, or we hash a search-friendly version)
+- `emr.clinical_notes.note_text`
 
 ### Positive Consequences
 
-* **Zero Infrastructure Cost:** No dependency on Azure Key Vault or AWS KMS for the MVP.
-* **Simple Implementation:** Easily managed via standard Node.js `crypto` library.
-* **Data Security:** DB backups and direct SQL queries will not expose the most sensitive PHI.
+- **Zero Infrastructure Cost:** No dependency on Azure Key Vault or AWS KMS for the MVP.
+- **Simple Implementation:** Easily managed via standard Node.js `crypto` library.
+- **Data Security:** DB backups and direct SQL queries will not expose the most sensitive PHI.
 
 ### Negative Consequences
 
-* **Key Rotation:** Rotating a single master key requires decrypting and re-encrypting the entire database. (This is acceptable for the MVP scale but must be upgraded to Envelope Encryption in Phase 3).
-* **Searchability:** We cannot do `LIKE '%text%'` searches on encrypted fields. If we must search by phone number, we will store a deterministic HMAC hash of the phone number alongside the encrypted value for exact-match lookups.
+- **Key Rotation:** Rotating a single master key requires decrypting and re-encrypting the entire database. (This is acceptable for the MVP scale but must be upgraded to Envelope Encryption in Phase 3).
+- **Searchability:** We cannot do `LIKE '%text%'` searches on encrypted fields. If we must search by phone number, we will store a deterministic HMAC hash of the phone number alongside the encrypted value for exact-match lookups.
 
 ## 5. Implementation Notes
 
-* Implement a `CryptoService` in NestJS.
-* Use deterministic encryption (or store the IV alongside the ciphertext) for fields that require exact-match querying.
-* Ensure the master key is strictly managed via GitHub Secrets during CI/CD and is never committed to source control.
+- Implement a `CryptoService` in NestJS.
+- Use deterministic encryption (or store the IV alongside the ciphertext) for fields that require exact-match querying.
+- Ensure the master key is strictly managed via GitHub Secrets during CI/CD and is never committed to source control.

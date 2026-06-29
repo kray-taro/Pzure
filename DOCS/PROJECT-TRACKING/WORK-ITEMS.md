@@ -133,6 +133,7 @@ The frontend lane is internally **sequential** (each F-issue builds on the previ
 Beyond the hard chain above, these orderings are mandatory even when squads have capacity:
 
 **Intra-lane (strict within a single squad's lane):**
+
 - Commerce: [#16](https://gitlab.com/cricketaustin-group/Pzure/-/issues/16) → [#17](https://gitlab.com/cricketaustin-group/Pzure/-/issues/17) → [#18](https://gitlab.com/cricketaustin-group/Pzure/-/issues/18) — payments need a working POS; eTIMS needs finalised invoices.
 - Inventory: [#19](https://gitlab.com/cricketaustin-group/Pzure/-/issues/19) → [#20](https://gitlab.com/cricketaustin-group/Pzure/-/issues/20) → [#21](https://gitlab.com/cricketaustin-group/Pzure/-/issues/21) — stock ledger needs PO/GRN; expiry/recall need the ledger.
 - Pharmacy: [#22](https://gitlab.com/cricketaustin-group/Pzure/-/issues/22) → [#23](https://gitlab.com/cricketaustin-group/Pzure/-/issues/23) → [#24](https://gitlab.com/cricketaustin-group/Pzure/-/issues/24) → [#25](https://gitlab.com/cricketaustin-group/Pzure/-/issues/25) — dispensing needs an approved prescription; controlled meds and delivery extend dispensing.
@@ -140,6 +141,7 @@ Beyond the hard chain above, these orderings are mandatory even when squads have
 - Frontend: [#57](https://gitlab.com/cricketaustin-group/Pzure/-/issues/57) → [#58](https://gitlab.com/cricketaustin-group/Pzure/-/issues/58) → [#59](https://gitlab.com/cricketaustin-group/Pzure/-/issues/59) → [#61](https://gitlab.com/cricketaustin-group/Pzure/-/issues/61) → [#60](https://gitlab.com/cricketaustin-group/Pzure/-/issues/60) → [#62](https://gitlab.com/cricketaustin-group/Pzure/-/issues/62) — each layer consumes the previous (tokens → components → shells → standards → POS/print).
 
 **Frontend-to-module pairings (a module's real UI cannot complete before its frontend layer):**
+
 - POS core [#16](https://gitlab.com/cricketaustin-group/Pzure/-/issues/16) UI ⇐ F4 POS shell [#60](https://gitlab.com/cricketaustin-group/Pzure/-/issues/60) (both Sprint 7).
 - Dispensing/labels [#23](https://gitlab.com/cricketaustin-group/Pzure/-/issues/23) + lab [#28](https://gitlab.com/cricketaustin-group/Pzure/-/issues/28) print output ⇐ F6 print templates [#62](https://gitlab.com/cricketaustin-group/Pzure/-/issues/62) (Sprint 13).
 - All module forms/tables/status chips ⇐ F2 components [#58](https://gitlab.com/cricketaustin-group/Pzure/-/issues/58) + F5 standards [#61](https://gitlab.com/cricketaustin-group/Pzure/-/issues/61); start module backend in parallel, but gate UI completion on these.
@@ -160,6 +162,7 @@ all lanes complete
 ### Blockers gating parallel start
 
 Resolve in Sprint 0; several block the lanes above:
+
 - [#48](https://gitlab.com/cricketaustin-group/Pzure/-/issues/48) queue tech → blocks integration-heavy lanes (eTIMS [#18](https://gitlab.com/cricketaustin-group/Pzure/-/issues/18), payments [#17](https://gitlab.com/cricketaustin-group/Pzure/-/issues/17), comms [#36](https://gitlab.com/cricketaustin-group/Pzure/-/issues/36))
 - [#49](https://gitlab.com/cricketaustin-group/Pzure/-/issues/49) auth (Keycloak vs RBAC) → blocks #13 skeleton, therefore everything
 - [#50](https://gitlab.com/cricketaustin-group/Pzure/-/issues/50) eTIMS path → blocks [#18](https://gitlab.com/cricketaustin-group/Pzure/-/issues/18)

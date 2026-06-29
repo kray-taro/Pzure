@@ -1,31 +1,17 @@
-# DOCS-branch CI. Keeps the documentation source of truth DRY, consistent and
-# renderable. (The develop branch has its own .gitlab-ci.yml with code gates;
-# these two root configs must never be merged across branches.)
+# Pzure DOCS branch CI - documentation verification loop (#56)
 #
-# A workflow block is required: without it a job with no rules yields an empty
-# merge_request_event pipeline that fails at creation (duration: null, no jobs).
-# Run for MRs targeting DOCS and for pushes to DOCS.
+# DDIA reliability: documentation invariants (consistent DR targets, valid
+# links, lintable markdown) are machine-checked gates, not human discipline.
+# This pipeline runs on the DOCS branch and on MRs targeting DOCS.
+
+stages:
+  - consistency
+  - lint
+
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "DOCS"'
     - if: '$CI_COMMIT_BRANCH == "DOCS"'
-
-stages:
-  - guard
-  - consistency
-  - lint
-
-# --- guard stage: DRY/hygiene invariants (one ADR per number, no archives, .md only)
-
-docs-hygiene:
-  stage: guard
-  image: alpine:3.20
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "DOCS"'
-    - if: '$CI_COMMIT_BRANCH == "DOCS"'
-  script:
-    - apk add --no-cache bash git grep sed coreutils >/dev/null
-    - bash scripts/check-docs-hygiene.sh
 
 # --- consistency stage: fast-failing policy checks ---------------------------
 
@@ -46,7 +32,11 @@ link-check:
 # --- lint stage --------------------------------------------------------------
 
 # Lint the WHOLE DOCS markdown tree and BLOCK on any violation.
-# Rule set: .markdownlint.jsonc; file globs/ignores: .markdownlint-cli2.jsonc.
+# The legacy corpus has been burned down (#68): ADRs, WORK-ITEMS, and the
+# module specs are all clean, and the module MD025 file-scoping exclusion has
+# been removed from .markdownlint-cli2.jsonc. This is the final #68 step -
+# full-tree blocking with no rule disabled. Rule set: .markdownlint.jsonc;
+# file globs/ignores: .markdownlint-cli2.jsonc.
 markdownlint:
   stage: lint
   image: node:20-alpine

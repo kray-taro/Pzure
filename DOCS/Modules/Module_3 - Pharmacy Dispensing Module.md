@@ -19,7 +19,7 @@ For Kenya, this module must be designed around four realities:
 
 ---
 
-# 1. Purpose of the module
+## 1. Purpose of the module
 
 The Pharmacy Dispensing Module should:
 
@@ -40,7 +40,7 @@ The Pharmacy Dispensing Module should:
 
 ---
 
-# 2. Core users
+## 2. Core users
 
 | User                        | Main actions                                                                        |
 | --------------------------- | ----------------------------------------------------------------------------------- |
@@ -57,7 +57,7 @@ The Pharmacy Dispensing Module should:
 
 ---
 
-# 3. Relationship with modules 1 and 2
+## 3. Relationship with modules 1 and 2
 
 ## Module 1 dependency: organisation and licensing
 
@@ -102,7 +102,7 @@ The dispensing module must depend heavily on stock data:
 
 ---
 
-# 4. Core pharmacy transaction types
+## 4. Core pharmacy transaction types
 
 | Transaction                  | Description                                     | POS involved? | Stock involved? | Patient involved? |
 | ---------------------------- | ----------------------------------------------- | ------------: | --------------: | ----------------: |
@@ -120,7 +120,7 @@ The dispensing module must depend heavily on stock data:
 
 ---
 
-# 5. Feature-by-feature design
+## 5. Feature-by-feature design
 
 ## A. Prescription entry/upload
 
@@ -785,7 +785,7 @@ The system must answer:
 
 ---
 
-# 6. Required screens
+## 6. Required screens
 
 ## Screen 1: Prescription intake
 
@@ -993,7 +993,7 @@ Each step should show:
 
 ---
 
-# 7. Workflows
+## 7. Workflows
 
 ## A. External prescription workflow
 
@@ -1128,7 +1128,7 @@ PPB runs PvERS, the Pharmacovigilance Electronic Reporting System, and its guest
 
 ---
 
-# 8. Rules engine
+## 8. Rules engine
 
 ## Dispensing allowed
 
@@ -1226,7 +1226,7 @@ ELSE require new prescription
 
 ---
 
-# 9. Data model
+## 9. Data model
 
 ## Main tables
 
@@ -1485,7 +1485,7 @@ ELSE require new prescription
 
 ---
 
-# 10. API design
+## 10. API design
 
 ## Prescription endpoints
 
@@ -1557,7 +1557,7 @@ ELSE require new prescription
 
 ---
 
-# 11. Integration points
+## 11. Integration points
 
 | Integration             | Purpose                                                |
 | ----------------------- | ------------------------------------------------------ |
@@ -1574,7 +1574,7 @@ ELSE require new prescription
 
 ---
 
-# 12. Permissions
+## 12. Permissions
 
 | Permission                    |            Cashier |          Assistant | Pharmacist/Technologist | Superintendent | Manager | Auditor |
 | ----------------------------- | -----------------: | -----------------: | ----------------------: | -------------: | ------: | ------: |
@@ -1594,7 +1594,7 @@ ELSE require new prescription
 
 ---
 
-# 13. Reports
+## 13. Reports
 
 ## Operational reports
 
@@ -1634,7 +1634,7 @@ ADR/PQMP reports opened
 
 ---
 
-# 14. Edge cases
+## 14. Edge cases
 
 | Edge case                                               | Correct handling                                                                               |
 | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
@@ -1657,7 +1657,7 @@ ADR/PQMP reports opened
 
 ---
 
-# 15. MVP versus later versions
+## 15. MVP versus later versions
 
 ## MVP
 
@@ -1715,7 +1715,7 @@ Add:
 
 ---
 
-# 16. Acceptance criteria
+## 16. Acceptance criteria
 
 The module is ready when it passes these tests:
 
@@ -1739,7 +1739,7 @@ The module is ready when it passes these tests:
 
 ---
 
-# 17. Final product behaviour
+## 17. Final product behaviour
 
 The Pharmacy Dispensing Module should behave like this:
 
@@ -1774,7 +1774,7 @@ ADR-021: Medication Safety Knowledge Base and Clinical Decision Support Strategy
 
 ---
 
-# 1. Architecture decision
+## 1. Architecture decision
 
 For this Kenyan 10-branch enterprise rollout, I recommend a **hybrid staged approach**, not a purely manual table and not an immediate fully commercial dependency.
 
@@ -1804,7 +1804,7 @@ Then Version 2/3 expands to deeper interaction, contraindication, dose, disease,
 
 ---
 
-# 2. Why KEML alone is not enough
+## 2. Why KEML alone is not enough
 
 KEML is essential but it is **not a drug interaction database**.
 
@@ -1829,7 +1829,7 @@ WHO’s Model Lists of Essential Medicines are updated every two years, and the 
 
 ---
 
-# 3. Corrected Module 3 design: Medication Safety Knowledge Base
+## 3. Corrected Module 3 design: Medication Safety Knowledge Base
 
 Add this as a new submodule under Module 3:
 
@@ -1852,7 +1852,7 @@ ADR/pharmacovigilance
 
 ---
 
-# 4. Recommended MVP knowledge stack
+## 4. Recommended MVP knowledge stack
 
 ## 4.1 Core local formulary
 
@@ -1924,7 +1924,7 @@ Create curated local tables for the first version.
 
 ---
 
-# 5. Clinical decision support levels
+## 5. Clinical decision support levels
 
 ## Level 1: MVP safety checks
 
@@ -1981,7 +1981,7 @@ For this project, I would not hard-code a commercial vendor into the base produc
 
 ---
 
-# 6. Proposed CDS architecture
+## 6. Proposed CDS architecture
 
 ## 6.1 High-level architecture
 
@@ -2055,7 +2055,7 @@ Responsibilities:
 
 ---
 
-# 7. Data model additions
+## 7. Data model additions
 
 Add these tables to the SQL Server model.
 
@@ -2292,7 +2292,7 @@ This table is critical. Without it, brand-name products cannot be safely screene
 
 ---
 
-# 8. CDS provider abstraction
+## 8. CDS provider abstraction
 
 Build the rules engine so sources can change.
 
@@ -2340,7 +2340,7 @@ without rewriting pharmacy workflow.
 
 ---
 
-# 9. Safety alert severity model
+## 9. Safety alert severity model
 
 Alert severity must be strict enough for safety but not so noisy that pharmacists ignore it.
 
@@ -2365,7 +2365,7 @@ Example:
 
 ---
 
-# 10. Alert-fatigue controls
+## 10. Alert-fatigue controls
 
 This is important. A noisy CDS engine is unsafe.
 
@@ -2382,7 +2382,7 @@ This is important. A noisy CDS engine is unsafe.
 
 ---
 
-# 11. Kenya-localization rules
+## 11. Kenya-localization rules
 
 ## 11.1 KEML and KEPH level check
 
@@ -2431,7 +2431,7 @@ This does not replace national treatment guidelines. It provides structured warn
 
 ---
 
-# 12. Pharmacovigilance integration
+## 12. Pharmacovigilance integration
 
 The system should support ADR and medication-error capture linked to dispense, product, batch, and patient.
 
@@ -2473,7 +2473,7 @@ Follow-up task created
 
 ---
 
-# 13. Implementation plan addition
+## 13. Implementation plan addition
 
 Add a new sprint before building full Module 3 pharmacy safety.
 
@@ -2506,7 +2506,7 @@ Insert after Product Master / before Module 3 advanced dispensing
 
 ---
 
-# 14. MVP acceptance criteria for medication safety
+## 14. MVP acceptance criteria for medication safety
 
 | Test                                                      | Expected result                                           |
 | --------------------------------------------------------- | --------------------------------------------------------- |
@@ -2525,7 +2525,7 @@ Insert after Product Master / before Module 3 advanced dispensing
 
 ---
 
-# 15. Governance model
+## 15. Governance model
 
 Medication safety content must be governed like clinical content.
 
@@ -2578,7 +2578,7 @@ Revise or retire
 
 ---
 
-# 16. Data quality requirements
+## 16. Data quality requirements
 
 Medication safety only works if product data is clean.
 
@@ -2602,7 +2602,7 @@ Prescription-only medicines should not be activated for dispensing until product
 
 ---
 
-# 17. Commercial vendor readiness
+## 17. Commercial vendor readiness
 
 Even if you do not buy a commercial knowledge base immediately, design for it.
 
@@ -2646,7 +2646,7 @@ This prevents the UI and pharmacy workflow from being rewritten if the knowledge
 
 ---
 
-# 18. Update to the risk register
+## 18. Update to the risk register
 
 Add these risks.
 
@@ -2665,7 +2665,7 @@ Add these risks.
 
 ---
 
-# 19. Corrected Module 3 principle
+## 19. Corrected Module 3 principle
 
 Replace the previous principle:
 
@@ -2681,7 +2681,7 @@ No prescription medicine should leave the pharmacy without a patient, prescripti
 
 ---
 
-# 20. Final recommendation
+## 20. Final recommendation
 
 For this project, implement:
 
@@ -2715,7 +2715,7 @@ The important architectural rule is:
 
 **The pharmacy system must not claim to perform medication safety checks unless it stores the source, version, mapping, rule, severity, alert, override, and responsible clinician/pharmacist decision behind every warning.**
 
-# Module 3 Gap Closure: Pharmacy Dispensing — Developer Handoff Addendum
+## Module 3 Gap Closure: Pharmacy Dispensing — Developer Handoff Addendum
 
 ## Updated handoff status
 
@@ -2735,7 +2735,7 @@ Advanced clinical interaction databases, controlled-medicine final register word
 
 ---
 
-# 1. Regulatory anchor summary
+## 1. Regulatory anchor summary
 
 The Pharmacy and Poisons Act defines “dispense” as supplying a medicine or poison on and in accordance with a prescription duly given by a duly qualified medical practitioner, dentist, or veterinary surgeon. The Pharmacy and Poisons registration rules expose the medicine sale-class vocabulary developers should use: **prescription-only medicine (POM), over-the-counter medicine (OTC), pharmacy medicine (P), and general sales (GS)**. PPB’s PRIMS public product register should be treated as a verification source for registered products and marketing-authorisation status where available. ([new.kenyalaw.org](https://new.kenyalaw.org/akn/ke/act/1956/17/eng@2023-12-11)) ([new.kenyalaw.org](https://new.kenyalaw.org/akn/ke/act/ln/1981/147/eng%402022-12-31)) ([prims.pharmacyboardkenya.org](https://prims.pharmacyboardkenya.org/pharma_register_public/))
 
@@ -2745,7 +2745,7 @@ The Pharmacy and Poisons Rules require certain prescription details for Part I p
 
 ---
 
-# 2. Final developer decisions
+## 2. Final developer decisions
 
 | Gap                                 | Final decision                                                                                                                                                                                                                                                                                                           |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -2759,7 +2759,7 @@ The Pharmacy and Poisons Rules require certain prescription details for Part I p
 
 ---
 
-# 3. Final medicine classification model
+## 3. Final medicine classification model
 
 Do **not** classify medicines using one field such as `medicine_type = prescription`. That is too weak.
 
@@ -2899,7 +2899,7 @@ The Kenya Essential Medicines List 2023 includes therapeutic categories and AWaR
 
 ---
 
-# 4. Product classification master-data tables
+## 4. Product classification master-data tables
 
 ## 4.1 `medicine_products`
 
@@ -2983,7 +2983,7 @@ ELSE block sale/dispense
 
 ---
 
-# 5. Clinical warning engine
+## 5. Clinical warning engine
 
 ## 5.1 Final approach
 
@@ -3163,7 +3163,7 @@ THEN requires_pharmacist_acknowledgement OR prescriber clarification
 
 ---
 
-# 6. Substitution governance
+## 6. Substitution governance
 
 ## 6.1 Final substitution policy
 
@@ -3240,7 +3240,7 @@ AND block unless approval captured
 
 ---
 
-# 7. Controlled medicine register
+## 7. Controlled medicine register
 
 ## 7.1 Final conservative register model
 
@@ -3343,7 +3343,7 @@ This retention design uses the two-year prescription/poisons-record anchor in th
 
 ---
 
-# 8. Final label templates
+## 8. Final label templates
 
 PPB’s SmPC/PIL/labelling guideline states that product information should be scientifically accurate, consistent, user-friendly, and support safe and effective medicine use; it covers indications, dosage, contraindications, warnings, pharmacology, storage, patient information leaflets, and primary/secondary packaging labelling. For dispensing labels, the system should use conservative patient-safety labels that complement, not replace, manufacturer labels and patient information leaflets. ([web.pharmacyboardkenya.org](https://web.pharmacyboardkenya.org/download/guideline-on-summary-of-product-characteristics-patient-information-leaflet-and-labelling/))
 
@@ -3450,7 +3450,7 @@ Keep out of reach of children.
 
 ---
 
-# 9. Final prescription intake rules
+## 9. Final prescription intake rules
 
 ## 9.1 Prescription source enum
 
@@ -3510,7 +3510,7 @@ AND labelable dosage instructions are required
 
 ---
 
-# 10. Final partial dispensing rules
+## 10. Final partial dispensing rules
 
 ## 10.1 Partial dispense reason enum
 
@@ -3552,7 +3552,7 @@ AND label must show actual quantity supplied
 
 ---
 
-# 11. Final refill/repeat rules
+## 11. Final refill/repeat rules
 
 ## 11.1 Refill status enum
 
@@ -3600,7 +3600,7 @@ AND pharmacist override reason required
 
 ---
 
-# 12. Final dispensing data model
+## 12. Final dispensing data model
 
 ## 12.1 `prescriptions`
 
@@ -3696,7 +3696,7 @@ AND pharmacist override reason required
 
 ---
 
-# 13. Workflow diagrams for developers
+## 13. Workflow diagrams for developers
 
 ## 13.1 POM external prescription
 
@@ -3807,7 +3807,7 @@ Next supply uses remaining balance
 
 ---
 
-# 14. API endpoints
+## 14. API endpoints
 
 ## 14.1 Classification endpoints
 
@@ -3867,7 +3867,7 @@ Next supply uses remaining balance
 
 ---
 
-# 15. Final screen changes
+## 15. Final screen changes
 
 ## 15.1 Medicine classification screen
 
@@ -3928,7 +3928,7 @@ Export
 
 ---
 
-# 16. Final acceptance criteria
+## 16. Final acceptance criteria
 
 ## 16.1 Medicine classification
 
@@ -4013,7 +4013,7 @@ Export
 
 ---
 
-# 17. Final developer implementation sequence
+## 17. Final developer implementation sequence
 
 ## Phase 1: Classification and product master
 
@@ -4092,7 +4092,7 @@ batch recall linkage
 
 ---
 
-# 18. Final handoff summary
+## 18. Final handoff summary
 
 Module 3 is now developer-ready with these final decisions:
 

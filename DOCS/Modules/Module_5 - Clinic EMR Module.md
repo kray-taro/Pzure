@@ -22,7 +22,7 @@ Kenya’s Digital Health Act points toward integrated digital health systems wit
 
 ---
 
-# 1. Purpose of the module
+## 1. Purpose of the module
 
 The Clinic EMR Module should:
 
@@ -41,7 +41,7 @@ The Clinic EMR Module should:
 
 ---
 
-# 2. Kenya-specific design basis
+## 2. Kenya-specific design basis
 
 ## A. Facility licensing and professional accountability
 
@@ -125,7 +125,7 @@ Software implication:
 
 ---
 
-# 3. Core users
+## 3. Core users
 
 | User                            | Main actions                                                                         |
 | ------------------------------- | ------------------------------------------------------------------------------------ |
@@ -143,7 +143,7 @@ Software implication:
 
 ---
 
-# 4. Relationship with modules 1–4
+## 4. Relationship with modules 1–4
 
 ## Module 1: Organisation and Licensing
 
@@ -190,7 +190,7 @@ Software implication:
 
 ---
 
-# 5. Core clinical transaction types
+## 5. Core clinical transaction types
 
 | Transaction               | Description                                                  |
 | ------------------------- | ------------------------------------------------------------ |
@@ -209,7 +209,7 @@ Software implication:
 
 ---
 
-# 6. Feature-by-feature design
+## 6. Feature-by-feature design
 
 ## A. Registration
 
@@ -904,7 +904,7 @@ The visit summary is the patient-facing and referral/claims-friendly output of t
 
 ---
 
-# 7. Required screens
+## 7. Required screens
 
 ## Screen 1: Patient registration
 
@@ -1126,7 +1126,7 @@ Features:
 
 ---
 
-# 8. Workflows
+## 8. Workflows
 
 ## A. New outpatient visit
 
@@ -1261,7 +1261,7 @@ Features:
 
 ---
 
-# 9. Rules engine
+## 9. Rules engine
 
 ## Clinical consultation allowed
 
@@ -1371,7 +1371,7 @@ ELSE block
 
 ---
 
-# 10. Data model
+## 10. Data model
 
 ## Main tables
 
@@ -1774,7 +1774,7 @@ ELSE block
 
 ---
 
-# 11. API design
+## 11. API design
 
 ## Patient and registration endpoints
 
@@ -1873,7 +1873,7 @@ ELSE block
 
 ---
 
-# 12. Integration points
+## 12. Integration points
 
 | Integration            | Purpose                                                                                                            |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
@@ -1892,7 +1892,7 @@ ELSE block
 
 ---
 
-# 13. Permissions
+## 13. Permissions
 
 | Permission               |  Reception | Triage/Nurse |    Clinician |     Lab | Pharmacy |    Billing |      Manager | Auditor |
 | ------------------------ | ---------: | -----------: | -----------: | ------: | -------: | ---------: | -----------: | ------: |
@@ -1916,7 +1916,7 @@ ELSE block
 
 ---
 
-# 14. Reports
+## 14. Reports
 
 ## Clinical operations reports
 
@@ -1963,7 +1963,7 @@ Certificates issued
 
 ---
 
-# 15. Privacy and security controls
+## 15. Privacy and security controls
 
 Because EMR data is sensitive health data, the module must have stronger controls than a normal POS.
 
@@ -1986,7 +1986,7 @@ Because EMR data is sensitive health data, the module must have stronger control
 
 ---
 
-# 16. Edge cases
+## 16. Edge cases
 
 | Edge case                                | Correct handling                                                     |
 | ---------------------------------------- | -------------------------------------------------------------------- |
@@ -2010,7 +2010,7 @@ Because EMR data is sensitive health data, the module must have stronger control
 
 ---
 
-# 17. MVP versus later versions
+## 17. MVP versus later versions
 
 ## MVP
 
@@ -2071,7 +2071,7 @@ Add:
 
 ---
 
-# 18. Acceptance criteria
+## 18. Acceptance criteria
 
 The module is ready when it passes these tests:
 
@@ -2098,7 +2098,7 @@ The module is ready when it passes these tests:
 
 ---
 
-# 19. Final product behaviour
+## 19. Final product behaviour
 
 The Clinic EMR Module should behave like this:
 
@@ -2147,7 +2147,7 @@ ADR-022: Diagnosis Coding Terminology, ICD-10 Import, Search and Governance Stra
 
 ---
 
-# 1. Architecture decision
+## 1. Architecture decision
 
 For Kenya, I recommend:
 
@@ -2173,7 +2173,7 @@ Do **not** use ICD-10-CM as the canonical Kenyan diagnosis code system unless a 
 
 ---
 
-# 2. Full ICD-10 vs ICD-10-CM vs short list
+## 2. Full ICD-10 vs ICD-10-CM vs short list
 
 ## Recommended decision
 
@@ -2195,7 +2195,7 @@ Track frequency, favourites, recent diagnoses
 
 ---
 
-# 3. Why full ICD-10 should be loaded
+## 3. Why full ICD-10 should be loaded
 
 Even if 90% of clinic use is common outpatient diagnoses, the system still needs the full set because:
 
@@ -2213,7 +2213,7 @@ Clinician UX should hide the complexity, but the database should contain the ful
 
 ---
 
-# 4. Code system choice
+## 4. Code system choice
 
 ## Canonical diagnosis system
 
@@ -2240,7 +2240,7 @@ HL7 notes that ICD is a family of code systems maintained by WHO, and countries 
 
 ---
 
-# 5. Import format
+## 5. Import format
 
 ## Recommended import pipeline
 
@@ -2274,7 +2274,7 @@ ICD-10-CM files are commonly available from CDC in PDF and XML formats, but that
 
 ---
 
-# 6. Data model additions
+## 6. Data model additions
 
 Add a terminology schema:
 
@@ -2421,7 +2421,7 @@ Important: store both the foreign key and the denormalized code/version at time 
 
 ---
 
-# 7. Search UX design
+## 7. Search UX design
 
 The clinician should not be forced to browse 70,000 codes manually.
 
@@ -2505,7 +2505,7 @@ score =
 
 ---
 
-# 8. Diagnosis picker UI
+## 8. Diagnosis picker UI
 
 ## Recommended UI
 
@@ -2577,7 +2577,7 @@ These must be mapped to the correct ICD-10 codes during clinical governance, not
 
 ---
 
-# 9. Claims integration
+## 9. Claims integration
 
 Diagnosis codes must support claims validation.
 
@@ -2616,7 +2616,7 @@ This allows:
 
 ---
 
-# 10. Reporting integration
+## 10. Reporting integration
 
 Diagnosis coding feeds Module 8.
 
@@ -2659,7 +2659,7 @@ Add a table:
 
 ---
 
-# 11. FHIR and interoperability readiness
+## 11. FHIR and interoperability readiness
 
 For future interoperability, diagnosis should map to FHIR Condition.
 
@@ -2682,7 +2682,7 @@ Use WHO ICD-10 canonical coding system where applicable, and retain mapping flex
 
 ---
 
-# 12. Import and update governance
+## 12. Import and update governance
 
 ## Import lifecycle
 
@@ -2718,7 +2718,7 @@ Freeze old version for historical claims
 
 ---
 
-# 13. Search implementation options
+## 13. Search implementation options
 
 ## SQL Server full-text search
 
@@ -2749,7 +2749,7 @@ For 10 branches, SQL Server full-text plus caching is enough for MVP.
 
 ---
 
-# 14. Frontend UX details
+## 14. Frontend UX details
 
 ## Autocomplete behaviour
 
@@ -2770,7 +2770,7 @@ For 10 branches, SQL Server full-text plus caching is enough for MVP.
 
 ---
 
-# 15. Data quality controls
+## 15. Data quality controls
 
 ## Required controls
 
@@ -2789,7 +2789,7 @@ For 10 branches, SQL Server full-text plus caching is enough for MVP.
 
 ---
 
-# 16. Security and access
+## 16. Security and access
 
 Diagnosis data is health data, so access must be controlled.
 
@@ -2806,7 +2806,7 @@ Diagnosis data is health data, so access must be controlled.
 
 ---
 
-# 17. Performance estimate
+## 17. Performance estimate
 
 ## ICD-10 data size
 
@@ -2827,7 +2827,7 @@ Full WHO ICD-10 is manageable for SQL Server. Even ICD-10-CM with tens of thousa
 
 ---
 
-# 18. Sprint addition
+## 18. Sprint addition
 
 Add a dedicated terminology sprint before EMR diagnosis implementation.
 
@@ -2873,7 +2873,7 @@ Place before existing EMR diagnosis sprint.
 
 ---
 
-# 19. Updated Module 5 principle
+## 19. Updated Module 5 principle
 
 Replace:
 
@@ -2889,7 +2889,7 @@ Diagnosis must be stored as structured, versioned terminology: full WHO ICD-10 c
 
 ---
 
-# 20. Final recommendation
+## 20. Final recommendation
 
 For this project:
 
@@ -2916,7 +2916,7 @@ The important rule is:
 
 **Clinicians should experience diagnosis entry as a fast common-diagnosis search, but the system must store a full, versioned, standard ICD-10 diagnosis code behind the visit, claim, report, and referral.**
 
-# Module 5 Gap Closure: Clinic EMR — Developer Handoff Addendum
+## Module 5 Gap Closure: Clinic EMR — Developer Handoff Addendum
 
 ## Updated handoff status
 
@@ -2939,7 +2939,7 @@ Developers can build the core EMR now. Clinical templates, certificate wording, 
 
 ---
 
-# 1. Final developer decisions
+## 1. Final developer decisions
 
 | Gap                                | Final decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -2956,7 +2956,7 @@ Developers can build the core EMR now. Clinical templates, certificate wording, 
 
 ---
 
-# 2. Standards and regulatory anchor summary
+## 2. Standards and regulatory anchor summary
 
 | Area                              | Source                                                            | System implication                                                                                          |
 | --------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
@@ -2971,7 +2971,7 @@ KMPDC lists health-facility inspection checklists by facility level and provides
 
 ---
 
-# 3. UI wireframes for clinician speed
+## 3. UI wireframes for clinician speed
 
 ## 3.1 Clinician workspace layout
 
@@ -3089,7 +3089,7 @@ Clinicians should be able to type quick commands.
 
 ---
 
-# 4. Final clinical template framework
+## 4. Final clinical template framework
 
 ## 4.1 Template architecture
 
@@ -3155,7 +3155,7 @@ clinical_template
 
 ---
 
-# 5. Final MVP clinical templates
+## 5. Final MVP clinical templates
 
 ## 5.1 General OPD template
 
@@ -3407,7 +3407,7 @@ If BP above configured critical threshold:
 
 ---
 
-# 6. ICD-10 diagnosis coding source and implementation
+## 6. ICD-10 diagnosis coding source and implementation
 
 ## 6.1 Final source decision
 
@@ -3497,7 +3497,7 @@ WHO’s ICD API documentation states that the ICD API allows programmatic access
 
 ---
 
-# 7. Certificate legal scope and guardrails
+## 7. Certificate legal scope and guardrails
 
 ## 7.1 Final certificate policy
 
@@ -3584,7 +3584,7 @@ voided_with_reason
 
 ---
 
-# 8. Facility-specific service packages
+## 8. Facility-specific service packages
 
 ## 8.1 Final service package model
 
@@ -3723,7 +3723,7 @@ ELSE service is hidden or blocked
 
 ---
 
-# 9. Claim-readiness validation
+## 9. Claim-readiness validation
 
 ## 9.1 Visit readiness statuses
 
@@ -3809,7 +3809,7 @@ Example response:
 
 ---
 
-# 10. FHIR/interoperability mapping
+## 10. FHIR/interoperability mapping
 
 ## 10.1 MVP mappings
 
@@ -3851,7 +3851,7 @@ Every clinical object should store:
 
 ---
 
-# 11. Updated EMR data model additions
+## 11. Updated EMR data model additions
 
 ## 11.1 `clinical_templates`
 
@@ -3930,7 +3930,7 @@ Already defined above.
 
 ---
 
-# 12. API endpoints to add or refine
+## 12. API endpoints to add or refine
 
 ## 12.1 Clinician workspace
 
@@ -3995,7 +3995,7 @@ Already defined above.
 
 ---
 
-# 13. Final workflows
+## 13. Final workflows
 
 ## 13.1 Fast OPD consultation
 
@@ -4061,7 +4061,7 @@ Already defined above.
 
 ---
 
-# 14. Final validation rules
+## 14. Final validation rules
 
 ## 14.1 Note signing
 
@@ -4130,7 +4130,7 @@ ELSE allow close with warning or block depending facility policy
 
 ---
 
-# 15. Final acceptance criteria
+## 15. Final acceptance criteria
 
 ## 15.1 Clinician UI
 
@@ -4206,7 +4206,7 @@ ELSE allow close with warning or block depending facility policy
 
 ---
 
-# 16. Developer implementation sequence
+## 16. Developer implementation sequence
 
 ## Phase 1: Clinician workspace and core EMR
 
@@ -4289,7 +4289,7 @@ clinical completeness rules
 
 ---
 
-# 17. Final handoff summary
+## 17. Final handoff summary
 
 Module 5 is now developer-ready with these final decisions:
 

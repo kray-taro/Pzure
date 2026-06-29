@@ -32,7 +32,7 @@ Stabilise, optimise, then scale
 
 ---
 
-# 1. Confirmed implementation baseline
+## 1. Confirmed implementation baseline
 
 | Area                   | Decision                                                                              |
 | ---------------------- | ------------------------------------------------------------------------------------- |
@@ -55,7 +55,7 @@ Stabilise, optimise, then scale
 
 ---
 
-# 2. What this changes architecturally
+## 2. What this changes architecturally
 
 Because this is a **10-branch enterprise pilot**, the system must be branch-aware from the first line of code.
 
@@ -78,7 +78,7 @@ Because this is a **10-branch enterprise pilot**, the system must be branch-awar
 
 ---
 
-# 3. Recommended target architecture
+## 3. Recommended target architecture
 
 ## 3.1 Logical architecture
 
@@ -153,7 +153,7 @@ Recommendation: **use the client’s Azure tenant/subscription**, not a develope
 
 ---
 
-# 4. Recommended codebase structure
+## 4. Recommended codebase structure
 
 ## 4.1 Repository structure
 
@@ -265,7 +265,7 @@ audit.data_access_logs
 
 ---
 
-# 5. Enterprise non-negotiables
+## 5. Enterprise non-negotiables
 
 These must be present from the first production release.
 
@@ -290,7 +290,7 @@ These must be present from the first production release.
 
 ---
 
-# 6. Delivery model
+## 6. Delivery model
 
 Because this is enterprise-grade and internal-development-led, use **programme increments** with parallel squads.
 
@@ -340,7 +340,7 @@ With a smaller internal team, do not reduce quality gates; extend the timeline.
 
 ---
 
-# 7. Sprint structure
+## 7. Sprint structure
 
 Assumption: **2-week sprints**.
 
@@ -348,7 +348,7 @@ The sprint plan below is designed as a **quality-first enterprise rollout**. Mul
 
 ---
 
-# 8. Enterprise sprint roadmap
+## 8. Enterprise sprint roadmap
 
 ## Phase 0: Mobilisation and enterprise blueprint
 
@@ -503,7 +503,7 @@ The sprint plan below is designed as a **quality-first enterprise rollout**. Mul
 
 ---
 
-# Phase 1: Core platform and master data
+## Phase 1: Core platform and master data
 
 ---
 
@@ -620,7 +620,7 @@ The sprint plan below is designed as a **quality-first enterprise rollout**. Mul
 
 ---
 
-# Phase 2: Commerce, billing, eTIMS, M-Pesa
+## Phase 2: Commerce, billing, eTIMS, M-Pesa
 
 ---
 
@@ -737,7 +737,7 @@ The sprint plan below is designed as a **quality-first enterprise rollout**. Mul
 
 ---
 
-# Phase 3: Inventory, procurement, stock control
+## Phase 3: Inventory, procurement, stock control
 
 ---
 
@@ -849,7 +849,7 @@ The sprint plan below is designed as a **quality-first enterprise rollout**. Mul
 
 ---
 
-# Phase 4: Pharmacy, controlled medicines, online pharmacy, delivery
+## Phase 4: Pharmacy, controlled medicines, online pharmacy, delivery
 
 ---
 
@@ -997,7 +997,7 @@ The sprint plan below is designed as a **quality-first enterprise rollout**. Mul
 
 ---
 
-# Phase 5: Clinic EMR and lab-lite
+## Phase 5: Clinic EMR and lab-lite
 
 ---
 
@@ -1146,7 +1146,7 @@ The sprint plan below is designed as a **quality-first enterprise rollout**. Mul
 
 ---
 
-# Phase 6: Claims, tariffs, denials, reconciliation
+## Phase 6: Claims, tariffs, denials, reconciliation
 
 ---
 
@@ -1294,7 +1294,7 @@ The sprint plan below is designed as a **quality-first enterprise rollout**. Mul
 
 ---
 
-# Phase 7: Reporting, analytics, communication
+## Phase 7: Reporting, analytics, communication
 
 ---
 
@@ -1446,7 +1446,7 @@ The sprint plan below is designed as a **quality-first enterprise rollout**. Mul
 
 ---
 
-# Phase 8: Enterprise hardening, security, UAT
+## Phase 8: Enterprise hardening, security, UAT
 
 ---
 
@@ -1640,7 +1640,7 @@ The sprint plan below is designed as a **quality-first enterprise rollout**. Mul
 
 ---
 
-# Phase 9: 10-branch production pilot rollout
+## Phase 9: 10-branch production pilot rollout
 
 ---
 
@@ -1787,7 +1787,7 @@ The sprint plan below is designed as a **quality-first enterprise rollout**. Mul
 
 ---
 
-# 9. Enterprise Version 2 and Version 3 roadmap after pilot
+## 9. Enterprise Version 2 and Version 3 roadmap after pilot
 
 Because you selected enterprise-grade from day one, many Version 2 items are already pulled into MVP. The remaining enhancements should be planned after the 10-branch pilot.
 
@@ -1822,7 +1822,7 @@ Because you selected enterprise-grade from day one, many Version 2 items are alr
 
 ---
 
-# 10. Branch rollout strategy
+## 10. Branch rollout strategy
 
 Do not take all 10 branches live on the same day. Use controlled waves.
 
@@ -1865,7 +1865,7 @@ Each branch must pass this before go-live.
 
 ---
 
-# 11. Data strategy for “no existing data”
+## 11. Data strategy for “no existing data”
 
 Having no existing system does not remove data work. It means the project must create clean master data from scratch.
 
@@ -1906,7 +1906,7 @@ Having no existing system does not remove data work. It means the project must c
 
 ---
 
-# 12. Device and hardware plan
+## 12. Device and hardware plan
 
 ## Standard branch hardware kit
 
@@ -1939,7 +1939,7 @@ Having no existing system does not remove data work. It means the project must c
 
 ---
 
-# 13. Integration implementation plan
+## 13. Integration implementation plan
 
 ## eTIMS
 
@@ -1996,7 +1996,7 @@ Having no existing system does not remove data work. It means the project must c
 
 ---
 
-# 14. Quality strategy
+## 14. Quality strategy
 
 ## Quality gates by sprint
 
@@ -2041,7 +2041,7 @@ A feature is not done until:
 
 ---
 
-# 15. End-to-end acceptance test scenarios
+## 15. End-to-end acceptance test scenarios
 
 These are mandatory before production.
 
@@ -2065,7 +2065,7 @@ These are mandatory before production.
 
 ---
 
-# 16. Risk register tailored to your setup
+## 16. Risk register tailored to your setup
 
 | Risk                            | Why serious                                             | Mitigation                                               |
 | ------------------------------- | ------------------------------------------------------- | -------------------------------------------------------- |
@@ -2088,7 +2088,7 @@ These are mandatory before production.
 
 ---
 
-# 17. Governance model
+## 17. Governance model
 
 ## Weekly delivery cadence
 
@@ -2122,7 +2122,7 @@ These are mandatory before production.
 
 ---
 
-# 18. Immediate next 30 days
+## 18. Immediate next 30 days
 
 ## Week 1
 
@@ -2183,7 +2183,7 @@ These are mandatory before production.
 
 ---
 
-# 19. Items to finalise during Sprint 0
+## 19. Items to finalise during Sprint 0
 
 You have provided enough to proceed. These are the remaining operational choices that should be closed during Sprint 0, not blockers now.
 
@@ -2205,7 +2205,7 @@ You have provided enough to proceed. These are the remaining operational choices
 
 ---
 
-# 20. Recommended final delivery timeline
+## 20. Recommended final delivery timeline
 
 Assuming 2-week sprints:
 
@@ -2228,7 +2228,7 @@ With a strong internal team running multiple squads in parallel, selected workst
 
 ---
 
-# 21. Final recommendation
+## 21. Final recommendation
 
 For your selected scope, the correct implementation posture is:
 
