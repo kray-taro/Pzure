@@ -9,7 +9,7 @@ export interface Db {
   asBranch<T = unknown>(
     branchId: string | null,
     query: string,
-    opts?: { bypass?: boolean },
+    opts?: { bypass?: boolean; userId?: string | null },
   ): Promise<sql.IResult<T>>;
   raw(query: string): Promise<sql.IResult<unknown>>;
 }
@@ -52,15 +52,22 @@ export async function connect(): Promise<Db> {
     throw new Error(`SQL Server not reachable within 60s: ${String(lastErr)}`);
   }
 
-  async function asBranch<T>(branchId: string | null, query: string, opts?: { bypass?: boolean }) {
+  async function asBranch<T>(
+    branchId: string | null,
+    query: string,
+    opts?: { bypass?: boolean; userId?: string | null },
+  ) {
     // SESSION_CONTEXT must be set on the same connection/request that runs the
-    // query. Bind branch_id/bypass as parameters (no string interpolation) so
-    // the helper itself models the parameterised pattern the app must use.
+    // query. Bind branch_id/user_id/bypass as parameters (no string
+    // interpolation) so the helper models the parameterised pattern the app
+    // must use (ADR-002 sets branch_id AND user_id per request from the JWT).
     const request = pool.request();
     request.input('p_branch_id', sql.UniqueIdentifier, branchId);
+    request.input('p_user_id', sql.UniqueIdentifier, opts?.userId ?? null);
     request.input('p_bypass', sql.Bit, opts?.bypass ? 1 : null);
     const preamble =
       "EXEC sp_set_session_context @key=N'branch_id', @value=@p_branch_id;\n" +
+      "EXEC sp_set_session_context @key=N'user_id', @value=@p_user_id;\n" +
       "EXEC sp_set_session_context @key=N'tenancy_bypass', @value=@p_bypass;\n";
     return request.query<T>(`${preamble}${query}`);
   }

@@ -59,7 +59,7 @@ function findSqlMigrations(root) {
 // check (we only want the resolution, not duplicate error noise).
 // Memoised across a single guard run: deep chains (lab_results -> lab_samples
 // -> lab_orders -> emr_visits) are otherwise re-walked O(n*depth) times.
-const _chainMemo = new Map();
+let _chainMemo = new Map();
 function resolveChain(name, map, errors, { pushErrors = true, seen = new Set() } = {}) {
   if (_chainMemo.has(name)) return _chainMemo.get(name);
   const entry = map.tables[name];
@@ -100,6 +100,21 @@ function tableHasPolicy(ddl, table) {
     `create\\s+security\\s+policy[\\s\\S]*?on\\s+(?:\\[?dbo\\]?\\.)?\\[?${t}\\]?(?![A-Za-z0-9_])`,
     'i',
   ).test(ddl);
+}
+
+// Verify the policy actually scopes on the EXPECTED column, not merely that
+// some policy exists. The predicate function fn_rls_<table> must reference the
+// scope column (organisation_id for org tables, branch_id for branch tables),
+// so an org table mistakenly given a branch policy is caught.
+function policyScopesOn(ddl, table, expectedColumn) {
+  const t = escapeRe(table);
+  const col = escapeRe(expectedColumn);
+  const fnMatch = new RegExp(
+    `create\\s+function\\s+(?:\\[?dbo\\]?\\.)?\\[?fn_rls_${t}\\]?[\\s\\S]*?\\bgo\\b`,
+    'i',
+  ).exec(ddl);
+  if (!fnMatch) return false;
+  return new RegExp(`\\b${col}\\b`, 'i').test(fnMatch[0]);
 }
 
 function escapeRe(s) {
@@ -205,11 +220,19 @@ function main() {
       // A table is "present in schema" if a CREATE TABLE for it exists; only then
       // do we require an RLS policy (tables not yet migrated are not yet a risk).
       if (!tableIsCreated(ddl, name)) continue;
+      const scope = scopeTarget(name, map);
+      const expectedColumn = scope === 'org' ? 'organisation_id' : (map.tables[name].branchColumn ?? 'branch_id');
       if (!tableHasPolicy(ddl, name)) {
-        const scope = scopeTarget(name, map);
         errors.push(
           `transactional table '${name}' is created in a migration but has no CREATE SECURITY POLICY ` +
             `(ADR-001 §6.4; expected a ${scope}-scoped policy)`,
+        );
+      } else if (!policyScopesOn(ddl, name, expectedColumn)) {
+        // A policy exists but its predicate does not reference the expected
+        // scope column — e.g. an org table mistakenly given a branch policy.
+        errors.push(
+          `transactional table '${name}' has a security policy that does not scope on '${expectedColumn}' ` +
+            `(expected a ${scope}-scoped predicate; ADR-001 §6.4)`,
         );
       }
     }
