@@ -4276,11 +4276,3 @@ the submission reference is captured,
 denials can be corrected or written off,
 and every paid amount can be reconciled to the original claim line.
 ```
-
-[1]: https://new.kenyalaw.org/akn/ke/act/ln/2025/56 "
-      Tariffs for Healthcare Services, 2025
-    - Kenya Law"
-[2]: https://new.kenyalaw.org/akn/ke/act/ln/2024/49 "
-      The Social Health Insurance Regulations
-    - Kenya Law"
-[3]: https://portal.sha.go.ke/ "SHA | Provider Portal"

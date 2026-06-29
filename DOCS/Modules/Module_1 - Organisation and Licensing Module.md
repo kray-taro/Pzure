@@ -2873,6 +2873,3 @@ The closed Module 1 design should now be treated as the **system gatekeeper**:
 ```text
 No branch should sell medicines, dispense prescriptions, run clinic consultations, verify lab results, submit claims, or issue regulated workflows unless the organisation, branch, licence, professional, contract, and document rules are satisfied.
 ```
-
-[1]: https://brs.go.ke/?utm_source=chatgpt.com "Business Registration Service | Doing Business Made Easier"
-[2]: https://web.pharmacyboardkenya.org/pharmacy-practice-procedures-2/?utm_source=chatgpt.com "Pharmacy Practice Procedures - Pharmacy and Poisons Board"

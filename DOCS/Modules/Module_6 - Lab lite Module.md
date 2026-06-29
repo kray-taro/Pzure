@@ -3717,10 +3717,3 @@ the result was verified by an authorized licensed lab professional,
 critical or sensitive results were handled safely,
 and every print, correction, share, or send-out was audited.
 ```
-
-[1]: https://www.kmlttb.org/?utm_source=chatgpt.com "KMLTTB | Kenya Medical Laboratory Technicians & Technologist Board"
-[2]: https://www.regenstrief.org/real-world-solutions/loinc/?utm_source=chatgpt.com "LOINC Data Standards - Regenstrief Institute"
-[3]: https://medlineplus.gov/laboratorytests.html?utm_source=chatgpt.com "Laboratory Tests - MedlinePlus"
-[4]: https://medlineplus.gov/ency/article/003482.htm?utm_source=chatgpt.com "Blood sugar test: MedlinePlus Medical Encyclopedia"
-[5]: https://medlineplus.gov/ency/article/003579.htm?utm_source=chatgpt.com "Urinalysis: MedlinePlus Medical Encyclopedia"
-[6]: https://medlineplus.gov/lab-tests/how-to-understand-your-lab-results/?utm_source=chatgpt.com "How to Understand Your Lab Results: MedlinePlus Medical Test"
