@@ -4021,7 +4021,7 @@ Build these first:
 | Audit logs                       | Fraud control                 |
 | Device registry                  | Hardware management           |
 
-## Version 2
+## Roadmap Version 2
 
 Add:
 
@@ -4040,7 +4040,7 @@ Add:
 | Automated M-Pesa statement import | Reconciliation                     |
 | Offline sync dashboard            | Branch reliability                 |
 
-## Version 3
+## Roadmap Version 3
 
 Add:
 
