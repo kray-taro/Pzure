@@ -35,7 +35,7 @@ Health data is sensitive personal data (Data Protection Act). ADR-003 set field-
 
 - **MVP:** TLS 1.2+ in transit; Azure SQL **TDE** at rest; field-level **AES-256-GCM** for the designated PII/PHI columns (names, national ID, phone, diagnosis, results). Encryption key referenced from Key Vault, not committed.
 - **Phase 3 upgrade:** envelope encryption — **KEK in Azure Key Vault**, per-record **DEK** wrapped by the KEK; cache unwrapped DEKs in memory only.
-- **Search:** store deterministic **HMAC-SHA256** hashes for encrypted fields that need lookup.
+- **Search:** store deterministic **keyed HMAC-SHA256** hashes for encrypted fields that need exact-match lookup. The HMAC key (**pepper**) is a secret held **outside the database** (env / Azure Key Vault), never in a hash or data column, so a DB-only attacker cannot brute-force a low-entropy identifier (e.g. national ID, birth certificate number) offline. This keying requirement applies to **every** deterministic search hash in the PII registry — `national_id`, `birth_cert_no`, `patient_number`, `phone_primary`, `dob`, `email`, `mpesa_receipt_number` — since each shares the offline-enumeration concern to some degree. The pepper rotates with the encryption keys (see Rotation below); rotating it requires recomputing the affected hash columns. Ratified via [#65](https://gitlab.com/cricketaustin-group/Pzure/-/issues/65); see ADR-003 §4.1.
 - **Rotation:** scheduled KEK rotation (e.g. annual) + on-incident rotation; Key Vault **soft delete + purge protection** on; managed identity for app->Key Vault.
 - **Runbooks:** key-rotation runbook and key-compromise runbook required before production.
 

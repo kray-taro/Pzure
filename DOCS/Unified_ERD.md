@@ -47,6 +47,10 @@ erDiagram
         string last_name
         date dob
         string phone_primary
+        string national_id
+        string national_id_hash
+        string birth_cert_no
+        string birth_cert_no_hash
     }
     patient_allergies {
         uuid id PK

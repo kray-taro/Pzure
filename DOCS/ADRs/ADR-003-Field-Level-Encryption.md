@@ -44,7 +44,15 @@ For the MVP, we will use a single strong AES-256-GCM symmetric key injected via 
 ### Negative Consequences
 
 - **Key Rotation:** Rotating a single master key requires decrypting and re-encrypting the entire database. (This is acceptable for the MVP scale but must be upgraded to Envelope Encryption in Phase 3).
-- **Searchability:** We cannot do `LIKE '%text%'` searches on encrypted fields. If we must search by phone number, we will store a deterministic HMAC hash of the phone number alongside the encrypted value for exact-match lookups.
+- **Searchability:** We cannot do `LIKE '%text%'` searches on encrypted fields. If we must search by an encrypted field for exact-match (equality) lookup, we store a deterministic **keyed HMAC-SHA256** hash of the value alongside the ciphertext (see §4.1).
+
+### 4.1 Exact-match search hashes (amendment, ratified via #65)
+
+Product confirmed that **national-ID lookup is a genuine MVP requirement**: reception and clinicians look patients up by national ID. For **minors without a national ID, the birth certificate number is the equivalent key**. We therefore authorize deterministic search hashes for `national_id` and `birth_cert_no`, in addition to the `phone_primary` hash already implied above.
+
+A naive deterministic HMAC over a low-entropy identifier (a national ID or birth certificate number) is **offline-enumerable**: an attacker with read access to the hash column (the direct-DB / DBA threat of §1) can dictionary the identifier space and confirm whether a given person is a patient, defeating field encryption for equality. To mitigate this, every deterministic search hash MUST be a **keyed HMAC-SHA256 using a secret pepper held outside the database** (environment / Azure Key Vault per ADR-007). A DB-only attacker, lacking the pepper, cannot brute-force the hash.
+
+This keyed-pepper requirement applies to **all** deterministic search hashes in the PII registry (`national_id`, `birth_cert_no`, `patient_number`, `phone_primary`, `dob`, `email`, `mpesa_receipt_number`); see ADR-007 §6. The corresponding `*_hash` columns are recorded in `Unified_ERD.md`, and the PII registry may re-enable `searchHash: true` for `national_id` (and `birth_cert_no`) on this basis.
 
 ## 5. Implementation Notes
 
