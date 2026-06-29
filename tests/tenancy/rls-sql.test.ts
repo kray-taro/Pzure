@@ -8,9 +8,12 @@ import {
   buildInheritanceTvfPredicate,
   buildDenormBranchTrigger,
   buildBranchSetPolicy,
+  buildOrgScopedPolicy,
   assertIdent,
   SESSION_BRANCH,
   SESSION_BYPASS,
+  SESSION_USER_ID,
+  SESSION_ORG,
 } from '../../scripts/lib/rls-sql.mjs';
 
 describe('rls-sql identifier validation (fail-closed)', () => {
@@ -55,7 +58,8 @@ describe('rls-sql generated DDL', () => {
 
   it('denorm policy derives branch_id via INSTEAD OF INSERT (no AFTER INSERT block)', () => {
     const sql = buildInheritanceDenormPolicy({
-      table: 'billing_invoices', fkColumn: 'sale_id', parentTable: 'billing_sales',
+      table: 'billing_invoices', columns: ['sale_id', 'amount', 'note'],
+      fkColumn: 'sale_id', parentTable: 'billing_sales',
     });
     expect(sql).toMatch(/INSTEAD OF INSERT/);
     expect(sql).toMatch(/INSERT INTO dbo\.billing_invoices/);
@@ -63,6 +67,32 @@ describe('rls-sql generated DDL', () => {
     // inserts because branch_id is NULL when an AFTER predicate evaluates).
     expect(sql).not.toMatch(/BLOCK PREDICATE .*AFTER INSERT/);
     expect(sql).toMatch(/ADD BLOCK PREDICATE .*AFTER UPDATE/);
+  });
+
+  it('denorm policy carries ALL caller columns through (no data loss) and derives only branch_id', () => {
+    const sql = buildInheritanceDenormPolicy({
+      table: 'billing_invoices', columns: ['sale_id', 'amount', 'note'],
+      fkColumn: 'sale_id', parentTable: 'billing_sales',
+    });
+    // Non-key columns must appear in both the column list and the SELECT.
+    expect(sql).toMatch(/INSERT INTO dbo\.billing_invoices \(id, sale_id, amount, note, branch_id\)/);
+    expect(sql).toMatch(/SELECT i\.id, i\.sale_id, i\.amount, i\.note, p\.branch_id/);
+    // A missing FK parent must fail loudly, not silently drop the row.
+    expect(sql).toMatch(/THROW 50001/);
+    expect(sql).toMatch(/LEFT JOIN dbo\.billing_sales/);
+  });
+
+  it('denorm policy requires the columns list (fails closed if omitted)', () => {
+    expect(() =>
+      buildInheritanceDenormPolicy({ table: 'billing_invoices', fkColumn: 'sale_id', parentTable: 'billing_sales' }),
+    ).toThrow(/'columns'/);
+  });
+
+  it('org-scoped policy filters on the session organisation, never a branch', () => {
+    const sql = buildOrgScopedPolicy({ table: 'patient_allergies', orgColumn: 'organisation_id' });
+    expect(sql).toContain(SESSION_ORG);
+    expect(sql).not.toContain(SESSION_BRANCH);
+    expect(sql).toMatch(/CREATE SECURITY POLICY dbo\.sp_patient_allergies/);
   });
 
   it('denorm UPDATE trigger re-derives branch_id only when the FK changes', () => {
@@ -75,10 +105,13 @@ describe('rls-sql generated DDL', () => {
     expect(sql).toMatch(/IF UPDATE\(sale_id\)/);
   });
 
-  it('branch-set policy scopes by the grant table, not the single session branch', () => {
+  it('branch-set policy keys the grant row by the USER, not by branch = session branch', () => {
     const sql = buildBranchSetPolicy({ table: 'core_branches' });
     expect(sql).toMatch(/FROM dbo\.core_branch_users AS g/);
-    expect(sql).toContain(SESSION_BRANCH);
+    // Must key on the user (so a multi-branch user sees all granted branches)...
+    expect(sql).toContain(`g.user_id = ${SESSION_USER_ID}`);
+    // ...and must NOT collapse to the single session branch.
+    expect(sql).not.toContain(`g.branch_id = ${SESSION_BRANCH}`);
     expect(sql).toMatch(/ADD BLOCK PREDICATE .*AFTER UPDATE/);
   });
 });

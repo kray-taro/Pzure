@@ -19,6 +19,11 @@
 
 export const SESSION_BRANCH = "CONVERT(uniqueidentifier, SESSION_CONTEXT(N'branch_id'))";
 export const SESSION_BYPASS = "CONVERT(bit, SESSION_CONTEXT(N'tenancy_bypass'))";
+// The authenticated user, set per request from the JWT (ADR-002). Required to
+// scope a table by the user's GRANT SET (e.g. core_branches), which spans
+// multiple branches and therefore cannot key on the single session branch.
+export const SESSION_USER_ID = "CONVERT(uniqueidentifier, SESSION_CONTEXT(N'user_id'))";
+export const SESSION_ORG = "CONVERT(uniqueidentifier, SESSION_CONTEXT(N'organisation_id'))";
 
 // Fail-closed identifier validation. RLS DDL cannot be parameterised (object
 // names are not bindable), so every schema/table/column name interpolated below
@@ -82,11 +87,17 @@ export function buildDirectPolicy({ schema = 'dbo', table, branchColumn = 'branc
  * table receives branch_id from the caller, a denorm table derives it, and the
  * two have different INSERT contracts (SOLID/ISP).
  *
- * @param {{ schema?: string, table: string, branchColumn?: string, fkColumn: string, parentTable: string, parentKey?: string, parentBranchColumn?: string }} opts
+ * `columns` MUST list every insertable column on the table EXCEPT branchColumn
+ * (which is derived from the parent). Because the trigger is INSTEAD OF, it is
+ * the only insert that runs, so every caller-supplied column must be carried
+ * through or it is silently lost. `id` and `fkColumn` are included if omitted.
+ *
+ * @param {{ schema?: string, table: string, columns: string[], branchColumn?: string, fkColumn: string, parentTable: string, parentKey?: string, parentBranchColumn?: string }} opts
  */
 export function buildInheritanceDenormPolicy({
   schema = 'dbo',
   table,
+  columns,
   branchColumn = 'branch_id',
   fkColumn,
   parentTable,
@@ -98,6 +109,18 @@ export function buildInheritanceDenormPolicy({
     [fkColumn, 'fkColumn'], [parentTable, 'parentTable'], [parentKey, 'parentKey'],
     [parentBranchColumn, 'parentBranchColumn'],
   ]) assertIdent(v, role);
+  if (!Array.isArray(columns) || columns.length === 0) {
+    throw new Error(`buildInheritanceDenormPolicy: 'columns' (the table's insertable columns, excluding ${branchColumn}) is required for ${table}`);
+  }
+  // Carry through every supplied column; ensure id + fk are present; never the
+  // derived branch column (it comes from the parent). De-dup, preserve order.
+  const carried = [];
+  for (const c of ['id', fkColumn, ...columns]) {
+    assertIdent(c, 'column');
+    if (c !== branchColumn && !carried.includes(c)) carried.push(c);
+  }
+  const insertCols = [...carried, branchColumn];
+  const selectCols = [...carried.map((c) => `i.${c}`), `p.${parentBranchColumn}`];
   const fn = `${schema}.fn_rls_${table}`;
   const body = branchPredicateBody(`@${branchColumn}`);
   const insTrg = `${schema}.trg_denorm_ins_${table}`;
@@ -109,11 +132,17 @@ export function buildInheritanceDenormPolicy({
     `GO`,
     // INSTEAD OF INSERT derives branch_id from the parent BEFORE the row lands,
     // so the (later) read FILTER and any UPDATE BLOCK see a populated column.
+    // ALL caller columns are carried through; a missing parent FAILS LOUDLY
+    // (LEFT JOIN + THROW) rather than silently dropping the row.
     `CREATE TRIGGER ${insTrg} ON ${schema}.${table} INSTEAD OF INSERT AS`,
     `BEGIN`,
     `    SET NOCOUNT ON;`,
-    `    INSERT INTO ${schema}.${table} (id, ${fkColumn}, ${branchColumn})`,
-    `    SELECT i.id, i.${fkColumn}, p.${parentBranchColumn}`,
+    `    IF EXISTS (SELECT 1 FROM inserted AS i`,
+    `               LEFT JOIN ${schema}.${parentTable} AS p ON p.${parentKey} = i.${fkColumn}`,
+    `               WHERE p.${parentKey} IS NULL)`,
+    `        THROW 50001, 'denorm insert: FK parent not found (cannot derive ${branchColumn})', 1;`,
+    `    INSERT INTO ${schema}.${table} (${insertCols.join(', ')})`,
+    `    SELECT ${selectCols.join(', ')}`,
     `    FROM inserted AS i`,
     `    JOIN ${schema}.${parentTable} AS p ON p.${parentKey} = i.${fkColumn};`,
     `END;`,
@@ -123,6 +152,30 @@ export function buildInheritanceDenormPolicy({
     `CREATE SECURITY POLICY ${schema}.sp_${table}`,
     `    ADD FILTER PREDICATE ${fn}(${branchColumn}) ON ${schema}.${table},`,
     `    ADD BLOCK PREDICATE ${fn}(${branchColumn}) ON ${schema}.${table} AFTER UPDATE`,
+    `    WITH (STATE = ON);`,
+    `GO`,
+  ].join('\n');
+}
+
+/**
+ * RLS DDL for an ORG-scoped inheritance table (e.g. patient_allergies): it
+ * reaches organisation_id, not a branch, so it is filtered by the session org,
+ * never by branch. This is the one non-branch transactional policy kind the
+ * guard's resolvesTo='organisation_id' path requires.
+ * @param {{ schema?: string, table: string, orgColumn?: string }} opts
+ */
+export function buildOrgScopedPolicy({ schema = 'dbo', table, orgColumn = 'organisation_id' }) {
+  for (const [v, role] of [[schema, 'schema'], [table, 'table'], [orgColumn, 'orgColumn']]) assertIdent(v, role);
+  const fn = `${schema}.fn_rls_${table}`;
+  return [
+    `CREATE FUNCTION ${fn}(@${orgColumn} uniqueidentifier)`,
+    `    RETURNS TABLE WITH SCHEMABINDING`,
+    `AS RETURN SELECT 1 AS rls_ok WHERE @${orgColumn} = ${SESSION_ORG} OR ${SESSION_BYPASS} = 1;`,
+    `GO`,
+    `CREATE SECURITY POLICY ${schema}.sp_${table}`,
+    `    ADD FILTER PREDICATE ${fn}(${orgColumn}) ON ${schema}.${table},`,
+    `    ADD BLOCK PREDICATE ${fn}(${orgColumn}) ON ${schema}.${table} AFTER INSERT,`,
+    `    ADD BLOCK PREDICATE ${fn}(${orgColumn}) ON ${schema}.${table} AFTER UPDATE`,
     `    WITH (STATE = ON);`,
     `GO`,
   ].join('\n');
@@ -167,12 +220,12 @@ export function buildDenormBranchTrigger({
 }
 
 /**
- * RLS DDL for a table whose visibility is the current user's BRANCH GRANT SET
+ * RLS DDL for a table whose visibility is the current USER's BRANCH GRANT SET
  * (e.g. core_branches): a user may legitimately span multiple branches, so the
- * predicate is membership in the grant table, not equality to the single
- * session branch. Reads return every branch the user is granted; the session
- * branch still narrows writes via the block predicate on the grant-keyed column.
- * @param {{ schema?: string, table: string, keyColumn?: string, grantTable?: string, grantBranchColumn?: string }} opts
+ * predicate is membership of the keyed branch in THIS USER's grants — keyed by
+ * the session user, not by the single session branch. Reads therefore return
+ * EVERY branch the user is granted (not just the active one).
+ * @param {{ schema?: string, table: string, keyColumn?: string, grantTable?: string, grantBranchColumn?: string, grantUserColumn?: string }} opts
  */
 export function buildBranchSetPolicy({
   schema = 'dbo',
@@ -180,10 +233,12 @@ export function buildBranchSetPolicy({
   keyColumn = 'id',
   grantTable = 'core_branch_users',
   grantBranchColumn = 'branch_id',
+  grantUserColumn = 'user_id',
 }) {
   for (const [v, role] of [
     [schema, 'schema'], [table, 'table'], [keyColumn, 'keyColumn'],
     [grantTable, 'grantTable'], [grantBranchColumn, 'grantBranchColumn'],
+    [grantUserColumn, 'grantUserColumn'],
   ]) assertIdent(v, role);
   const fn = `${schema}.fn_rls_${table}`;
   return [
@@ -192,9 +247,12 @@ export function buildBranchSetPolicy({
     `AS RETURN`,
     `    SELECT 1 AS rls_ok`,
     `    WHERE ${SESSION_BYPASS} = 1`,
+    // Membership of the keyed branch in the CURRENT USER's grant set. The user
+    // (not the active branch) is the key, so a multi-branch user sees all their
+    // granted branches.
     `       OR EXISTS (SELECT 1 FROM ${schema}.${grantTable} AS g`,
     `                  WHERE g.${grantBranchColumn} = @${keyColumn}`,
-    `                    AND g.${grantBranchColumn} = ${SESSION_BRANCH});`,
+    `                    AND g.${grantUserColumn} = ${SESSION_USER_ID});`,
     `GO`,
     `CREATE SECURITY POLICY ${schema}.sp_${table}`,
     `    ADD FILTER PREDICATE ${fn}(${keyColumn}) ON ${schema}.${table},`,

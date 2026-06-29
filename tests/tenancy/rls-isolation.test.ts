@@ -11,6 +11,7 @@ import {
   buildInheritanceDenormPolicy,
   buildInheritanceTvfPredicate,
   buildDenormBranchTrigger,
+  buildBranchSetPolicy,
 } from '../../scripts/lib/rls-sql.mjs';
 import { connect, dbConfigured, type Db } from './db';
 
@@ -41,7 +42,8 @@ run('ADR-001 §6.4 RLS isolation (live SQL Server)', () => {
       IF OBJECT_ID('dbo.sp_t_child','SP') IS NOT NULL DROP SECURITY POLICY dbo.sp_t_child;
       IF OBJECT_ID('dbo.sp_t_denorm','SP') IS NOT NULL DROP SECURITY POLICY dbo.sp_t_denorm;
       IF OBJECT_ID('dbo.sp_t_direct','SP') IS NOT NULL DROP SECURITY POLICY dbo.sp_t_direct;
-      IF OBJECT_ID('dbo.trg_denorm_t_denorm','TR') IS NOT NULL DROP TRIGGER dbo.trg_denorm_t_denorm;
+      IF OBJECT_ID('dbo.trg_denorm_ins_t_denorm','TR') IS NOT NULL DROP TRIGGER dbo.trg_denorm_ins_t_denorm;
+      IF OBJECT_ID('dbo.trg_denorm_upd_t_denorm','TR') IS NOT NULL DROP TRIGGER dbo.trg_denorm_upd_t_denorm;
       IF OBJECT_ID('dbo.fn_rls_t_child','IF') IS NOT NULL DROP FUNCTION dbo.fn_rls_t_child;
       IF OBJECT_ID('dbo.fn_rls_t_denorm','IF') IS NOT NULL DROP FUNCTION dbo.fn_rls_t_denorm;
       IF OBJECT_ID('dbo.fn_rls_t_direct','IF') IS NOT NULL DROP FUNCTION dbo.fn_rls_t_direct;
@@ -86,6 +88,8 @@ run('ADR-001 §6.4 RLS isolation (live SQL Server)', () => {
     await db.raw(
       buildInheritanceDenormPolicy({
         table: 't_denorm',
+        // Every insertable column except the derived branch_id must be carried.
+        columns: ['parent_id', 'label'],
         branchColumn: 'branch_id',
         fkColumn: 'parent_id',
         parentTable: 't_direct',
@@ -173,8 +177,15 @@ run('ADR-001 §6.4 RLS isolation (live SQL Server)', () => {
     await expect(
       db.asBranch(BRANCH_A, `INSERT INTO dbo.t_denorm (id, parent_id, label) VALUES (NEWID(), '${parentA}', 'good-denorm');`),
     ).resolves.toBeDefined();
-    const aRead = await db.asBranch(BRANCH_A, `SELECT COUNT(*) AS n FROM dbo.t_denorm WHERE label = 'good-denorm';`);
-    expect(aRead.recordset[0].n).toBe(1);
+    // The non-key column MUST survive the INSTEAD OF insert (data-loss guard),
+    // and branch_id must have been derived from the parent.
+    const aRead = await db.asBranch(
+      BRANCH_A,
+      `SELECT label, branch_id FROM dbo.t_denorm WHERE label = 'good-denorm';`,
+    );
+    expect(aRead.recordset.length).toBe(1);
+    expect(aRead.recordset[0].label).toBe('good-denorm');
+    expect(String(aRead.recordset[0].branch_id).toLowerCase()).toBe(BRANCH_A);
   });
 
   it('T7b denormalised inheritance NEGATIVE write: a cross-branch insert is rejected', async () => {
@@ -188,5 +199,31 @@ run('ADR-001 §6.4 RLS isolation (live SQL Server)', () => {
     // And the evil row must not be visible to anyone scoped to A.
     const aRead = await db.asBranch(BRANCH_A, `SELECT COUNT(*) AS n FROM dbo.t_denorm WHERE label = 'evil-denorm';`);
     expect(aRead.recordset[0].n).toBe(0);
+  });
+
+  it('T8 branch grant set: a multi-branch user sees ALL granted branches, not just the session branch', async () => {
+    // core_branches-style grant-set scoping. A user granted both branches must
+    // see both core_branches rows even while their session branch is A — the
+    // defect the single-branch predicate would hide.
+    const USER = '33333333-3333-3333-3333-333333333333';
+    await db.raw(`
+      IF OBJECT_ID('dbo.sp_t_branches','SP') IS NOT NULL DROP SECURITY POLICY dbo.sp_t_branches;
+      IF OBJECT_ID('dbo.fn_rls_t_branches','IF') IS NOT NULL DROP FUNCTION dbo.fn_rls_t_branches;
+      IF OBJECT_ID('dbo.t_branch_users','U') IS NOT NULL DROP TABLE dbo.t_branch_users;
+      IF OBJECT_ID('dbo.t_branches','U') IS NOT NULL DROP TABLE dbo.t_branches;
+      CREATE TABLE dbo.t_branches (id uniqueidentifier NOT NULL PRIMARY KEY, label nvarchar(50) NULL);
+      CREATE TABLE dbo.t_branch_users (user_id uniqueidentifier NOT NULL, branch_id uniqueidentifier NOT NULL);
+      INSERT INTO dbo.t_branches (id, label) VALUES ('${BRANCH_A}', 'branch-A'), ('${BRANCH_B}', 'branch-B');
+      INSERT INTO dbo.t_branch_users (user_id, branch_id) VALUES ('${USER}', '${BRANCH_A}'), ('${USER}', '${BRANCH_B}');
+    `);
+    await db.raw(
+      buildBranchSetPolicy({ table: 't_branches', grantTable: 't_branch_users', grantBranchColumn: 'branch_id', grantUserColumn: 'user_id' }),
+    );
+    // Session branch is A, but the user is granted A and B -> sees both.
+    const seen = await db.asBranch(BRANCH_A, 'SELECT label FROM dbo.t_branches ORDER BY label;', { userId: USER });
+    expect(seen.recordset.map((x: { label: string }) => x.label)).toEqual(['branch-A', 'branch-B']);
+    // A user with no grants sees none (fail-closed), regardless of session branch.
+    const none = await db.asBranch(BRANCH_A, 'SELECT COUNT(*) AS n FROM dbo.t_branches;', { userId: '44444444-4444-4444-4444-444444444444' });
+    expect(none.recordset[0].n).toBe(0);
   });
 });
