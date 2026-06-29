@@ -37,4 +37,10 @@ export default tseslint.config(
       'no-restricted-syntax': ['error', NO_RAW_HEX, NO_PALETTE_IMPORT],
     },
   },
+  {
+    // Drift-test palette = parity oracle reference data; literal hex is required.
+    // Only no-restricted-syntax is off here — no-explicit-any stays enabled.
+    files: ['packages/design-tokens/src/tokens.drift.test.ts'],
+    rules: { 'no-restricted-syntax': 'off' },
+  },  
 );

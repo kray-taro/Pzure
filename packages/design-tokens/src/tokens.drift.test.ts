@@ -8,7 +8,7 @@
  * automated checks), not merely asserted in an MR description.
  */
 import { describe, it, expect } from 'vitest';
-import tokens from './tokens.json';
+import { tokens } from './tokens.typed';
 import { status, clinical, finance, inventory, claims, sync } from './colors';
 import { touch } from './touch';
 import { layout } from './layout';
@@ -50,7 +50,7 @@ function resolveGroup(group: Record<string, string>): Record<string, string> {
   );
 }
 
-const color = (tokens as any).color;
+const color = tokens.color;
 
 describe('tokens.json <-> .ts module parity (DRY single source of truth)', () => {
   it('status group matches', () => {
@@ -72,9 +72,9 @@ describe('tokens.json <-> .ts module parity (DRY single source of truth)', () =>
     expect(resolveGroup(color.sync)).toEqual(sync);
   });
   it('touch tokens match', () => {
-    expect((tokens as any).touch).toEqual(touch);
+    expect(tokens.touch).toEqual(touch);
   });
   it('layout tokens match', () => {
-    expect((tokens as any).layout).toEqual(layout);
+    expect(tokens.layout).toEqual(layout);
   });
 });
