@@ -1,0 +1,15 @@
+{
+  // markdownlint-cli2 runner config for the DOCS verification loop (#56, #68).
+  // The rule set itself lives in .markdownlint.jsonc; this file only controls
+  // which files the full-tree run lints.
+  //
+  // The legacy module specifications under DOCS/Modules/Module_* and
+  // Modul_Master used many top-level (#) headings as section markers, which
+  // tripped MD025 en masse. Those section markers have now been demoted to
+  // ## (one H1 per file), so the modules lint cleanly and no longer need to
+  // be excluded. The full DOCS tree is now linted and blocking; only
+  // node_modules is ignored.
+  "ignores": [
+    "**/node_modules/**"
+  ]
+}
