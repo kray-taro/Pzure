@@ -57,10 +57,18 @@ function findSqlMigrations(root) {
 // Returns the resolved scope column name (e.g. 'branch_id'/'organisation_id') or
 // null if it terminates without one. `pushErrors` is false for the master sanity
 // check (we only want the resolution, not duplicate error noise).
+// Memoised across a single guard run: deep chains (lab_results -> lab_samples
+// -> lab_orders -> emr_visits) are otherwise re-walked O(n*depth) times.
+const _chainMemo = new Map();
 function resolveChain(name, map, errors, { pushErrors = true, seen = new Set() } = {}) {
+  if (_chainMemo.has(name)) return _chainMemo.get(name);
   const entry = map.tables[name];
   if (!entry) return null;
-  if (entry.class === 'direct') return entry.branchColumn ?? 'branch_id';
+  if (entry.class === 'direct') {
+    const col = entry.branchColumn ?? 'branch_id';
+    _chainMemo.set(name, col);
+    return col;
+  }
   if (entry.class !== 'inheritance') return null;
   if (seen.has(name)) {
     if (pushErrors) errors.push(`inheritance cycle detected at '${name}'`);
@@ -72,7 +80,10 @@ function resolveChain(name, map, errors, { pushErrors = true, seen = new Set() }
     if (pushErrors) errors.push(`'${name}' inheritance parent '${parent}' is not classified`);
     return null;
   }
-  return resolveChain(parent, map, errors, { pushErrors, seen });
+  const resolved = resolveChain(parent, map, errors, { pushErrors, seen });
+  // Only memoise terminal resolutions (cycles/missing parents are run-specific).
+  if (resolved !== null) _chainMemo.set(name, resolved);
+  return resolved;
 }
 
 // Statement-aware detection so a substring (lab_orders vs lab_orders_archive),
@@ -93,6 +104,16 @@ function tableHasPolicy(ddl, table) {
 
 function escapeRe(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// What tenant scope a table's policy must enforce: 'branch' (default for
+// transactional tables) or 'org' when the classification declares the chain
+// resolves to organisation_id. Used so the guard demands the CORRECT policy
+// kind rather than assuming all inheritance is branch-scoped.
+function scopeTarget(name, map) {
+  const entry = map.tables[name];
+  if (entry?.resolvesTo === 'organisation_id' || entry?.scopeColumn === 'organisation_id') return 'org';
+  return 'branch';
 }
 
 function main() {
@@ -127,11 +148,18 @@ function main() {
       errors.push(`classified table '${name}' does not exist in Unified_ERD.md`);
       continue;
     }
-    // 3. direct branch column exists.
+    // 3. direct branch column exists. A grant-set-scoped direct table (e.g.
+    //    core_branches) is keyed by its own id and resolved against a grant
+    //    table, so it must declare that grant table.
     if (entry.class === 'direct') {
       const col = entry.branchColumn ?? 'branch_id';
       if (!hasColumn(erd.tables[name], col)) {
         errors.push(`direct table '${name}' is missing its branch column '${col}' in the ERD`);
+      }
+      if (entry.scopeBy === 'grant_set') {
+        if (!entry.grantTable || !erd.tables[entry.grantTable]) {
+          errors.push(`grant-set table '${name}' references unknown grantTable '${entry.grantTable}'`);
+        }
       }
     }
     // 4. inheritance FK + parent exist and chain resolves to a direct branch col,
@@ -164,7 +192,10 @@ function main() {
     }
   }
 
-  // 6. RLS policy attachment (only once migrations exist).
+  // 6. RLS policy attachment (only once migrations exist). resolvesTo-aware:
+  //    a branch-resolving transactional table must carry a BRANCH policy; an
+  //    org-resolving inheritance table (e.g. patient_allergies) must carry an
+  //    ORG policy and must NOT be forced into a branch policy.
   const sqlFiles = findSqlMigrations(ROOT);
   if (sqlFiles.length > 0) {
     const ddl = sqlFiles.map((f) => readFileSync(f, 'utf8')).join('\n');
@@ -175,7 +206,11 @@ function main() {
       // do we require an RLS policy (tables not yet migrated are not yet a risk).
       if (!tableIsCreated(ddl, name)) continue;
       if (!tableHasPolicy(ddl, name)) {
-        errors.push(`transactional table '${name}' is created in a migration but has no CREATE SECURITY POLICY (ADR-001 §6.4)`);
+        const scope = scopeTarget(name, map);
+        errors.push(
+          `transactional table '${name}' is created in a migration but has no CREATE SECURITY POLICY ` +
+            `(ADR-001 §6.4; expected a ${scope}-scoped policy)`,
+        );
       }
     }
   }

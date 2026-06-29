@@ -65,21 +65,76 @@ export function buildDirectPolicy({ schema = 'dbo', table, branchColumn = 'branc
 }
 
 /**
- * RLS DDL for an inheritance-scoped table using a denormalised branch_id column
- * (the preferred approach: simple, indexable, and identical predicate to direct
- * tables). The migration is responsible for populating/maintaining branch_id
- * from the FK parent at write time (trigger or app-layer).
- * @param {{ schema?: string, table: string, branchColumn?: string }} opts
+ * RLS DDL for an inheritance-scoped table using a DENORMALISED branch_id column
+ * (the preferred approach: simple, indexable).
+ *
+ * IMPORTANT ordering invariant: a SQL Server `AFTER INSERT` BLOCK predicate
+ * evaluates the row's stored columns *before* any AFTER trigger runs, so it
+ * cannot be paired with an AFTER trigger that derives branch_id — the column
+ * would still be NULL and every insert would be rejected. We therefore:
+ *   - DERIVE branch_id from the FK parent in an INSTEAD OF INSERT trigger
+ *     (so the row already carries the correct branch_id when it lands), and
+ *   - apply the FILTER predicate + an AFTER UPDATE BLOCK predicate only.
+ * Re-pointing the FK is guarded by buildDenormBranchTrigger (AFTER UPDATE),
+ * which keeps branch_id consistent and is itself subject to the UPDATE block.
+ *
+ * This builder is intentionally NOT an alias of buildDirectPolicy: a direct
+ * table receives branch_id from the caller, a denorm table derives it, and the
+ * two have different INSERT contracts (SOLID/ISP).
+ *
+ * @param {{ schema?: string, table: string, branchColumn?: string, fkColumn: string, parentTable: string, parentKey?: string, parentBranchColumn?: string }} opts
  */
-export function buildInheritanceDenormPolicy(opts) {
-  return buildDirectPolicy(opts);
+export function buildInheritanceDenormPolicy({
+  schema = 'dbo',
+  table,
+  branchColumn = 'branch_id',
+  fkColumn,
+  parentTable,
+  parentKey = 'id',
+  parentBranchColumn = 'branch_id',
+}) {
+  for (const [v, role] of [
+    [schema, 'schema'], [table, 'table'], [branchColumn, 'branchColumn'],
+    [fkColumn, 'fkColumn'], [parentTable, 'parentTable'], [parentKey, 'parentKey'],
+    [parentBranchColumn, 'parentBranchColumn'],
+  ]) assertIdent(v, role);
+  const fn = `${schema}.fn_rls_${table}`;
+  const body = branchPredicateBody(`@${branchColumn}`);
+  const insTrg = `${schema}.trg_denorm_ins_${table}`;
+  return [
+    // FILTER/UPDATE-BLOCK predicate function over the denormalised column.
+    `CREATE FUNCTION ${fn}(@${branchColumn} uniqueidentifier)`,
+    `    RETURNS TABLE WITH SCHEMABINDING`,
+    `AS RETURN SELECT 1 AS rls_ok WHERE ${body};`,
+    `GO`,
+    // INSTEAD OF INSERT derives branch_id from the parent BEFORE the row lands,
+    // so the (later) read FILTER and any UPDATE BLOCK see a populated column.
+    `CREATE TRIGGER ${insTrg} ON ${schema}.${table} INSTEAD OF INSERT AS`,
+    `BEGIN`,
+    `    SET NOCOUNT ON;`,
+    `    INSERT INTO ${schema}.${table} (id, ${fkColumn}, ${branchColumn})`,
+    `    SELECT i.id, i.${fkColumn}, p.${parentBranchColumn}`,
+    `    FROM inserted AS i`,
+    `    JOIN ${schema}.${parentTable} AS p ON p.${parentKey} = i.${fkColumn};`,
+    `END;`,
+    `GO`,
+    // No AFTER INSERT block predicate (the INSTEAD OF trigger guarantees the
+    // derived branch_id); FILTER on read + BLOCK on UPDATE.
+    `CREATE SECURITY POLICY ${schema}.sp_${table}`,
+    `    ADD FILTER PREDICATE ${fn}(${branchColumn}) ON ${schema}.${table},`,
+    `    ADD BLOCK PREDICATE ${fn}(${branchColumn}) ON ${schema}.${table} AFTER UPDATE`,
+    `    WITH (STATE = ON);`,
+    `GO`,
+  ].join('\n');
 }
 
 /**
- * Write-time maintenance for the denormalised branch_id on an inheritance table:
- * a trigger that derives branch_id from the FK parent on INSERT/UPDATE. This is
- * the mechanism the denormalised RLS path relies on, so it ships from the same
- * generator and is exercised by the live tests (no developer-discipline gap).
+ * AFTER UPDATE maintenance for the denormalised branch_id: if a row's FK parent
+ * changes, re-derive branch_id so it stays consistent. Set-based and multi-row
+ * safe. NOTE: re-homing a row across branches via parent_id change is itself
+ * subject to the AFTER UPDATE block predicate, so it can only succeed within the
+ * session branch (or audited bypass). Migrations SHOULD also index
+ * (${fkColumn}) on hot tables; the trigger joins the parent on every update.
  * @param {{ schema?: string, table: string, branchColumn?: string, fkColumn: string, parentTable: string, parentKey?: string, parentBranchColumn?: string }} o
  */
 export function buildDenormBranchTrigger({
@@ -96,16 +151,55 @@ export function buildDenormBranchTrigger({
     [fkColumn, 'fkColumn'], [parentTable, 'parentTable'], [parentKey, 'parentKey'],
     [parentBranchColumn, 'parentBranchColumn'],
   ]) assertIdent(v, role);
-  const trg = `${schema}.trg_denorm_${table}`;
+  const trg = `${schema}.trg_denorm_upd_${table}`;
   return [
-    `CREATE TRIGGER ${trg} ON ${schema}.${table} AFTER INSERT, UPDATE AS`,
+    `CREATE TRIGGER ${trg} ON ${schema}.${table} AFTER UPDATE AS`,
     `BEGIN`,
     `    SET NOCOUNT ON;`,
+    `    IF UPDATE(${fkColumn})`,
     `    UPDATE t SET t.${branchColumn} = p.${parentBranchColumn}`,
     `    FROM ${schema}.${table} AS t`,
     `    JOIN inserted AS i ON i.id = t.id`,
     `    JOIN ${schema}.${parentTable} AS p ON p.${parentKey} = t.${fkColumn};`,
     `END;`,
+    `GO`,
+  ].join('\n');
+}
+
+/**
+ * RLS DDL for a table whose visibility is the current user's BRANCH GRANT SET
+ * (e.g. core_branches): a user may legitimately span multiple branches, so the
+ * predicate is membership in the grant table, not equality to the single
+ * session branch. Reads return every branch the user is granted; the session
+ * branch still narrows writes via the block predicate on the grant-keyed column.
+ * @param {{ schema?: string, table: string, keyColumn?: string, grantTable?: string, grantBranchColumn?: string }} opts
+ */
+export function buildBranchSetPolicy({
+  schema = 'dbo',
+  table,
+  keyColumn = 'id',
+  grantTable = 'core_branch_users',
+  grantBranchColumn = 'branch_id',
+}) {
+  for (const [v, role] of [
+    [schema, 'schema'], [table, 'table'], [keyColumn, 'keyColumn'],
+    [grantTable, 'grantTable'], [grantBranchColumn, 'grantBranchColumn'],
+  ]) assertIdent(v, role);
+  const fn = `${schema}.fn_rls_${table}`;
+  return [
+    `CREATE FUNCTION ${fn}(@${keyColumn} uniqueidentifier)`,
+    `    RETURNS TABLE WITH SCHEMABINDING`,
+    `AS RETURN`,
+    `    SELECT 1 AS rls_ok`,
+    `    WHERE ${SESSION_BYPASS} = 1`,
+    `       OR EXISTS (SELECT 1 FROM ${schema}.${grantTable} AS g`,
+    `                  WHERE g.${grantBranchColumn} = @${keyColumn}`,
+    `                    AND g.${grantBranchColumn} = ${SESSION_BRANCH});`,
+    `GO`,
+    `CREATE SECURITY POLICY ${schema}.sp_${table}`,
+    `    ADD FILTER PREDICATE ${fn}(${keyColumn}) ON ${schema}.${table},`,
+    `    ADD BLOCK PREDICATE ${fn}(${keyColumn}) ON ${schema}.${table} AFTER UPDATE`,
+    `    WITH (STATE = ON);`,
     `GO`,
   ].join('\n');
 }
