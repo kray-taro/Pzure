@@ -40,7 +40,10 @@ include:
   - template: Jobs/Dependency-Scanning.gitlab-ci.yml
   - template: Jobs/Secret-Detection.gitlab-ci.yml
 
-default:
+# Node toolchain base. Only the JS jobs (lint/typecheck/test) extend this, so
+# the node image + npm install never leak into the alpine guard jobs or the
+# managed scanner/SAST images (which have no node/npm -> would exit 127).
+.node:
   image: node:20-alpine
   cache:
     key:
@@ -58,7 +61,6 @@ branch-name:
   stage: guard
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"'
-  before_script: []
   image: alpine:3.20
   script:
     - apk add --no-cache bash >/dev/null
@@ -66,7 +68,6 @@ branch-name:
 
 no-raw-hex:
   stage: guard
-  before_script: []
   image: alpine:3.20
   script:
     - apk add --no-cache bash grep >/dev/null
@@ -74,7 +75,6 @@ no-raw-hex:
 
 secret-detection:
   stage: guard
-  before_script: []
   image: alpine:3.20
   script:
     - apk add --no-cache bash grep >/dev/null
@@ -84,16 +84,19 @@ secret-detection:
 
 lint:
   stage: lint
+  extends: .node
   script:
     - npm run lint
 
 typecheck:
   stage: typecheck
+  extends: .node
   script:
     - npm run typecheck
 
 test:
   stage: test
+  extends: .node
   script:
     - npm test
   coverage: '/All files[^|]*\|[^|]*\s+([\d.]+)/'
