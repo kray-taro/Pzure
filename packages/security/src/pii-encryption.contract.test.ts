@@ -76,11 +76,36 @@ describe('ADR-003/ADR-007 PII/PHI field-encryption scope', () => {
     // ADR-003 they must carry a deterministic search hash. dob is included
     // because name + DOB disambiguation is a standard patient-lookup path; a
     // missing hash here would invite a later plaintext DOB index.
-    for (const column of ['patient_number', 'phone_primary', 'dob']) {
+    // national_id and birth_cert_no are searched too: national-ID lookup is a
+    // ratified MVP requirement (#65) and birth_cert_no is its minor equivalent.
+    for (const column of [
+      'patient_number',
+      'phone_primary',
+      'dob',
+      'national_id',
+      'birth_cert_no',
+    ]) {
       const c = COLUMN_CLASSIFICATIONS.find(
         (x) => x.table === 'patient_patients' && x.column === column,
       );
       expect(c?.searchHash, `${column} needs a search hash`).toBe(true);
+    }
+  });
+
+  it('keeps national_id / birth_cert_no as encrypted PII with a (keyed-pepper) search hash (#65)', () => {
+    // Ratified in #65 (ADR-003 §4.1 / ADR-007 §6): national_id and the minor
+    // equivalent birth_cert_no are searched by exact match, so they carry a
+    // search hash - but ONLY because that hash is a keyed HMAC-SHA256 with a
+    // secret pepper held outside the DB, defeating offline enumeration of these
+    // low-entropy identifiers. They remain field-encrypted PII regardless.
+    for (const column of ['national_id', 'birth_cert_no']) {
+      const c = COLUMN_CLASSIFICATIONS.find(
+        (x) => x.table === 'patient_patients' && x.column === column,
+      );
+      expect(c, `${column} must be classified`).toBeDefined();
+      expect(c?.dataClass).toBe('pii');
+      expect(c?.fieldEncrypted).toBe(true);
+      expect(c?.searchHash).toBe(true);
     }
   });
 

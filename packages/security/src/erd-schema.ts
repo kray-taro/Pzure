@@ -50,7 +50,8 @@ export interface ErdColumn {
 export const ERD_SENSITIVE_COLUMNS: readonly ErdColumn[] = [
   // patient_patients (PII) - the real ERD patient table.
   { table: 'patient_patients', column: 'patient_number', note: 'direct patient identifier' },
-  { table: 'patient_patients', column: 'national_id', note: 'national ID (high-sensitivity PII), encrypted; no search hash per ADR-003 §4' },
+  { table: 'patient_patients', column: 'national_id', note: 'national ID (high-sensitivity PII), encrypted; keyed-pepper HMAC search hash ratified in #65 (ADR-003 §4.1)' },
+  { table: 'patient_patients', column: 'birth_cert_no', note: 'birth certificate number (high-sensitivity PII); minor equivalent of national_id, encrypted with keyed-pepper HMAC search hash (#65 / ADR-003 §4.1)' },
   { table: 'patient_patients', column: 'first_name', note: 'name' },
   { table: 'patient_patients', column: 'last_name', note: 'name' },
   { table: 'patient_patients', column: 'dob', note: 'date of birth' },
