@@ -9,7 +9,7 @@
   },
   "tables": {
     "core_organisations": { "class": "master", "note": "top-level tenant root" },
-    "core_branches": { "class": "direct", "branchColumn": "id", "note": "the branch itself; RLS scopes a user to their allowed branch ids" },
+    "core_branches": { "class": "direct", "branchColumn": "id", "scopeBy": "grant_set", "grantTable": "core_branch_users", "note": "the branch itself; visibility is the user's branch GRANT SET (core_branch_users), not the single session branch — a user may span multiple branches (buildBranchSetPolicy)" },
     "core_users": { "class": "master", "scopeColumn": "organisation_id" },
     "core_roles": { "class": "master", "note": "global lookup" },
     "core_user_roles": { "class": "master", "note": "join over org-scoped users/roles" },

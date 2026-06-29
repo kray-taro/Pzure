@@ -56,27 +56,17 @@ run('ADR-001 §6.4 RLS isolation (live SQL Server)', () => {
       CREATE TABLE dbo.t_denorm (id uniqueidentifier NOT NULL PRIMARY KEY, parent_id uniqueidentifier NOT NULL REFERENCES dbo.t_direct(id), branch_id uniqueidentifier NULL, label nvarchar(50) NULL);
       CREATE TABLE dbo.t_master (id uniqueidentifier NOT NULL PRIMARY KEY, organisation_id uniqueidentifier NOT NULL, label nvarchar(50) NULL);
     `);
-    // Trigger that maintains the denormalised branch_id BEFORE the policy is on,
-    // so the seeded rows below get populated by the real shipping mechanism.
-    await db.raw(
-      buildDenormBranchTrigger({
-        table: 't_denorm',
-        branchColumn: 'branch_id',
-        fkColumn: 'parent_id',
-        parentTable: 't_direct',
-        parentKey: 'id',
-        parentBranchColumn: 'branch_id',
-      }),
-    );
     // Seed rows for both branches BEFORE policies are enabled (bypass via raw).
+    // branch_id on t_denorm is populated explicitly here (pre-policy) so seed
+    // rows exist; post-policy inserts go through the INSTEAD OF trigger.
     await db.raw(`
       INSERT INTO dbo.t_direct (id, branch_id, label) VALUES
         (NEWID(), '${BRANCH_A}', 'A-row'),
         (NEWID(), '${BRANCH_B}', 'B-row');
       INSERT INTO dbo.t_child (id, parent_id, label)
         SELECT NEWID(), id, 'child-of-' + label FROM dbo.t_direct;
-      INSERT INTO dbo.t_denorm (id, parent_id, label)
-        SELECT NEWID(), id, 'denorm-of-' + label FROM dbo.t_direct;
+      INSERT INTO dbo.t_denorm (id, parent_id, branch_id, label)
+        SELECT NEWID(), id, branch_id, 'denorm-of-' + label FROM dbo.t_direct;
     `);
     await db.raw(`INSERT INTO dbo.t_master (id, organisation_id, label) VALUES (NEWID(), NEWID(), 'shared-ref');`);
     // Apply the REAL generated policies.
@@ -90,8 +80,29 @@ run('ADR-001 §6.4 RLS isolation (live SQL Server)', () => {
         parentBranchColumn: 'branch_id',
       }),
     );
-    // Denormalised inheritance uses the SAME predicate shape as direct tables.
-    await db.raw(buildInheritanceDenormPolicy({ table: 't_denorm', branchColumn: 'branch_id' }));
+    // Denormalised inheritance: INSTEAD OF INSERT derives branch_id (the real
+    // shipping mechanism), FILTER on read, BLOCK on UPDATE. Plus the UPDATE
+    // maintenance trigger for FK re-pointing.
+    await db.raw(
+      buildInheritanceDenormPolicy({
+        table: 't_denorm',
+        branchColumn: 'branch_id',
+        fkColumn: 'parent_id',
+        parentTable: 't_direct',
+        parentKey: 'id',
+        parentBranchColumn: 'branch_id',
+      }),
+    );
+    await db.raw(
+      buildDenormBranchTrigger({
+        table: 't_denorm',
+        branchColumn: 'branch_id',
+        fkColumn: 'parent_id',
+        parentTable: 't_direct',
+        parentKey: 'id',
+        parentBranchColumn: 'branch_id',
+      }),
+    );
   }, 60_000);
 
   afterAll(async () => {
@@ -147,17 +158,35 @@ run('ADR-001 §6.4 RLS isolation (live SQL Server)', () => {
     expect(b.recordset[0].n).toBe(1);
   });
 
-  it('T7 denormalised inheritance: write-time trigger + RLS isolate the preferred path', async () => {
-    // Read isolation: Branch A sees only its denormalised child row.
+  it('T7 denormalised inheritance read isolation: Branch A sees only its row', async () => {
     const aRead = await db.asBranch(BRANCH_A, 'SELECT label FROM dbo.t_denorm;');
     expect(aRead.recordset.map((x: { label: string }) => x.label)).toEqual(['denorm-of-A-row']);
-    // Write rejection: inserting under Branch A a row whose parent is Branch B
-    // must be blocked — the trigger denormalises branch_id = B, the BLOCK
-    // predicate then rejects it. Proves the shipping mechanism, not just a join.
+  });
+
+  it('T7a denormalised inheritance POSITIVE write: a same-branch insert SUCCEEDS', async () => {
+    // Regression guard for the AFTER-INSERT-block ordering bug: the INSTEAD OF
+    // trigger must derive branch_id from the (Branch A) parent so the insert is
+    // accepted. If the denorm policy ever reverts to an AFTER INSERT block, the
+    // row's branch_id is NULL at predicate time and THIS insert fails.
+    const parentA = (await db.raw(`SELECT TOP 1 id FROM dbo.t_direct WHERE branch_id = '${BRANCH_A}';`))
+      .recordset[0].id as string;
+    await expect(
+      db.asBranch(BRANCH_A, `INSERT INTO dbo.t_denorm (id, parent_id, label) VALUES (NEWID(), '${parentA}', 'good-denorm');`),
+    ).resolves.toBeDefined();
+    const aRead = await db.asBranch(BRANCH_A, `SELECT COUNT(*) AS n FROM dbo.t_denorm WHERE label = 'good-denorm';`);
+    expect(aRead.recordset[0].n).toBe(1);
+  });
+
+  it('T7b denormalised inheritance NEGATIVE write: a cross-branch insert is rejected', async () => {
+    // Parent is a Branch B row; under Branch A the INSTEAD OF trigger derives
+    // branch_id = B, which the write path must reject (not the NULL backstop).
     const parentB = (await db.raw(`SELECT TOP 1 id FROM dbo.t_direct WHERE branch_id = '${BRANCH_B}';`))
       .recordset[0].id as string;
     await expect(
       db.asBranch(BRANCH_A, `INSERT INTO dbo.t_denorm (id, parent_id, label) VALUES (NEWID(), '${parentB}', 'evil-denorm');`),
     ).rejects.toThrow();
+    // And the evil row must not be visible to anyone scoped to A.
+    const aRead = await db.asBranch(BRANCH_A, `SELECT COUNT(*) AS n FROM dbo.t_denorm WHERE label = 'evil-denorm';`);
+    expect(aRead.recordset[0].n).toBe(0);
   });
 });
