@@ -86,6 +86,23 @@ function resolveChain(name, map, errors, { pushErrors = true, seen = new Set() }
   return resolved;
 }
 
+// Walk `parent` links and return the first ancestor (inclusive) that OWNS an
+// organisation_id column (scopeColumn: 'organisation_id'), or null if the chain
+// is broken, cyclic, or never reaches one. Used to validate org-inheritance
+// tables (resolvesTo: 'organisation_id'), which resolveChain cannot validate
+// because their chain terminates at a `master` org root, not a `direct` branch.
+function resolveOrgChain(name, map, seen = new Set()) {
+  const entry = map.tables[name];
+  if (!entry) return null;
+  if (entry.scopeColumn === 'organisation_id') return name;
+  if (entry.class !== 'inheritance') return null;
+  if (seen.has(name)) return null; // cycle
+  seen.add(name);
+  const parent = entry.parent;
+  if (!parent || !map.tables[parent]) return null;
+  return resolveOrgChain(parent, map, seen);
+}
+
 // Statement-aware detection so a substring (lab_orders vs lab_orders_archive),
 // bracket-quoting, or a comment can't produce a false result on a security gate.
 function tableIsCreated(ddl, table) {
@@ -235,7 +252,25 @@ function main() {
           `inheritance table '${name}' declares resolvesTo='${entry.resolvesTo}' but its FK chain resolves to '${resolved}'`,
         );
       }
-    }
+      
+      // Org-resolving inheritance (e.g. patient_allergies -> patient_patients):
+      // resolveChain cannot validate it (its chain ends at a `master` org root,
+      // not a `direct` branch), so without this it would pass with a broken or
+      // missing FK chain. Require the declared parent to exist and the chain to
+      // terminate at an organisation_id-owning ancestor.
+      if (entry.resolvesTo === 'organisation_id') {
+        if (!entry.parent || !map.tables[entry.parent]) {
+          errors.push(
+            `org-inheritance table '${name}' declares resolvesTo='organisation_id' but its parent '${entry.parent}' is not classified`,
+          );
+        } else if (!resolveOrgChain(name, map)) {
+          errors.push(
+            `org-inheritance table '${name}' FK chain does not reach an organisation_id-owning ancestor (broken/cyclic chain or no org root)`,
+          );
+        }
+        }
+      }
+
     // 5. master sanity: must NOT be reachable to a branch column by a chain.
     if (entry.class === 'master') {
       const resolved = resolveChain(name, map, errors, { pushErrors: false });
