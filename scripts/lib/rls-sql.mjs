@@ -99,12 +99,13 @@ export function buildDirectPolicy({ schema = 'dbo', table, branchColumn = 'branc
  * the only insert that runs, so every caller-supplied column must be carried
  * through or it is silently lost. `id` and `fkColumn` are included if omitted.
  *
- * @param {{ schema?: string, table: string, columns: string[], branchColumn?: string, fkColumn: string, parentTable: string, parentKey?: string, parentBranchColumn?: string }} opts
+ * @param {{ schema?: string, table: string, columns: string[], pkColumn?: string, branchColumn?: string, fkColumn: string, parentTable: string, parentKey?: string, parentBranchColumn?: string }} opts
  */
 export function buildInheritanceDenormPolicy({
   schema = 'dbo',
   table,
   columns,
+  pkColumn = 'id',
   branchColumn = 'branch_id',
   fkColumn,
   parentTable,
@@ -112,17 +113,17 @@ export function buildInheritanceDenormPolicy({
   parentBranchColumn = 'branch_id',
 }) {
   for (const [v, role] of [
-    [schema, 'schema'], [table, 'table'], [branchColumn, 'branchColumn'],
+    [schema, 'schema'], [table, 'table'], [pkColumn, 'pkColumn'], [branchColumn, 'branchColumn'],
     [fkColumn, 'fkColumn'], [parentTable, 'parentTable'], [parentKey, 'parentKey'],
     [parentBranchColumn, 'parentBranchColumn'],
   ]) assertIdent(v, role);
   if (!Array.isArray(columns) || columns.length === 0) {
     throw new Error(`buildInheritanceDenormPolicy: 'columns' (the table's insertable columns, excluding ${branchColumn}) is required for ${table}`);
   }
-  // Carry through every supplied column; ensure id + fk are present; never the
+  // Carry through every supplied column; ensure pk + fk are present; never the
   // derived branch column (it comes from the parent). De-dup, preserve order.
   const carried = [];
-  for (const c of ['id', fkColumn, ...columns]) {
+  for (const c of [pkColumn, fkColumn, ...columns]) {
     assertIdent(c, 'column');
     if (c !== branchColumn && !carried.includes(c)) carried.push(c);
   }
@@ -232,11 +233,12 @@ export function buildOrgInheritanceTvfPredicate({
  * subject to the AFTER UPDATE block predicate, so it can only succeed within the
  * session branch (or audited bypass). Migrations SHOULD also index
  * (${fkColumn}) on hot tables; the trigger joins the parent on every update.
- * @param {{ schema?: string, table: string, branchColumn?: string, fkColumn: string, parentTable: string, parentKey?: string, parentBranchColumn?: string }} o
+ * @param {{ schema?: string, table: string, pkColumn?: string, branchColumn?: string, fkColumn: string, parentTable: string, parentKey?: string, parentBranchColumn?: string }} o
  */
 export function buildDenormBranchTrigger({
   schema = 'dbo',
   table,
+  pkColumn = 'id',
   branchColumn = 'branch_id',
   fkColumn,
   parentTable,
@@ -244,7 +246,7 @@ export function buildDenormBranchTrigger({
   parentBranchColumn = 'branch_id',
 }) {
   for (const [v, role] of [
-    [schema, 'schema'], [table, 'table'], [branchColumn, 'branchColumn'],
+    [schema, 'schema'], [table, 'table'], [pkColumn, 'pkColumn'], [branchColumn, 'branchColumn'],
     [fkColumn, 'fkColumn'], [parentTable, 'parentTable'], [parentKey, 'parentKey'],
     [parentBranchColumn, 'parentBranchColumn'],
   ]) assertIdent(v, role);
@@ -256,7 +258,7 @@ export function buildDenormBranchTrigger({
     `    IF UPDATE(${fkColumn})`,
     `    UPDATE t SET t.${branchColumn} = p.${parentBranchColumn}`,
     `    FROM ${schema}.${table} AS t`,
-    `    JOIN inserted AS i ON i.id = t.id`,
+    `    JOIN inserted AS i ON i.${pkColumn} = t.${pkColumn}`,
     `    JOIN ${schema}.${parentTable} AS p ON p.${parentKey} = t.${fkColumn};`,
     `END;`,
     `GO`,
