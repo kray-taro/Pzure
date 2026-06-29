@@ -1,7 +1,7 @@
 # Gate 0B — Security, Privacy & Identity Review (Ratification Record)
 
 **Owning issue:** [#55](https://gitlab.com/cricketaustin-group/Pzure/-/issues/55) (Sprint 0B) · Parent: [#1](https://gitlab.com/cricketaustin-group/Pzure/-/issues/1) · Hardening lane: [#40](https://gitlab.com/cricketaustin-group/Pzure/-/issues/40)
-**Reviewer role:** Security Analyst · **Date:** 2026-06-28 · **Status:** Ratified
+**Reviewer role:** Security Analyst · **Date:** 2026-06-28 · **Status:** Conditionally Ratified (pending companion CI MR — see §3)
 
 Gate 0B confirms that no patient, payment, pharmacy or claim feature proceeds
 without an approved security architecture. This record ratifies the security/
@@ -22,13 +22,17 @@ data-access-log requirement.
 All six ADRs are already `Approved` in `DECISION-LOG.md`; this Gate 0B review
 formally signs them off as the security baseline.
 
-> **ADR numbering note.** `DECISION-LOG.md` is authoritative. The "How" section of
-> [#55](https://gitlab.com/cricketaustin-group/Pzure/-/issues/55) is **stale**: it labels token/session as ADR-004, RBAC as ADR-005 and
-> audit/access as "ADR-006". Per the log, **ADR-004 = RBAC + PIN**, **ADR-005 =
-> outbox/queue**, **ADR-006 = offline mode**. There is **no dedicated audit/access
-> ADR**; the audit + patient data-access-log requirement is governed by this Gate
-> record + `AUDIT-AND-DATA-ACCESS-LOG.md`, with retention under **ADR-019** and
-> masking/export under **ADR-020**. #55's How section should be corrected to match.
+> **ADR numbering note.** `DECISION-LOG.md` is authoritative. Per the log,
+> **ADR-004 = RBAC + PIN**, **ADR-005 = outbox/queue**, and **ADR-006 = degraded
+> offline mode** — there is **no dedicated audit/access ADR** (ADR-006 is *not*
+> audit). The audit + patient data-access-log requirement is therefore governed
+> by this Gate record + `AUDIT-AND-DATA-ACCESS-LOG.md`, with retention under
+> **ADR-019** and masking/export under **ADR-020**.
+>
+> An earlier version of [#55](https://gitlab.com/cricketaustin-group/Pzure/-/issues/55)'s "How" section mislabelled these ADRs
+> (token/session as ADR-004, RBAC as ADR-005, audit/access as "ADR-006"). That
+> section has since been **reconciled to `DECISION-LOG.md`** and now matches this
+> record; no further correction to #55 is required.
 
 ## 2. Blockers confirmed closed
 
@@ -51,12 +55,16 @@ formally signs them off as the security baseline.
 > **Ratification is contingent on both landing.** This documentation MR (`DOCS`)
 > MUST NOT be treated as a completed Gate 0B sign-off until the companion CI MR
 > (`feat/security-gate-sast` → `develop`) is also merged. If the companion MR is
-> abandoned or materially changed, this record must be re-reviewed. Link the
-> companion MR here once opened: _<companion MR !-link>_.
+> abandoned or materially changed, this record must be re-reviewed.
+>
+> **Companion CI MR:** _not yet linked — this record stays **Conditionally
+> Ratified** until the `feat/security-gate-sast` → `develop` MR is opened, linked
+> here, and merged._ Replace this line with the `!`-reference once the MR exists.
 
 ## 4. Exit decision
 
-Gate 0B is **ratified**. Combined with Gate 0A (data/ERD/tenancy) and 0C
-(offline/integration/NFR/DR), module lanes may proceed under the approved
-security architecture. Residual hardening (MFA enforcement, break-glass UX,
+Gate 0B is **conditionally ratified**: the security architecture and ADRs are
+signed off, but sign-off is **not complete** until the companion CI MR
+(`feat/security-gate-sast` → `develop`, see §3) is merged. Module lanes may
+proceed under the approved security architecture once that companion MR lands. Residual hardening (MFA enforcement, break-glass UX,
 anomaly alerting, restore drills) is carried by [#40](https://gitlab.com/cricketaustin-group/Pzure/-/issues/40).
