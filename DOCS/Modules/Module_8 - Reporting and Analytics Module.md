@@ -25,7 +25,7 @@ Kenya’s Digital Health Act places data collection, collation, analysis, report
 
 ---
 
-# 1. Purpose of the module
+## 1. Purpose of the module
 
 The Reporting and Analytics Module should:
 
@@ -45,7 +45,7 @@ The Reporting and Analytics Module should:
 
 ---
 
-# 2. Kenya-specific design basis
+## 2. Kenya-specific design basis
 
 ## A. eTIMS and tax reporting
 
@@ -132,7 +132,7 @@ Software implication:
 
 ---
 
-# 3. Core users
+## 3. Core users
 
 | User                      | Main reporting needs                                                   |
 | ------------------------- | ---------------------------------------------------------------------- |
@@ -151,7 +151,7 @@ Software implication:
 
 ---
 
-# 4. Reporting architecture
+## 4. Reporting architecture
 
 The module should have three layers.
 
@@ -185,7 +185,7 @@ For small clinics and chemists, the MVP can start with operational reports direc
 
 ---
 
-# 5. Data sources
+## 5. Data sources
 
 | Source module          | Data used in reporting                                     |
 | ---------------------- | ---------------------------------------------------------- |
@@ -202,7 +202,7 @@ For small clinics and chemists, the MVP can start with operational reports direc
 
 ---
 
-# 6. Minimum report catalogue
+## 6. Minimum report catalogue
 
 ## 6.1 Daily sales report
 
@@ -937,7 +937,7 @@ Technical/portal error
 
 ---
 
-# 7. Additional recommended reports
+## 7. Additional recommended reports
 
 The minimum reports are good, but a complete Kenyan solution should also include the following.
 
@@ -1000,7 +1000,7 @@ The minimum reports are good, but a complete Kenyan solution should also include
 
 ---
 
-# 8. Dashboards
+## 8. Dashboards
 
 ## A. Owner dashboard
 
@@ -1137,7 +1137,7 @@ Audit exports
 
 ---
 
-# 9. Report permissions and masking
+## 9. Report permissions and masking
 
 Not every user should see every report or every field.
 
@@ -1175,7 +1175,7 @@ Not every user should see every report or every field.
 
 ---
 
-# 10. Filters and dimensions
+## 10. Filters and dimensions
 
 Every serious report should support standard filters.
 
@@ -1220,7 +1220,7 @@ Every serious report should support standard filters.
 
 ---
 
-# 11. Metrics dictionary
+## 11. Metrics dictionary
 
 The system should define metrics centrally so users do not argue over numbers.
 
@@ -1249,7 +1249,7 @@ The system should define metrics centrally so users do not argue over numbers.
 
 ---
 
-# 12. Alerts and exception reporting
+## 12. Alerts and exception reporting
 
 Reporting should not only wait for users to open reports. It should push exceptions.
 
@@ -1286,7 +1286,7 @@ Reporting should not only wait for users to open reports. It should push excepti
 
 ---
 
-# 13. Report scheduling
+## 13. Report scheduling
 
 Reports should be schedulable.
 
@@ -1317,7 +1317,7 @@ Reports should be schedulable.
 
 ---
 
-# 14. Data quality controls
+## 14. Data quality controls
 
 Bad reports usually come from bad data. The module should include data quality reports.
 
@@ -1361,7 +1361,7 @@ Claims missing attachments
 
 ---
 
-# 15. Data model
+## 15. Data model
 
 ## Main reporting tables
 
@@ -1538,7 +1538,7 @@ Claims missing attachments
 
 ---
 
-# 16. API design
+## 16. API design
 
 ## Report endpoints
 
@@ -1588,7 +1588,7 @@ Claims missing attachments
 
 ---
 
-# 17. Report generation rules
+## 17. Report generation rules
 
 ## Permission rule
 
@@ -1661,7 +1661,7 @@ THEN create DPO review alert
 
 ---
 
-# 18. Report formats
+## 18. Report formats
 
 | Format             | Use                                       |
 | ------------------ | ----------------------------------------- |
@@ -1691,7 +1691,7 @@ THEN create DPO review alert
 
 ---
 
-# 19. Visual analytics
+## 19. Visual analytics
 
 The system should provide simple visuals.
 
@@ -1711,7 +1711,7 @@ For small clinics and chemists, avoid overly complex BI screens. A clear table p
 
 ---
 
-# 20. Offline and sync reporting
+## 20. Offline and sync reporting
 
 Because outlets may operate with unstable internet, reporting must distinguish local and synced data.
 
@@ -1741,7 +1741,7 @@ Because outlets may operate with unstable internet, reporting must distinguish l
 
 ---
 
-# 21. Data retention and archiving
+## 21. Data retention and archiving
 
 Reports should not permanently depend on recalculating live records only. Historical figures should be reproducible.
 
@@ -1764,7 +1764,7 @@ The health information management regulations refer to retaining health data hel
 
 ---
 
-# 22. Workflows
+## 22. Workflows
 
 ## A. Daily close workflow
 
@@ -1838,7 +1838,7 @@ The health information management regulations refer to retaining health data hel
 
 ---
 
-# 23. MVP versus later versions
+## 23. MVP versus later versions
 
 ## MVP
 
@@ -1902,7 +1902,7 @@ Add:
 
 ---
 
-# 24. Acceptance criteria
+## 24. Acceptance criteria
 
 The Reporting and Analytics Module is ready when it passes these tests:
 
@@ -1930,7 +1930,7 @@ The Reporting and Analytics Module is ready when it passes these tests:
 
 ---
 
-# 25. Final product behaviour
+## 25. Final product behaviour
 
 The Reporting and Analytics Module should behave like this:
 
@@ -1973,7 +1973,7 @@ It must be a governed reporting layer with standard facts, dimensions, metrics, 
 
 ---
 
-# 1. Final developer decisions
+## 1. Final developer decisions
 
 | Gap                                | Final decision                                                                                                                                                                                                           |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -1989,7 +1989,7 @@ It must be a governed reporting layer with standard facts, dimensions, metrics, 
 
 ---
 
-# 2. Reporting architecture
+## 2. Reporting architecture
 
 ## 2.1 Recommended architecture
 
@@ -2020,7 +2020,7 @@ Dashboards / exports / scheduled reports / alerts
 
 ---
 
-# 3. Reporting schema foundations
+## 3. Reporting schema foundations
 
 ## 3.1 Core reporting dimensions
 
@@ -2090,7 +2090,7 @@ This view should always mask by default. Full patient data should only be availa
 
 ---
 
-# 4. Core reporting fact views
+## 4. Core reporting fact views
 
 Developers should build these first. The 14 minimum reports should read from these views, not directly from many transactional tables.
 
@@ -2782,7 +2782,7 @@ LEFT JOIN branches b ON b.id = dae.branch_id;
 
 ---
 
-# 5. Machine-readable report registry v1
+## 5. Machine-readable report registry v1
 
 Developers should seed these into `report_definitions`.
 
@@ -3453,7 +3453,7 @@ Default output should be aggregate. Patient-level drilldown requires clinical-ma
 
 ---
 
-# 6. Exact KPI definitions
+## 6. Exact KPI definitions
 
 Seed these into `metric_definitions`.
 
@@ -3494,7 +3494,7 @@ Seed these into `metric_definitions`.
 
 ---
 
-# 7. Dashboard wireframes
+## 7. Dashboard wireframes
 
 ## 7.1 Owner dashboard
 
@@ -3613,7 +3613,7 @@ KPI cards:
 
 ---
 
-# 8. Masking rules implementation
+## 8. Masking rules implementation
 
 ## 8.1 Data sensitivity classes
 
@@ -3669,7 +3669,7 @@ mask_patient_number('PT-00012') → 'PT-00012'
 
 ---
 
-# 9. Report access control
+## 9. Report access control
 
 ## 9.1 Access decision inputs
 
@@ -3719,7 +3719,7 @@ export request or view only
 
 ---
 
-# 10. Immutable audit architecture
+## 10. Immutable audit architecture
 
 ## 10.1 Final audit design
 
@@ -3818,7 +3818,7 @@ hash_current = SHA256(
 
 ---
 
-# 11. Export rules
+## 11. Export rules
 
 ## 11.1 Export decision flow
 
@@ -3880,7 +3880,7 @@ Export ID: EXP-000234
 
 ---
 
-# 12. Alerts and thresholds
+## 12. Alerts and thresholds
 
 ## 12.1 Alert rule schema
 
@@ -3937,7 +3937,7 @@ Export ID: EXP-000234
 
 ---
 
-# 13. Scheduling rules
+## 13. Scheduling rules
 
 ## 13.1 Default report schedules
 
@@ -3972,7 +3972,7 @@ Export ID: EXP-000234
 
 ---
 
-# 14. Data quality report definitions
+## 14. Data quality report definitions
 
 Build a `DATA_QUALITY_DASHBOARD` early because weak data will damage every report.
 
@@ -3997,7 +3997,7 @@ Build a `DATA_QUALITY_DASHBOARD` early because weak data will damage every repor
 
 ---
 
-# 15. Implementation sequence
+## 15. Implementation sequence
 
 ## Phase 1: Reporting infrastructure
 
@@ -4101,7 +4101,7 @@ break-glass detection
 
 ---
 
-# 16. Developer acceptance criteria
+## 16. Developer acceptance criteria
 
 ## 16.1 Report infrastructure
 
@@ -4173,7 +4173,7 @@ break-glass detection
 
 ---
 
-# 17. Final handoff summary
+## 17. Final handoff summary
 
 Module 8 is now developer-ready with these final decisions:
 
