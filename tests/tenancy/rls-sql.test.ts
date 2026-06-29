@@ -57,16 +57,25 @@ describe('rls-sql generated DDL', () => {
     expect(sql).toContain(SESSION_BYPASS);
   });
 
-  it('denorm policy derives branch_id via INSTEAD OF INSERT (no AFTER INSERT block)', () => {
+  it('denorm policy derives branch_id via INSTEAD OF INSERT and blocks cross-branch writes', () => {
     const sql = buildInheritanceDenormPolicy({
       table: 'billing_invoices', columns: ['sale_id', 'amount', 'note'],
       fkColumn: 'sale_id', parentTable: 'billing_sales',
     });
     expect(sql).toMatch(/INSTEAD OF INSERT/);
     expect(sql).toMatch(/INSERT INTO dbo\.billing_invoices/);
-    // Critical: must NOT add an AFTER INSERT block predicate (would reject all
-    // inserts because branch_id is NULL when an AFTER predicate evaluates).
-    expect(sql).not.toMatch(/BLOCK PREDICATE .*AFTER INSERT/);
+    // #71 (B1): the trigger must REJECT a derived branch_id that differs from
+    // the session branch (cross-branch write injection) unless audited bypass.
+    expect(sql).toMatch(/THROW 53000/);
+    expect(sql).toContain(`p.branch_id <> ${SESSION_BRANCH}`);
+    // Honours the audited bypass path and is fail-closed on a NULL session
+    // branch (no branch context => cannot write).
+    expect(sql).toContain(SESSION_BYPASS);
+    expect(sql).toContain(`${SESSION_BRANCH} IS NULL`);
+    // The DB backstop: BOTH AFTER INSERT and AFTER UPDATE block predicates are
+    // now present (the INSTEAD OF trigger populates branch_id first, so the
+    // AFTER INSERT block no longer rejects legitimate same-branch inserts).
+    expect(sql).toMatch(/ADD BLOCK PREDICATE .*AFTER INSERT/);
     expect(sql).toMatch(/ADD BLOCK PREDICATE .*AFTER UPDATE/);
   });
 
