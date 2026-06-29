@@ -45,15 +45,17 @@ fi
 #    DOCS/ADRs that is not *.md fails (PROJECT-TRACKING scripts live elsewhere
 #    and are not covered here).
 echo '== markdown extensions =='
+fail3=0
 while IFS= read -r f; do
   case "$f" in
     *.md) ;;            # OK: renders as markdown
     *)
       echo "ERROR: $f is missing a .md extension." >&2
+      fail3=1
       fail=1
       ;;
   esac
 done < <(git ls-files -- 'DOCS/Modules' 'DOCS/ADRs')
-if [ "$fail" -eq 0 ]; then echo 'OK: docs extensions clean.'; fi
+[ "$fail3" -eq 0 ] && echo 'OK: docs extensions clean.'
 
 exit "$fail"
