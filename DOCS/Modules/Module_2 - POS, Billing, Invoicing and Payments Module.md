@@ -15,7 +15,7 @@ For Kenya, this module must be designed around four realities:
 
 ---
 
-# 1. Purpose of the module
+## 1. Purpose of the module
 
 The POS and Billing Module should:
 
@@ -34,7 +34,7 @@ The POS and Billing Module should:
 
 ---
 
-# 2. Core principle: separate sale, invoice, receipt, and payment
+## 2. Core principle: separate sale, invoice, receipt, and payment
 
 Many weak POS systems mix these together. A proper system should treat them separately.
 
@@ -54,7 +54,7 @@ This matters because a customer can receive an invoice before full payment, an i
 
 ---
 
-# 3. Main users
+## 3. Main users
 
 | User           | Main actions                                                   |
 | -------------- | -------------------------------------------------------------- |
@@ -71,7 +71,7 @@ This matters because a customer can receive an invoice before full payment, an i
 
 ---
 
-# 4. Core transaction types
+## 4. Core transaction types
 
 The system should support different transaction categories.
 
@@ -92,7 +92,7 @@ The system should support different transaction categories.
 
 ---
 
-# 5. Feature-by-feature design
+## 5. Feature-by-feature design
 
 ## A. Fast checkout
 
@@ -628,7 +628,7 @@ Recommended order:
 
 ---
 
-# 6. Screens required
+## 6. Screens required
 
 ## Screen 1: Main POS checkout
 
@@ -773,7 +773,7 @@ Actions:
 
 ---
 
-# 7. Workflows
+## 7. Workflows
 
 ## A. Retail cash sale
 
@@ -916,7 +916,7 @@ Controls:
 
 ---
 
-# 8. Rules engine
+## 8. Rules engine
 
 The module should expose pricing, tax, payment, and compliance rules to other modules.
 
@@ -980,7 +980,7 @@ ELSE require manager approval
 
 ---
 
-# 9. Tax and item-code configuration
+## 9. Tax and item-code configuration
 
 The system should not hard-code tax treatment carelessly. It should allow tax configuration by product/service category, branch, and effective date.
 
@@ -1013,7 +1013,7 @@ The system should not hard-code tax treatment carelessly. It should allow tax co
 
 ---
 
-# 10. Stock integration
+## 10. Stock integration
 
 The POS must never sell stock without writing inventory movements.
 
@@ -1046,7 +1046,7 @@ The user may override only with reason and permission.
 
 ---
 
-# 11. Customer, patient, and buyer PIN handling
+## 11. Customer, patient, and buyer PIN handling
 
 The POS should support anonymous walk-in retail sales but also structured customer/patient billing.
 
@@ -1079,7 +1079,7 @@ System behaviour:
 
 ---
 
-# 12. Audit logs
+## 12. Audit logs
 
 Every financially sensitive action must be logged.
 
@@ -1102,7 +1102,7 @@ Every financially sensitive action must be logged.
 
 ---
 
-# 13. Reports
+## 13. Reports
 
 ## Daily business reports
 
@@ -1147,7 +1147,7 @@ Claims receivable
 
 ---
 
-# 14. Database design
+## 14. Database design
 
 ## Main tables
 
@@ -1403,7 +1403,7 @@ Claims receivable
 
 ---
 
-# 15. API design
+## 15. API design
 
 ## POS endpoints
 
@@ -1458,7 +1458,7 @@ Claims receivable
 
 ---
 
-# 16. Integration points
+## 16. Integration points
 
 | Integration                   | Purpose                                                  |
 | ----------------------------- | -------------------------------------------------------- |
@@ -1476,7 +1476,7 @@ Claims receivable
 
 ---
 
-# 17. Permissions
+## 17. Permissions
 
 | Permission             |    Cashier |   Pharmacist |    Reception |      Manager |   Accountant |        Owner |
 | ---------------------- | ---------: | -----------: | -----------: | -----------: | -----------: | -----------: |
@@ -1496,7 +1496,7 @@ Claims receivable
 
 ---
 
-# 18. Edge cases the system must handle
+## 18. Edge cases the system must handle
 
 | Edge case                                | Correct handling                                               |
 | ---------------------------------------- | -------------------------------------------------------------- |
@@ -1517,9 +1517,9 @@ Claims receivable
 
 ---
 
-# 19. MVP versus later versions
+## 19. MVP versus later versions
 
-## MVP
+### MVP
 
 Build these first:
 
@@ -1573,7 +1573,7 @@ Add:
 
 ---
 
-# 20. Acceptance criteria
+## 20. Acceptance criteria
 
 The module is ready when it passes these tests:
 
@@ -1598,7 +1598,7 @@ The module is ready when it passes these tests:
 
 ---
 
-# 21. Final product behaviour
+## 21. Final product behaviour
 
 The POS and Billing Module should not be a generic supermarket till. It should behave like a **Kenya-ready health retail billing engine**:
 
@@ -1635,7 +1635,7 @@ I would close this as:
 ADR-025: Barcode, QR, DataMatrix, GS1, Sample Label and Internal Identifier Strategy
 ```
 
-# 1. Architecture decision
+## 1. Architecture decision
 
 Use a **multi-symbology barcode strategy**, not one universal barcode.
 
@@ -1666,7 +1666,7 @@ GS1 describes EAN-13 as the most commonly used GS1 symbol and typically found on
 
 ---
 
-# 2. Barcode strategy by entity
+## 2. Barcode strategy by entity
 
 ## 2.1 Product barcode
 
@@ -1997,7 +1997,7 @@ Do not encode medicine names or sensitive medical details.
 
 ---
 
-# 3. Recommended symbology matrix
+## 3. Recommended symbology matrix
 
 | Entity                            | MVP barcode      | Version 2/3 option                 | Notes                                  |
 | --------------------------------- | ---------------- | ---------------------------------- | -------------------------------------- |
@@ -2018,7 +2018,7 @@ Do not encode medicine names or sensitive medical details.
 
 ---
 
-# 4. Internal identifier design
+## 4. Internal identifier design
 
 Barcode symbology is separate from the identifier format.
 
@@ -2072,7 +2072,7 @@ AMOXICILLIN-FOR-JOHN-PHONE0722...
 
 ---
 
-# 5. Label content standards
+## 5. Label content standards
 
 ## 5.1 Product/internal stock label
 
@@ -2164,7 +2164,7 @@ Blood | 22-May 09:42
 
 ---
 
-# 6. Scanner and printer support
+## 6. Scanner and printer support
 
 ## Scanner requirements
 
@@ -2202,7 +2202,7 @@ Even if MVP mostly uses EAN-13 and Code 128, the scanner should support 2D from 
 
 ---
 
-# 7. Data model additions
+## 7. Data model additions
 
 ## `core.barcode_symbologies`
 
@@ -2314,7 +2314,7 @@ Even if MVP mostly uses EAN-13 and Code 128, the scanner should support 2D from 
 
 ---
 
-# 8. Barcode validation rules
+## 8. Barcode validation rules
 
 ## EAN-13
 
@@ -2358,7 +2358,7 @@ Even if MVP mostly uses EAN-13 and Code 128, the scanner should support 2D from 
 
 ---
 
-# 9. Workflow impact
+## 9. Workflow impact
 
 ## Product receiving
 
@@ -2438,7 +2438,7 @@ Patient handover proof captured
 
 ---
 
-# 10. Versioned rollout
+## 10. Versioned rollout
 
 ## MVP
 
@@ -2482,7 +2482,7 @@ GS1 notes that two-dimensional barcodes can encode data beyond GTIN, such as exp
 
 ---
 
-# 11. Acceptance criteria
+## 11. Acceptance criteria
 
 | Test                                 | Expected result                                   |
 | ------------------------------------ | ------------------------------------------------- |
@@ -2505,7 +2505,7 @@ GS1 notes that two-dimensional barcodes can encode data beyond GTIN, such as exp
 
 ---
 
-# 12. Final recommendation
+## 12. Final recommendation
 
 For your platform:
 
@@ -2541,7 +2541,7 @@ Developers can start building Module 2 now. They should **not** connect to live 
 
 ---
 
-# 1. Final developer decisions
+## 1. Final developer decisions
 
 | Gap                        | Final decision                                                                                                                                                                                                                  |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -2556,7 +2556,7 @@ Developers can start building Module 2 now. They should **not** connect to live 
 
 ---
 
-# 2. Regulatory and technical anchor summary
+## 2. Regulatory and technical anchor summary
 
 KRA states that eTIMS is the electronic Tax Invoice Management System and that all persons engaged in business are required to onboard eTIMS and issue electronic tax invoices. KRA’s system-to-system integration page says taxpayers with invoicing systems can integrate through an API, either through VSCU or OSCU; KRA describes VSCU as suitable for bulk invoicing and not-always-online taxpayers, while OSCU is suitable for taxpayers whose invoicing is always online. ([kra.go.ke](https://www.kra.go.ke/online-services/etims)) ([kra.go.ke](https://www.kra.go.ke/business/etims-electronic-tax-invoice-management-system/learn-about-etims/etims-system-to-system-integration))
 
@@ -2566,7 +2566,7 @@ Safaricom’s Daraja platform provides access to Safaricom and M-Pesa APIs for p
 
 ---
 
-# 3. Final normalized POS model
+## 3. Final normalized POS model
 
 The domain model should separate commercial, fiscal, payment, stock, and accounting objects.
 
@@ -2612,7 +2612,7 @@ shift close
 
 ---
 
-# 4. eTIMS integration contract
+## 4. eTIMS integration contract
 
 ## 4.1 Final eTIMS integration strategy
 
@@ -2878,7 +2878,7 @@ The regulations require credit and debit notes to reference the original invoice
 
 ---
 
-# 5. eTIMS item-code and tax-code catalogue
+## 5. eTIMS item-code and tax-code catalogue
 
 ## 5.1 Item classification and registration
 
@@ -2936,7 +2936,7 @@ This prevents a bad integration if KRA’s system-code mapping changes or differ
 
 ---
 
-# 6. Daraja / M-Pesa integration contract
+## 6. Daraja / M-Pesa integration contract
 
 ## 6.1 Final Daraja flow decision
 
@@ -3083,7 +3083,7 @@ reversed
 
 ---
 
-# 7. Accounting posting rules
+## 7. Accounting posting rules
 
 Module 2 should generate accounting events. It does not need to be a full accounting system in MVP, but it must produce clean journals for export.
 
@@ -3238,7 +3238,7 @@ Recommended default: **contra-revenue method** for management visibility.
 
 ---
 
-# 8. Hardware and printer integration specs
+## 8. Hardware and printer integration specs
 
 ## 8.1 Hardware abstraction
 
@@ -3344,7 +3344,7 @@ DeviceService
 
 ---
 
-# 9. Final POS workflow rules
+## 9. Final POS workflow rules
 
 ## 9.1 Sale lifecycle
 
@@ -3406,7 +3406,7 @@ cancelled
 
 ---
 
-# 10. Final field validation rules
+## 10. Final field validation rules
 
 ## 10.1 Sale header
 
@@ -3485,7 +3485,7 @@ cancelled
 
 ---
 
-# 11. Final tax and pricing rules
+## 11. Final tax and pricing rules
 
 ## 11.1 Tax calculation modes
 
@@ -3555,7 +3555,7 @@ gross_amount = net_amount + tax_amount
 
 ---
 
-# 12. Updated database tables for Module 2
+## 12. Updated database tables for Module 2
 
 ## 12.1 `sales`
 
@@ -3727,7 +3727,7 @@ gross_amount = net_amount + tax_amount
 
 ---
 
-# 13. API endpoints for Module 2
+## 13. API endpoints for Module 2
 
 ## 13.1 POS sale endpoints
 
@@ -3798,7 +3798,7 @@ gross_amount = net_amount + tax_amount
 
 ---
 
-# 14. Exact POS workflows for developers
+## 14. Exact POS workflows for developers
 
 ## 14.1 Fast retail sale
 
@@ -3886,7 +3886,7 @@ gross_amount = net_amount + tax_amount
 
 ---
 
-# 15. Error and retry handling
+## 15. Error and retry handling
 
 ## 15.1 eTIMS errors
 
@@ -3926,7 +3926,7 @@ gross_amount = net_amount + tax_amount
 
 ---
 
-# 16. Security and audit controls
+## 16. Security and audit controls
 
 | Action              | Required audit                           |
 | ------------------- | ---------------------------------------- |
@@ -3946,7 +3946,7 @@ gross_amount = net_amount + tax_amount
 
 ---
 
-# 17. Integration readiness checklist
+## 17. Integration readiness checklist
 
 ## 17.1 Before eTIMS sandbox
 
@@ -3995,9 +3995,9 @@ gross_amount = net_amount + tax_amount
 
 ---
 
-# 18. MVP versus later versions
+## 18. MVP versus later versions
 
-## MVP
+### MVP
 
 Build these first:
 
@@ -4058,7 +4058,7 @@ Add:
 
 ---
 
-# 19. Developer acceptance criteria
+## 19. Developer acceptance criteria
 
 ## 19.1 POS acceptance
 
@@ -4133,7 +4133,7 @@ Add:
 
 ---
 
-# 20. Final handoff summary
+## 20. Final handoff summary
 
 Module 2 is now developer-ready with these final decisions:
 
