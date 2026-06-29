@@ -72,9 +72,9 @@ describe('tokens.json <-> .ts module parity (DRY single source of truth)', () =>
     expect(resolveGroup(color.sync)).toEqual(sync);
   });
   it('touch tokens match', () => {
-    expect((tokens as any).touch).toEqual(touch);
+    expect(tokens.touch).toEqual(touch);
   });
   it('layout tokens match', () => {
-    expect((tokens as any).layout).toEqual(layout);
+    expect(tokens.layout).toEqual(layout);
   });
 });
