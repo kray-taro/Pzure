@@ -242,11 +242,11 @@ function main() {
             `(ADR-001 §6.4; expected a ${scope}-scoped policy)`,
         );
       } else if (!policyScopesOn(ddl, name, expectedColumns)) {
-        // A policy exists but its predicate does not reference the expected
+        // A policy exists but its predicate does not reference any expected
         // scope column — e.g. an org table mistakenly given a branch policy.
         errors.push(
-          `transactional table '${name}' has a security policy that does not scope on '${expectedColumn}' ` +
-            `(expected a ${scope}-scoped predicate; ADR-001 §6.4)`,
+          `transactional table '${name}' has a security policy that does not scope on ` +
+            `${expectedColumns.map((c) => `'${c}'`).join(' or ')} (expected a ${scope}-scoped predicate; ADR-001 §6.4)`,
         );
       }
     }
