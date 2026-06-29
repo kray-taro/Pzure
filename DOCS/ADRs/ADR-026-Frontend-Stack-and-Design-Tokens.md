@@ -64,6 +64,15 @@ Ship `packages/design-tokens` with: `tokens.json`, `colors.ts`, `typography.ts`,
 
 Plus `touch` (`target.min` 48px, `posButton` 64px, `keypad` 64px) and `layout` (sidebar/header/cart dimensions). Statuses are represented as machine code + display label + semantic colour.
 
+## 4a. Monorepo layout
+
+The frontend is a monorepo:
+
+- `apps/*` shells: `web-admin`, `web-pos`, `web-clinic`, `web-pharmacy`, `web-lab`, `web-claims`, `web-portal`.
+- `packages/*`: `ui`, `design-tokens`, `icons`, `forms`, `data-grid`, `charts`, `auth-client`, `api-client`, `offline-client`, `feature-flags`.
+
+Each shell owns its workflow-specific layout; shared behaviour lives in `packages/*` so it is defined once (DRY) and consumed everywhere. The POS shell (`web-pos`) is touch-first and never reuses the admin layout.
+
 ## 5. Consequences
 
 One shared token/component layer enforces consistency and accessibility across shells while each shell keeps a workflow-specific, device-appropriate layout. POS stays touch- and keyboard-first and is not polluted by admin forms. Banning raw hex makes theming, dark mode and clinical/finance state colours centrally governed. Cost: discipline to keep tokens authoritative and to route all colour/spacing through tokens; AG Grid only where justified to limit bundle size.

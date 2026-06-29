@@ -71,7 +71,7 @@ while IFS= read -r line; do
       fail=1
       ;;
   esac
-done < <(grep -rEn 'RTO[^.]*8-24h|RTO[^.]*8\xe2\x80\x9324h|RPO[^.]*24h' DOCS || true)
+done < <(grep -rEn 'RTO[^.]*8-24h|RTO[^.]*8–24h|RPO[^.]*24h' DOCS || true)
 
 if [ "$fail" -ne 0 ]; then
   echo "" >&2
