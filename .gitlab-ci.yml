@@ -29,6 +29,15 @@ stages:
   - test
   - scan
 
+# Gate 0B (#55): full SAST + dependency scanning + secret detection replace the
+# day-one secret guard's "baseline only" scope. The local guard stays as a cheap
+# fast-fail in the `guard` stage; these templates add deep static analysis and
+# CVE checks. Pinned into the `scan` stage via `extends: .scan-base` below.
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+
 default:
   image: node:20-alpine
   cache:
@@ -87,10 +96,24 @@ test:
     - npm test
   coverage: '/All files[^|]*\|[^|]*\s+([\d.]+)/'
 
+# `.scan-base` is a hidden base job consumed via `extends:` (more discoverable
+# than a YAML anchor and composable with the templates' own job definitions).
+# Operability: these scans are heavy (Docker executor, minutes per run), so we
+# scope them to develop, scheduled pipelines, and MRs targeting develop - the
+# cheap guard-stage checks stay the per-MR fast-fail so MR velocity is kept.
 .scan-base:
   stage: scan
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"'
+
+sast:
+  extends: .scan-base
+
+gemnasium-dependency_scanning:
+  extends: .scan-base
+
+secret_detection:
+  extends: .scan-base
 
