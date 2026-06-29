@@ -6,13 +6,12 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { describe, it, expect } from 'vitest';
+import { VALID_CLASSES } from '../../scripts/lib/tenancy-classes.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(here, '..', '..');
 const GUARD = join(ROOT, 'scripts', 'check-tenancy-scoping.mjs');
 const MAP = JSON.parse(readFileSync(join(ROOT, 'DOCS', 'tenancy-scoping.json'), 'utf8'));
-
-const VALID = new Set(['master', 'direct', 'inheritance']);
 
 describe('ADR-001 §6.4 tenancy scoping guard (test 7)', () => {
   it('passes the migration guard against the current ERD + classification', () => {
@@ -24,7 +23,7 @@ describe('ADR-001 §6.4 tenancy scoping guard (test 7)', () => {
 
   it('only uses known scoping classes', () => {
     for (const [name, entry] of Object.entries<Record<string, string>>(MAP.tables)) {
-      expect(VALID.has(entry.class), `${name} has class ${entry.class}`).toBe(true);
+      expect(VALID_CLASSES.has(entry.class), `${name} has class ${entry.class}`).toBe(true);
     }
   });
 

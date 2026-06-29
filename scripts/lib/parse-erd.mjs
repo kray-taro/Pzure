@@ -12,7 +12,10 @@ import { readFileSync } from 'node:fs';
  * @typedef {{ tables: Record<string, Table>, relationships: Relationship[] }} Erd
  */
 
-const REL_RE = /^([A-Za-z0-9_]+)\s*\|\|--o\{\s*([A-Za-z0-9_]+)\s*:/;
+// Match any mermaid relationship cardinality between two tables, e.g.
+//   A ||--o{ B : label   A }o--|| B : label   A ||--|| B : label
+// We only need the two endpoints, so the cardinality tokens are non-capturing.
+const REL_RE = /^([A-Za-z0-9_]+)\s*[|}o][|o]?--[|o][|o{}]?\s*([A-Za-z0-9_]+)\s*:/;
 const TABLE_OPEN_RE = /^([A-Za-z0-9_]+)\s*\{$/;
 const COLUMN_RE = /^([A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)(?:\s+(PK|FK|UK))?\s*$/;
 

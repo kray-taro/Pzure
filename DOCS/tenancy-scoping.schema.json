@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://pzure.dev/schemas/tenancy-scoping.schema.json",
+  "title": "Tenancy scoping classification",
+  "description": "Structural contract for DOCS/tenancy-scoping.json. Semantics are enforced by scripts/check-tenancy-scoping.mjs against DOCS/Unified_ERD.md.",
+  "type": "object",
+  "required": ["sessionContextKey", "classes", "tables"],
+  "additionalProperties": true,
+  "properties": {
+    "$schema": { "type": "string" },
+    "description": { "type": "string" },
+    "sessionContextKey": { "type": "string", "const": "branch_id" },
+    "classes": {
+      "type": "object",
+      "required": ["master", "direct", "inheritance"],
+      "additionalProperties": false,
+      "properties": {
+        "master": { "type": "string" },
+        "direct": { "type": "string" },
+        "inheritance": { "type": "string" }
+      }
+    },
+    "tables": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["class"],
+        "additionalProperties": false,
+        "properties": {
+          "class": { "enum": ["master", "direct", "inheritance"] },
+          "branchColumn": { "type": "string" },
+          "scopeColumn": { "type": "string" },
+          "fk": { "type": "string" },
+          "parent": { "type": "string" },
+          "parentKey": { "type": "string" },
+          "resolvesTo": { "type": "string" },
+          "denormalised": { "type": "boolean" },
+          "note": { "type": "string" }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "class": { "const": "direct" } } },
+            "then": { "required": ["branchColumn"] }
+          },
+          {
+            "if": { "properties": { "class": { "const": "inheritance" } } },
+            "then": { "required": ["fk", "parent"] }
+          }
+        ]
+      }
+    }
+  }
+}

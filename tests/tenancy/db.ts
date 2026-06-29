@@ -54,12 +54,15 @@ export async function connect(): Promise<Db> {
 
   async function asBranch<T>(branchId: string | null, query: string, opts?: { bypass?: boolean }) {
     // SESSION_CONTEXT must be set on the same connection/request that runs the
-    // query. Use a dedicated request and a single batch.
-    const setBranch = branchId
-      ? `EXEC sp_set_session_context @key=N'branch_id', @value='${branchId}';`
-      : `EXEC sp_set_session_context @key=N'branch_id', @value=NULL;`;
-    const setBypass = `EXEC sp_set_session_context @key=N'tenancy_bypass', @value=${opts?.bypass ? '1' : 'NULL'};`;
-    return pool.request().query<T>(`${setBranch}\n${setBypass}\n${query}`);
+    // query. Bind branch_id/bypass as parameters (no string interpolation) so
+    // the helper itself models the parameterised pattern the app must use.
+    const request = pool.request();
+    request.input('p_branch_id', sql.UniqueIdentifier, branchId);
+    request.input('p_bypass', sql.Bit, opts?.bypass ? 1 : null);
+    const preamble =
+      "EXEC sp_set_session_context @key=N'branch_id', @value=@p_branch_id;\n" +
+      "EXEC sp_set_session_context @key=N'tenancy_bypass', @value=@p_bypass;\n";
+    return request.query<T>(`${preamble}${query}`);
   }
 
   return {
