@@ -40,7 +40,7 @@ The Organisation and Licensing Module should:
 
 ---
 
-# 3. Main data structure
+## 3. Main data structure
 
 The module should be built around these entities:
 
@@ -68,7 +68,7 @@ A business may have one legal entity and many branches. Each branch may have dif
 
 ---
 
-# 4. Detailed data fields
+## 4. Detailed data fields
 
 ## A. Business registration
 
@@ -373,7 +373,7 @@ Even though ODPC is not in your original table, it should be included in this mo
 
 ---
 
-# 5. Recommended extra compliance records
+## 5. Recommended extra compliance records
 
 The user table is correct, but the system should also support configurable extra permits because counties and facility types differ.
 
@@ -394,7 +394,7 @@ These should be stored using a generic **Licence/Permit Type** configuration so 
 
 ---
 
-# 6. Screens required
+## 6. Screens required
 
 ## Screen 1: Organisation profile
 
@@ -557,7 +557,7 @@ Widgets:
 
 ---
 
-# 7. Licence status model
+## 7. Licence status model
 
 Every licence, permit, contract, or professional credential should use a common lifecycle.
 
@@ -593,7 +593,7 @@ Archived
 
 ---
 
-# 8. Alerts and reminders
+## 8. Alerts and reminders
 
 ## Alert schedule
 
@@ -639,7 +639,7 @@ Affected workflows: SHA eligibility checks, pre-authorisations, claim submission
 
 ---
 
-# 9. Workflow: setting up a new pharmacy branch
+## 9. Workflow: setting up a new pharmacy branch
 
 ```text
 1. Create legal entity
@@ -668,7 +668,7 @@ Affected workflows: SHA eligibility checks, pre-authorisations, claim submission
 
 ---
 
-# 10. Workflow: setting up a new clinic
+## 10. Workflow: setting up a new clinic
 
 ```text
 1. Create legal entity
@@ -684,7 +684,7 @@ Affected workflows: SHA eligibility checks, pre-authorisations, claim submission
 11. Activate clinic workflows
 ```
 
-## Workflow controls
+## Clinic setup workflow controls
 
 | Step                         | System control                                  |
 | ---------------------------- | ----------------------------------------------- |
@@ -696,7 +696,7 @@ Affected workflows: SHA eligibility checks, pre-authorisations, claim submission
 
 ---
 
-# 11. Workflow: setting up SHA/private insurer claims
+## 11. Workflow: setting up SHA/private insurer claims
 
 ```text
 1. Confirm branch has active facility licence
@@ -725,7 +725,7 @@ Affected workflows: SHA eligibility checks, pre-authorisations, claim submission
 
 ---
 
-# 12. Permissions and access control
+## 12. Permissions and access control
 
 ## Recommended permissions
 
@@ -754,7 +754,7 @@ unless they are a high-trust owner/admin and the action is clearly logged.
 
 ---
 
-# 13. Document management
+## 13. Document management
 
 Each uploaded document should store:
 
@@ -779,7 +779,7 @@ Documents should never be overwritten silently. A renewed licence should create 
 
 ---
 
-# 14. Compliance scoring
+## 14. Compliance scoring
 
 The dashboard can calculate compliance percentage per branch.
 
@@ -802,7 +802,7 @@ Because requirements differ by business type, the denominator should change by b
 
 ---
 
-# 15. Rules engine
+## 15. Rules engine
 
 The module should expose compliance rules to other modules.
 
@@ -849,7 +849,7 @@ ELSE online pharmacy disabled
 
 ---
 
-# 16. Reports
+## 16. Reports
 
 ## Compliance reports
 
@@ -879,7 +879,7 @@ ELSE online pharmacy disabled
 
 ---
 
-# 17. Database design
+## 17. Database design
 
 ## Main tables
 
@@ -1080,7 +1080,7 @@ ELSE online pharmacy disabled
 
 ---
 
-# 18. API design
+## 18. API design
 
 ## Internal API endpoints
 
@@ -1126,7 +1126,7 @@ ELSE online pharmacy disabled
 
 ---
 
-# 19. Integration points
+## 19. Integration points
 
 ## Current/practical integrations
 
@@ -1156,7 +1156,7 @@ This makes the system usable immediately and future-proof.
 
 ---
 
-# 20. Acceptance criteria
+## 20. Acceptance criteria
 
 The module is usable when it passes these tests:
 
@@ -1177,7 +1177,7 @@ The module is usable when it passes these tests:
 
 ---
 
-# 21. MVP versus later versions
+## 21. MVP versus later versions
 
 ## MVP
 
@@ -1228,7 +1228,7 @@ Add:
 
 ---
 
-# 22. Final product behaviour
+## 22. Final product behaviour
 
 The module should quietly control the rest of the software:
 
@@ -1257,7 +1257,7 @@ The correct design is not simply “store licence files.” The module must **ac
     - Kenya Law"
 [7]: https://www.odpc.go.ke/ "Office of the Data Protection Commissioner (ODPC)"
 
-# Module 1 Gap Closure: Organisation and Licensing — Developer Handoff Addendum
+## Module 1 Gap Closure: Organisation and Licensing — Developer Handoff Addendum
 
 ## Updated handoff status
 
@@ -1279,7 +1279,7 @@ Do not hard-code Kenya compliance rules directly into business logic.
 
 ---
 
-# 1. Regulatory anchor summary
+## 1. Regulatory anchor summary
 
 The module should support these official/regulatory sources as configurable verification anchors.
 
@@ -1301,7 +1301,7 @@ BRS describes itself as the sole custodian of the list of companies and informat
 
 ---
 
-# 2. Final normalized model
+## 2. Final normalized model
 
 Do **not** model every licence as a separate hard-coded table such as `ppb_licences`, `kmpdc_licences`, `odpc_certificates`, `sha_contracts`.
 
@@ -1409,7 +1409,7 @@ This is the table that turns compliance into system behaviour.
 
 ---
 
-# 3. Final controlled enums
+## 3. Final controlled enums
 
 These should be implemented as database-backed master data where possible, not only code enums.
 
@@ -1615,7 +1615,7 @@ blocking
 
 ---
 
-# 4. Normalized licence-type catalogue v1
+## 4. Normalized licence-type catalogue v1
 
 This is the first developer-ready catalogue. It should be loaded through seed data and editable by super-admin/compliance roles.
 
@@ -1652,7 +1652,7 @@ PPB’s online practice procedures describe premise and practice licence renewal
 
 ---
 
-# 5. Exact regulator/source verification matrix
+## 5. Exact regulator/source verification matrix
 
 This closes the “exact regulator/source verification matrix” gap.
 
@@ -1716,7 +1716,7 @@ manual_override
 
 ---
 
-# 6. Branch onboarding workflows
+## 6. Branch onboarding workflows
 
 This closes the “workflow diagrams for branch onboarding” gap.
 
@@ -1936,7 +1936,7 @@ Enable claims_submission for that payer only
 
 ---
 
-# 7. Branch service permission rules
+## 7. Branch service permission rules
 
 These rules should be evaluated whenever a licence, staff assignment, contract, or branch setting changes.
 
@@ -2015,7 +2015,7 @@ AND assigned radiology professional/equipment records are active
 
 ---
 
-# 8. Document retention and versioning policy
+## 8. Document retention and versioning policy
 
 This closes the “document retention/versioning policy” gap.
 
@@ -2098,7 +2098,7 @@ Audit: Always retained
 
 ---
 
-# 9. Master-data setup screens
+## 9. Master-data setup screens
 
 This closes the “master-data setup screens” gap.
 
@@ -2240,7 +2240,7 @@ Sections:
 
 ---
 
-# 10. Exact onboarding checklists
+## 10. Exact onboarding checklists
 
 ## 10.1 Organisation onboarding checklist
 
@@ -2333,7 +2333,7 @@ Sections:
 
 ---
 
-# 11. Field validation rules
+## 11. Field validation rules
 
 This closes the “exact field validation” gap.
 
@@ -2429,7 +2429,7 @@ This closes the “exact field validation” gap.
 
 ---
 
-# 12. UI flow: exact screens for developer handoff
+## 12. UI flow: exact screens for developer handoff
 
 ## 12.1 Organisation setup wizard
 
@@ -2572,7 +2572,7 @@ Approve temporary override
 
 ---
 
-# 13. API endpoints for Module 1
+## 13. API endpoints for Module 1
 
 ## Organisation
 
@@ -2645,7 +2645,7 @@ Approve temporary override
 
 ---
 
-# 14. Compliance score calculation
+## 14. Compliance score calculation
 
 ## 14.1 Branch compliance score
 
@@ -2694,7 +2694,7 @@ closed
 
 ---
 
-# 15. Developer-ready acceptance criteria
+## 15. Developer-ready acceptance criteria
 
 ## 15.1 Master-data acceptance
 
@@ -2770,7 +2770,7 @@ closed
 
 ---
 
-# 16. Final developer implementation sequence
+## 16. Final developer implementation sequence
 
 ## Phase 1: Core schema and master data
 
@@ -2850,7 +2850,7 @@ Reporting
 
 ---
 
-# 17. Final handoff summary
+## 17. Final handoff summary
 
 Module 1 is now developer-ready if implemented with these final decisions:
 
@@ -2873,6 +2873,3 @@ The closed Module 1 design should now be treated as the **system gatekeeper**:
 ```text
 No branch should sell medicines, dispense prescriptions, run clinic consultations, verify lab results, submit claims, or issue regulated workflows unless the organisation, branch, licence, professional, contract, and document rules are satisfied.
 ```
-
-[1]: https://brs.go.ke/?utm_source=chatgpt.com "Business Registration Service | Doing Business Made Easier"
-[2]: https://web.pharmacyboardkenya.org/pharmacy-practice-procedures-2/?utm_source=chatgpt.com "Pharmacy Practice Procedures - Pharmacy and Poisons Board"

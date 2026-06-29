@@ -20,7 +20,7 @@ Kenya’s Social Health Insurance Act establishes a Claims Management Office res
 
 ---
 
-# 1. Purpose of the module
+## 1. Purpose of the module
 
 The Claims and Insurance Module should:
 
@@ -41,7 +41,7 @@ The Claims and Insurance Module should:
 
 ---
 
-# 2. Kenya-specific design basis
+## 2. Kenya-specific design basis
 
 ## A. SHA empanelment, contracting, and provider obligations
 
@@ -114,7 +114,7 @@ Software implications:
 
 ---
 
-# 3. Core users
+## 3. Core users
 
 | User                       | Main actions                                                                 |
 | -------------------------- | ---------------------------------------------------------------------------- |
@@ -131,7 +131,7 @@ Software implications:
 
 ---
 
-# 4. Relationship with modules 1–6
+## 4. Relationship with modules 1–6
 
 ## Module 1: Organisation and Licensing
 
@@ -202,7 +202,7 @@ Software implications:
 
 ---
 
-# 5. Core claim transaction types
+## 5. Core claim transaction types
 
 | Transaction type              | Description                                      |
 | ----------------------------- | ------------------------------------------------ |
@@ -225,7 +225,7 @@ Software implications:
 
 ---
 
-# 6. Feature-by-feature design
+## 6. Feature-by-feature design
 
 ## A. Benefit scheme setup
 
@@ -324,7 +324,7 @@ Benefit scheme setup defines what a payer covers, at what price, with what rules
 
 ---
 
-## B. Pre-authorisation
+## B. Pre-authorisation (request and workflow)
 
 Pre-authorisation is a formal permission workflow before selected services are provided or claimed.
 
@@ -823,7 +823,7 @@ Attachments are critical because many claims fail due to missing documentation.
 
 ---
 
-# 7. Required screens
+## 7. Required screens
 
 ## Screen 1: Payer and scheme setup
 
@@ -1043,7 +1043,7 @@ Top denial reasons
 
 ---
 
-# 8. Workflows
+## 8. Workflows
 
 ## A. Basic outpatient insured visit
 
@@ -1159,7 +1159,7 @@ Top denial reasons
 
 ---
 
-# 9. Rules engine
+## 9. Rules engine
 
 ## Eligibility
 
@@ -1267,7 +1267,7 @@ ELSE create variance record
 
 ---
 
-# 10. Data model
+## 10. Data model
 
 ## Main tables
 
@@ -1590,7 +1590,7 @@ ELSE create variance record
 
 ---
 
-# 11. API design
+## 11. API design
 
 ## Payer and scheme endpoints
 
@@ -1665,7 +1665,7 @@ ELSE create variance record
 
 ---
 
-# 12. Integration points
+## 12. Integration points
 
 | Integration                  | Purpose                                                         |
 | ---------------------------- | --------------------------------------------------------------- |
@@ -1685,7 +1685,7 @@ ELSE create variance record
 
 ---
 
-# 13. Permissions
+## 13. Permissions
 
 | Permission              | Reception | Billing | Clinician | Lab | Pharmacy | Claims officer | Accountant | Manager | Auditor |
 | ----------------------- | --------: | ------: | --------: | --: | -------: | -------------: | ---------: | ------: | ------: |
@@ -1709,7 +1709,7 @@ ELSE create variance record
 
 ---
 
-# 14. Reports
+## 14. Reports
 
 ## Claims operations reports
 
@@ -1758,7 +1758,7 @@ Write-offs this month
 
 ---
 
-# 15. Quality, fraud, and compliance controls
+## 15. Quality, fraud, and compliance controls
 
 | Control                       | Requirement                                 |
 | ----------------------------- | ------------------------------------------- |
@@ -1780,7 +1780,7 @@ Write-offs this month
 
 ---
 
-# 16. Edge cases
+## 16. Edge cases
 
 | Edge case                                           | Correct handling                                                       |
 | --------------------------------------------------- | ---------------------------------------------------------------------- |
@@ -1807,7 +1807,7 @@ Write-offs this month
 
 ---
 
-# 17. MVP versus later versions
+## 17. MVP versus later versions
 
 ## MVP
 
@@ -1867,7 +1867,7 @@ Add:
 
 ---
 
-# 18. Acceptance criteria
+## 18. Acceptance criteria
 
 The Claims and Insurance Module is ready when it passes these tests:
 
@@ -1895,7 +1895,7 @@ The Claims and Insurance Module is ready when it passes these tests:
 
 ---
 
-# 19. Final product behaviour
+## 19. Final product behaviour
 
 The Claims and Insurance Module should behave like this:
 
@@ -1934,7 +1934,7 @@ Kenya’s current SHA tariff instrument is **Legal Notice 56 of 2025: Tariffs fo
 
 ---
 
-# 1. Architecture decision
+## 1. Architecture decision
 
 Use a **generic tariff engine** with payer-specific import templates.
 
@@ -1973,7 +1973,7 @@ The import tool should **not** be SHA-only. SHA is one payer. Private insurers a
 
 ---
 
-# 2. Why this matters
+## 2. Why this matters
 
 SHA regulations state that providers lodge claims for payment of healthcare services, that SHA pays based on prescribed tariffs, and that claims are reviewed and processed through the Centralized Digital Platform. They also require claims to include patient identifiers, clinical details, and the amount claimed. ([Kenya Law][2])
 
@@ -2000,7 +2000,7 @@ versioning
 
 ---
 
-# 3. Recommended tariff model
+## 3. Recommended tariff model
 
 ## 3.1 Tariff hierarchy
 
@@ -2032,7 +2032,7 @@ Internal mapping: SVC-CONS-GP
 
 ---
 
-# 4. Tariff table data model
+## 4. Tariff table data model
 
 ## `claims.tariff_tables`
 
@@ -2117,7 +2117,7 @@ Internal mapping: SVC-CONS-GP
 
 ---
 
-# 5. Canonical tariff import file
+## 5. Canonical tariff import file
 
 Use a CSV/XLSX import format with one row per tariff line.
 
@@ -2176,7 +2176,7 @@ The import tool should allow unknown/internal mappings initially, but not activa
 
 ---
 
-# 6. SHA tariff import format
+## 6. SHA tariff import format
 
 ## 6.1 SHA-specific fields
 
@@ -2208,7 +2208,7 @@ Important: the `tariff_amount` values above are placeholders. The import file sh
 
 ---
 
-# 7. Private insurer tariff import format
+## 7. Private insurer tariff import format
 
 Private insurers are more likely to have:
 
@@ -2235,7 +2235,7 @@ AAR-OPD-2026,AAR Corporate OPD Tariff,2026-V1,Contract AAR/CLIENT/2026,AAR,AAR I
 
 ---
 
-# 8. Employer/corporate tariff format
+## 8. Employer/corporate tariff format
 
 Employer schemes often have simpler rules:
 
@@ -2259,7 +2259,7 @@ CORP-ABC-2026,ABC Ltd Staff Medical Scheme,2026-V1,ABC Contract 2026,ABC-LTD,ABC
 
 ---
 
-# 9. Drug formulary tariff file
+## 9. Drug formulary tariff file
 
 Drug tariffs are different from consultation/lab/procedure tariffs because they need product, ingredient, pack, unit, formulary status, substitution, and quantity rules.
 
@@ -2309,7 +2309,7 @@ AAR-OPD-2026,2026-V1,AAR,AAR-CORP-OPD,2026-01-01,2026-12-31,AAR-NONFORM,PRODUCT_
 
 ---
 
-# 10. Lab tariff import file
+## 10. Lab tariff import file
 
 Lab tariffs need mapping to the internal lab catalogue and sometimes LOINC/external lab codes.
 
@@ -2355,7 +2355,7 @@ AAR-OPD-2026,2026-V1,AAR,AAR-CORP-OPD,2026-01-01,2026-12-31,AAR-LAB-HBA1C,LAB-HB
 
 ---
 
-# 11. Procedure tariff import file
+## 11. Procedure tariff import file
 
 Procedures often need pre-authorisation, referral, notes, limits, and sometimes package pricing.
 
@@ -2400,7 +2400,7 @@ AAR-OPD-2026,2026-V1,AAR,AAR-CORP-OPD,2026-01-01,2026-12-31,AAR-PROC-SUTURE,PROC
 
 ---
 
-# 12. Package / bundled tariff import file
+## 12. Package / bundled tariff import file
 
 Packages require a header plus components.
 
@@ -2458,7 +2458,7 @@ PKG-FEVER-OPD,product,PRODUCT_GROUP_BASIC_MEDICINES,Basic medicines,1,true,true,
 
 ---
 
-# 13. Capitation tariff format
+## 13. Capitation tariff format
 
 Capitation is not priced per normal service line. It requires encounter reporting and exception billing.
 
@@ -2491,7 +2491,7 @@ ABC-LTD,ABC-CAP-OPD,ABC-CONTRACT-2026,2026-01-01,2026-12-31,ABC-CAP-STAFF,ABC St
 
 ---
 
-# 14. Import workflow
+## 14. Import workflow
 
 ## 14.1 Import lifecycle
 
@@ -2541,7 +2541,7 @@ Superseded
 
 ---
 
-# 15. Validation rules
+## 15. Validation rules
 
 ## Hard validation errors
 
@@ -2574,7 +2574,7 @@ Superseded
 
 ---
 
-# 16. Tariff versioning rules
+## 16. Tariff versioning rules
 
 ## Version activation
 
@@ -2608,7 +2608,7 @@ This prevents old claims changing when tariffs are updated.
 
 ---
 
-# 17. Tariff mapping UI
+## 17. Tariff mapping UI
 
 The import tool needs a mapping workbench.
 
@@ -2651,7 +2651,7 @@ Reject row
 
 ---
 
-# 18. API design for tariff import
+## 18. API design for tariff import
 
 ## Endpoints
 
@@ -2671,7 +2671,7 @@ Reject row
 
 ---
 
-# 19. Tariff lookup logic
+## 19. Tariff lookup logic
 
 ## Input
 
@@ -2713,7 +2713,7 @@ Reject row
 
 ---
 
-# 20. Pricing precedence
+## 20. Pricing precedence
 
 When multiple pricing rules exist, use precedence:
 
@@ -2731,7 +2731,7 @@ Every override must be audited.
 
 ---
 
-# 21. Claim validation rules from tariff
+## 21. Claim validation rules from tariff
 
 The tariff line drives claim readiness.
 
@@ -2750,7 +2750,7 @@ The tariff line drives claim readiness.
 
 ---
 
-# 22. Reports needed for tariff governance
+## 22. Reports needed for tariff governance
 
 | Report                         | Purpose                       |
 | ------------------------------ | ----------------------------- |
@@ -2766,7 +2766,7 @@ The tariff line drives claim readiness.
 
 ---
 
-# 23. Updated sprint addition
+## 23. Updated sprint addition
 
 Add a dedicated tariff-import sprint before building full claims.
 
@@ -2810,7 +2810,7 @@ Add a dedicated tariff-import sprint before building full claims.
 
 ---
 
-# 24. Final recommendation
+## 24. Final recommendation
 
 Implement Module 7 tariffs like this:
 
@@ -2850,7 +2850,7 @@ The core rule should be:
       The Social Health Insurance Regulations
     - Kenya Law"
 
-# Module 7 Gap Closure: Claims and Insurance — Developer Handoff Addendum
+## Module 7 Gap Closure: Claims and Insurance — Developer Handoff Addendum
 
 ## Updated handoff status
 
@@ -2869,11 +2869,11 @@ Claims must not be hard-coded around one SHA form, one insurer format, one tarif
 The system must be payer-configurable, versioned, import-friendly, manual-first, and API-ready.
 ```
 
-As at **23 June 2026**, SHA’s public resources show tariff materials including **L.N. 56 of 2025** and a newer **L.N. 78 SHA – Tariffs for Healthcare Services under SHA, May 8th 2026**. That means the system must treat tariffs as **versioned external rules**, not fixed application code. ([Kenya Law][1])
+As at **23 June 2026**, SHA’s public resources show tariff materials including **L.N. 56 of 2025** and a newer **L.N. 78 SHA – Tariffs for Healthcare Services under SHA, May 8th 2026**. That means the system must treat tariffs as **versioned external rules**, not fixed application code. ([Kenya Law][g7-1])
 
 ---
 
-# 1. Final developer decisions
+## 1. Final developer decisions
 
 | Gap                                      | Final decision                                                                                                                                                                                             |
 | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -2890,19 +2890,19 @@ As at **23 June 2026**, SHA’s public resources show tariff materials including
 
 ---
 
-# 2. Regulatory and operational anchor summary
+## 2. Regulatory and operational anchor summary
 
-SHA claims are not ordinary invoices. Under the Social Health Insurance Regulations, benefits are payable where valid claims are lodged and approved, and all claims are to be lodged, reviewed, processed, validated, appraised and paid through the Centralized Digital Platform. Claims must be lodged within seven days from discharge, and the claim information includes SHA number, hospital registration number, patient demographics/contact details, clinical details, and amount claimed. ([Kenya Law][2])
+SHA claims are not ordinary invoices. Under the Social Health Insurance Regulations, benefits are payable where valid claims are lodged and approved, and all claims are to be lodged, reviewed, processed, validated, appraised and paid through the Centralized Digital Platform. Claims must be lodged within seven days from discharge, and the claim information includes SHA number, hospital registration number, patient demographics/contact details, clinical details, and amount claimed. ([Kenya Law][g7-2])
 
-The regulations also define claim-processing outcomes: approved claims, incomplete/error claims returned with reasons for amendment, and rejected claims notified with reasons not later than fourteen days from rejection. Pre-authorisation requests for specialized services are online requests and should include beneficiary details, provider/facility details, and service details; the decision should be immediate but no later than seventy-two hours, and pre-authorisation does not apply to emergency services. ([Kenya Law][2])
+The regulations also define claim-processing outcomes: approved claims, incomplete/error claims returned with reasons for amendment, and rejected claims notified with reasons not later than fourteen days from rejection. Pre-authorisation requests for specialized services are online requests and should include beneficiary details, provider/facility details, and service details; the decision should be immediate but no later than seventy-two hours, and pre-authorisation does not apply to emergency services. ([Kenya Law][g7-2])
 
-The regulations say claim processing is guided by prescribed tariffs, and tariffs are approved/gazetted and may be reviewed based on factors such as technology, economic factors, disease burden, market dynamics, population health risk, and provider feedback. This is the legal reason the application must support tariff versioning, not hard-coded tariff constants. ([Kenya Law][2])
+The regulations say claim processing is guided by prescribed tariffs, and tariffs are approved/gazetted and may be reviewed based on factors such as technology, economic factors, disease burden, market dynamics, population health risk, and provider feedback. This is the legal reason the application must support tariff versioning, not hard-coded tariff constants. ([Kenya Law][g7-2])
 
-SHA has a public provider portal, but the visible public page does not expose a stable developer API contract. Therefore, the correct developer posture is **manual-first, adapter-ready**. ([SHA Provider Portal][3])
+SHA has a public provider portal, but the visible public page does not expose a stable developer API contract. Therefore, the correct developer posture is **manual-first, adapter-ready**. ([SHA Provider Portal][g7-3])
 
 ---
 
-# 3. Final claims architecture
+## 3. Final claims architecture
 
 ## 3.1 Core architecture
 
@@ -2972,7 +2972,7 @@ Portal upload checklist
 
 ---
 
-# 4. Tariff table closure
+## 4. Tariff table closure
 
 ## 4.1 Final tariff policy
 
@@ -3094,7 +3094,7 @@ supersedable
 
 ---
 
-# 5. Benefit scheme closure
+## 5. Benefit scheme closure
 
 ## 5.1 Benefit scheme model
 
@@ -3155,7 +3155,7 @@ denial code set
 
 ---
 
-# 6. Current portal/API behaviour closure
+## 6. Current portal/API behaviour closure
 
 ## 6.1 Final integration position
 
@@ -3238,7 +3238,7 @@ manual_override_reference
 
 ---
 
-# 7. Payer-specific claim formats
+## 7. Payer-specific claim formats
 
 ## 7.1 Final claim format strategy
 
@@ -3349,7 +3349,7 @@ claim_format
 
 ---
 
-# 8. Seed required-attachment matrix
+## 8. Seed required-attachment matrix
 
 ## 8.1 Final attachment strategy
 
@@ -3432,7 +3432,7 @@ waived_with_reason
 
 ---
 
-# 9. Remittance import formats
+## 9. Remittance import formats
 
 ## 9.1 Final remittance strategy
 
@@ -3534,7 +3534,7 @@ Recommended matching order:
 
 ---
 
-# 10. Denial code catalogue
+## 10. Denial code catalogue
 
 ## 10.1 Internal denial categories
 
@@ -3611,7 +3611,7 @@ ELSE route to write-off / patient-balance review
 
 ---
 
-# 11. Claim validation engine
+## 11. Claim validation engine
 
 ## 11.1 Validation layers
 
@@ -3666,7 +3666,7 @@ Layer 10: Submission format readiness
 
 ---
 
-# 12. Claim bundle formats
+## 12. Claim bundle formats
 
 ## 12.1 PDF/ZIP claim pack
 
@@ -3729,7 +3729,7 @@ No silent claim edit after submission.
 
 ---
 
-# 13. Pre-authorisation closure
+## 13. Pre-authorisation closure
 
 ## 13.1 Pre-auth service catalogue
 
@@ -3795,7 +3795,7 @@ closed
 
 ---
 
-# 14. Reconciliation and accounting closure
+## 14. Reconciliation and accounting closure
 
 ## 14.1 Claims receivable accounts
 
@@ -3854,7 +3854,7 @@ From billing:
 
 ---
 
-# 15. Data model additions and refinements
+## 15. Data model additions and refinements
 
 ## 15.1 Add `payer_portals`
 
@@ -3957,7 +3957,7 @@ From billing:
 
 ---
 
-# 16. API additions and refinements
+## 16. API additions and refinements
 
 ## 16.1 Tariff endpoints
 
@@ -4012,7 +4012,7 @@ From billing:
 
 ---
 
-# 17. Final workflows
+## 17. Final workflows
 
 ## 17.1 Manual SHA claim workflow
 
@@ -4081,7 +4081,7 @@ From billing:
 
 ---
 
-# 18. Developer acceptance criteria
+## 18. Developer acceptance criteria
 
 ## 18.1 Tariff tables
 
@@ -4154,7 +4154,7 @@ From billing:
 
 ---
 
-# 19. Implementation sequence
+## 19. Implementation sequence
 
 ## Phase 1: Configurable claims core
 
@@ -4240,7 +4240,7 @@ status webhooks/importers
 
 ---
 
-# 20. Final handoff summary
+## 20. Final handoff summary
 
 Module 7 is now developer-ready with these final decisions:
 
@@ -4277,10 +4277,10 @@ denials can be corrected or written off,
 and every paid amount can be reconciled to the original claim line.
 ```
 
-[1]: https://new.kenyalaw.org/akn/ke/act/ln/2025/56 "
+[g7-1]: https://new.kenyalaw.org/akn/ke/act/ln/2025/56 "
       Tariffs for Healthcare Services, 2025
     - Kenya Law"
-[2]: https://new.kenyalaw.org/akn/ke/act/ln/2024/49 "
+[g7-2]: https://new.kenyalaw.org/akn/ke/act/ln/2024/49 "
       The Social Health Insurance Regulations
     - Kenya Law"
-[3]: https://portal.sha.go.ke/ "SHA | Provider Portal"
+[g7-3]: https://portal.sha.go.ke/ "SHA | Provider Portal"
