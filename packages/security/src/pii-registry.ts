@@ -38,13 +38,16 @@ export interface ColumnClassification {
 export const COLUMN_CLASSIFICATIONS: readonly ColumnClassification[] = [
   // patient_patients (PII) - the real ERD patient table.
   { table: 'patient_patients', column: 'patient_number', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
-  // national_id is encrypted PII, but ADR-003 §4 scopes the deterministic HMAC
-  // search hash to phone_primary only - it does NOT designate one for
-  // national_id. A deterministic hash over a low-entropy national ID is
-  // offline-enumerable (the DBA threat ADR-003 §1 names), so no searchHash here.
-  // If national-ID exact-match search is needed, ratify it in an ADR amendment
-  // (with an enumeration mitigation) before re-adding searchHash.
-  { table: 'patient_patients', column: 'national_id', dataClass: 'pii', fieldEncrypted: true },
+  // national_id is encrypted PII and IS searched by exact match (reception /
+  // clinician patient lookup). Ratified in #65 (ADR-003 §4.1 / ADR-007 §6): the
+  // search hash is a KEYED HMAC-SHA256 with a secret pepper held outside the DB
+  // (Key Vault), so a DB-only attacker cannot offline-enumerate the low-entropy
+  // national-ID space (the DBA threat ADR-003 §1 names). On that basis only,
+  // searchHash is re-enabled.
+  { table: 'patient_patients', column: 'national_id', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
+  // birth_cert_no is the equivalent exact-match search key for MINORS who lack a
+  // national ID (#65). Same keyed-pepper HMAC mechanism as national_id.
+  { table: 'patient_patients', column: 'birth_cert_no', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
   { table: 'patient_patients', column: 'phone_primary', dataClass: 'pii', fieldEncrypted: true, searchHash: true },
   { table: 'patient_patients', column: 'first_name', dataClass: 'pii', fieldEncrypted: true },
   { table: 'patient_patients', column: 'last_name', dataClass: 'pii', fieldEncrypted: true },
