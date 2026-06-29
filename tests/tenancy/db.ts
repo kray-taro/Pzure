@@ -57,7 +57,7 @@ export async function connect(): Promise<Db> {
   async function asBranch<T>(
     branchId: string | null,
     query: string,
-    opts?: { bypass?: boolean; userId?: string | null },
+    opts?: { bypass?: boolean; userId?: string | null; orgId?: string | null },
   ) {
     // SESSION_CONTEXT must be set on the same connection/request that runs the
     // query. Bind branch_id/user_id/bypass as parameters (no string
