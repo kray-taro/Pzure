@@ -12,11 +12,13 @@
 //   3. Each `direct` table's branch column exists on that table in the ERD.
 //   4. Each `inheritance` table's FK column + parent exist, and the chain
 //      terminates at a `direct` table's branch column (no dangling scope).
-//   5. Each `master` table is genuinely non-transactional (sanity: not reached
-//      here by a branch chain).
+//   5. Each `master` table is genuinely non-transactional: its declared
+//      columns/FK chain do NOT resolve to a branch column (a branch-owned
+//      table mis-labelled `master` would silently get no RLS policy and leak
+//      across branches — the most dangerous failure mode).
 //   6. If SQL migrations exist (packages/**/migrations/*.sql or migrations/*.sql),
-//      every `direct`/`inheritance` (transactional) table has a CREATE SECURITY
-//      POLICY referencing it.
+//      every `direct`/`inheritance` (transactional) table that is CREATEd has a
+//      CREATE SECURITY POLICY referencing it (statement-aware, not substring).
 //
 // Runnable today: with no migrations, checks 1–5 enforce the classification;
 // check 6 activates automatically once migration files are committed.
@@ -24,14 +26,14 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { parseErd, hasColumn } from './lib/parse-erd.mjs';
+import { VALID_CLASSES, TRANSACTIONAL_CLASSES } from './lib/tenancy-classes.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 const ERD_PATH = join(ROOT, 'DOCS', 'Unified_ERD.md');
 const MAP_PATH = join(ROOT, 'DOCS', 'tenancy-scoping.json');
 
-const TRANSACTIONAL = new Set(['direct', 'inheritance']);
-const VALID_CLASSES = new Set(['master', 'direct', 'inheritance']);
+const TRANSACTIONAL = TRANSACTIONAL_CLASSES;
 
 /** Recursively collect *.sql files under a few known migration locations. */
 function findSqlMigrations(root) {
@@ -51,22 +53,46 @@ function findSqlMigrations(root) {
   return out;
 }
 
-function resolveChain(name, map, errors, seen = new Set()) {
+// Resolve what tenant scope a table ultimately reaches by walking its FK chain.
+// Returns the resolved scope column name (e.g. 'branch_id'/'organisation_id') or
+// null if it terminates without one. `pushErrors` is false for the master sanity
+// check (we only want the resolution, not duplicate error noise).
+function resolveChain(name, map, errors, { pushErrors = true, seen = new Set() } = {}) {
   const entry = map.tables[name];
   if (!entry) return null;
   if (entry.class === 'direct') return entry.branchColumn ?? 'branch_id';
   if (entry.class !== 'inheritance') return null;
   if (seen.has(name)) {
-    errors.push(`inheritance cycle detected at '${name}'`);
+    if (pushErrors) errors.push(`inheritance cycle detected at '${name}'`);
     return null;
   }
   seen.add(name);
   const parent = entry.parent;
   if (!parent || !map.tables[parent]) {
-    errors.push(`'${name}' inheritance parent '${parent}' is not classified`);
+    if (pushErrors) errors.push(`'${name}' inheritance parent '${parent}' is not classified`);
     return null;
   }
-  return resolveChain(parent, map, errors, seen);
+  return resolveChain(parent, map, errors, { pushErrors, seen });
+}
+
+// Statement-aware detection so a substring (lab_orders vs lab_orders_archive),
+// bracket-quoting, or a comment can't produce a false result on a security gate.
+function tableIsCreated(ddl, table) {
+  const t = escapeRe(table);
+  return new RegExp(`create\\s+table\\s+(?:\\[?dbo\\]?\\.)?\\[?${t}\\]?(?![A-Za-z0-9_])`, 'i').test(ddl);
+}
+
+function tableHasPolicy(ddl, table) {
+  const t = escapeRe(table);
+  // A CREATE SECURITY POLICY ... ON dbo.<table> referencing this exact table.
+  return new RegExp(
+    `create\\s+security\\s+policy[\\s\\S]*?on\\s+(?:\\[?dbo\\]?\\.)?\\[?${t}\\]?(?![A-Za-z0-9_])`,
+    'i',
+  ).test(ddl);
+}
+
+function escapeRe(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function main() {
@@ -108,7 +134,8 @@ function main() {
         errors.push(`direct table '${name}' is missing its branch column '${col}' in the ERD`);
       }
     }
-    // 4. inheritance FK + parent exist and chain resolves to a direct branch col.
+    // 4. inheritance FK + parent exist and chain resolves to a direct branch col,
+    //    and the declared resolvesTo matches what the chain actually resolves to.
     if (entry.class === 'inheritance') {
       if (!entry.fk || !hasColumn(erd.tables[name], entry.fk)) {
         errors.push(`inheritance table '${name}' is missing its FK column '${entry.fk}' in the ERD`);
@@ -118,22 +145,36 @@ function main() {
       if (wantsBranch && !resolved) {
         errors.push(`inheritance table '${name}' FK chain does not resolve to a direct branch column`);
       }
+      // If the chain terminates at a branch column but the table declares it
+      // resolves elsewhere (e.g. organisation_id), the classification is a lie.
+      if (resolved && entry.resolvesTo !== undefined && entry.resolvesTo !== resolved) {
+        errors.push(
+          `inheritance table '${name}' declares resolvesTo='${entry.resolvesTo}' but its FK chain resolves to '${resolved}'`,
+        );
+      }
+    }
+    // 5. master sanity: must NOT be reachable to a branch column by a chain.
+    if (entry.class === 'master') {
+      const resolved = resolveChain(name, map, errors, { pushErrors: false });
+      if (resolved === 'branch_id' || entry.branchColumn) {
+        errors.push(
+          `master table '${name}' resolves to a branch scope ('${resolved ?? entry.branchColumn}') — it is branch-transactional and must be classified 'direct' or 'inheritance' (would otherwise ship with NO RLS policy)`,
+        );
+      }
     }
   }
 
   // 6. RLS policy attachment (only once migrations exist).
   const sqlFiles = findSqlMigrations(ROOT);
   if (sqlFiles.length > 0) {
-    const ddl = sqlFiles.map((f) => readFileSync(f, 'utf8')).join('\n').toLowerCase();
+    const ddl = sqlFiles.map((f) => readFileSync(f, 'utf8')).join('\n');
     for (const [name, entry] of Object.entries(map.tables)) {
       if (!TRANSACTIONAL.has(entry.class)) continue;
       if (!erd.tables[name]) continue;
       // A table is "present in schema" if a CREATE TABLE for it exists; only then
       // do we require an RLS policy (tables not yet migrated are not yet a risk).
-      const created = ddl.includes(`table dbo.${name}`) || ddl.includes(`table ${name}`);
-      if (!created) continue;
-      const hasPolicy = ddl.includes('security policy') && ddl.includes(name.toLowerCase());
-      if (!hasPolicy) {
+      if (!tableIsCreated(ddl, name)) continue;
+      if (!tableHasPolicy(ddl, name)) {
         errors.push(`transactional table '${name}' is created in a migration but has no CREATE SECURITY POLICY (ADR-001 §6.4)`);
       }
     }

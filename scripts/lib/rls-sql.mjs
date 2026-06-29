@@ -20,6 +20,19 @@
 export const SESSION_BRANCH = "CONVERT(uniqueidentifier, SESSION_CONTEXT(N'branch_id'))";
 export const SESSION_BYPASS = "CONVERT(bit, SESSION_CONTEXT(N'tenancy_bypass'))";
 
+// Fail-closed identifier validation. RLS DDL cannot be parameterised (object
+// names are not bindable), so every schema/table/column name interpolated below
+// MUST be a plain SQL identifier. Anything else (quoting, spaces, separators)
+// is rejected rather than emitted — this generator feeds a security boundary.
+const IDENT_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
+/** @param {string} name @param {string} role @returns {string} */
+export function assertIdent(name, role) {
+  if (typeof name !== 'string' || !IDENT_RE.test(name)) {
+    throw new Error(`Unsafe SQL identifier for ${role}: ${JSON.stringify(name)}`);
+  }
+  return name;
+}
+
 /** Predicate body shared by FILTER and BLOCK predicates for a branch column. */
 function branchPredicateBody(branchColumn) {
   // Corporate bypass is explicit and intended to be paired with an audit event
@@ -32,6 +45,9 @@ function branchPredicateBody(branchColumn) {
  * @param {{ schema?: string, table: string, branchColumn?: string }} opts
  */
 export function buildDirectPolicy({ schema = 'dbo', table, branchColumn = 'branch_id' }) {
+  assertIdent(schema, 'schema');
+  assertIdent(table, 'table');
+  assertIdent(branchColumn, 'branchColumn');
   const fn = `${schema}.fn_rls_${table}`;
   const body = branchPredicateBody(`@${branchColumn}`);
   return [
@@ -60,6 +76,41 @@ export function buildInheritanceDenormPolicy(opts) {
 }
 
 /**
+ * Write-time maintenance for the denormalised branch_id on an inheritance table:
+ * a trigger that derives branch_id from the FK parent on INSERT/UPDATE. This is
+ * the mechanism the denormalised RLS path relies on, so it ships from the same
+ * generator and is exercised by the live tests (no developer-discipline gap).
+ * @param {{ schema?: string, table: string, branchColumn?: string, fkColumn: string, parentTable: string, parentKey?: string, parentBranchColumn?: string }} o
+ */
+export function buildDenormBranchTrigger({
+  schema = 'dbo',
+  table,
+  branchColumn = 'branch_id',
+  fkColumn,
+  parentTable,
+  parentKey = 'id',
+  parentBranchColumn = 'branch_id',
+}) {
+  for (const [v, role] of [
+    [schema, 'schema'], [table, 'table'], [branchColumn, 'branchColumn'],
+    [fkColumn, 'fkColumn'], [parentTable, 'parentTable'], [parentKey, 'parentKey'],
+    [parentBranchColumn, 'parentBranchColumn'],
+  ]) assertIdent(v, role);
+  const trg = `${schema}.trg_denorm_${table}`;
+  return [
+    `CREATE TRIGGER ${trg} ON ${schema}.${table} AFTER INSERT, UPDATE AS`,
+    `BEGIN`,
+    `    SET NOCOUNT ON;`,
+    `    UPDATE t SET t.${branchColumn} = p.${parentBranchColumn}`,
+    `    FROM ${schema}.${table} AS t`,
+    `    JOIN inserted AS i ON i.id = t.id`,
+    `    JOIN ${schema}.${parentTable} AS p ON p.${parentKey} = t.${fkColumn};`,
+    `END;`,
+    `GO`,
+  ].join('\n');
+}
+
+/**
  * RLS DDL for an inheritance-scoped table WITHOUT denormalisation: a join-based
  * predicate that resolves the branch through the FK chain. Provided for tables
  * that deliberately opt out of a denormalised column.
@@ -73,6 +124,10 @@ export function buildInheritanceTvfPredicate({
   parentKey = 'id',
   parentBranchColumn = 'branch_id',
 }) {
+  for (const [v, role] of [
+    [schema, 'schema'], [table, 'table'], [fkColumn, 'fkColumn'],
+    [parentTable, 'parentTable'], [parentKey, 'parentKey'], [parentBranchColumn, 'parentBranchColumn'],
+  ]) assertIdent(v, role);
   const fn = `${schema}.fn_rls_${table}`;
   return [
     `CREATE FUNCTION ${fn}(@${fkColumn} uniqueidentifier)`,
