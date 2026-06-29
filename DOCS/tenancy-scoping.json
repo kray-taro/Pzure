@@ -15,7 +15,7 @@
     "core_user_roles": { "class": "master", "note": "join over org-scoped users/roles" },
     "core_branch_users": { "class": "direct", "branchColumn": "branch_id" },
     "patient_patients": { "class": "master", "scopeColumn": "organisation_id", "note": "patient may roam across branches within an org" },
-    "patient_allergies": { "class": "inheritance", "fk": "patient_id", "parent": "patient_patients", "resolvesTo": "organisation_id", "note": "org-scoped via patient, not branch-scoped" },
+    "patient_allergies": { "class": "inheritance", "fk": "patient_id", "parent": "patient_patients", "resolvesTo": "organisation_id", "orgVia": "tvf", "note": "org-scoped via patient (no own organisation_id column); RLS reaches organisation_id through patient_id -> patient_patients via buildOrgInheritanceTvfPredicate" },
 
     "terminology_code_systems": { "class": "master" },
     "terminology_diagnosis_codes": { "class": "master", "fk": "code_system_id", "parent": "terminology_code_systems" },

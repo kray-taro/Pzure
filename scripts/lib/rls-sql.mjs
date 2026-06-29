@@ -158,10 +158,11 @@ export function buildInheritanceDenormPolicy({
 }
 
 /**
- * RLS DDL for an ORG-scoped inheritance table (e.g. patient_allergies): it
- * reaches organisation_id, not a branch, so it is filtered by the session org,
- * never by branch. This is the one non-branch transactional policy kind the
- * guard's resolvesTo='organisation_id' path requires.
+ * RLS DDL for a table that OWNS an organisation_id column and is scoped to the
+ * session org (NOT a branch). Use this only when the table actually has the
+ * organisation_id column on the row; an inheritance table that merely *reaches*
+ * organisation_id through an FK chain must use buildOrgInheritanceTvfPredicate
+ * instead (it has no such column to bind).
  * @param {{ schema?: string, table: string, orgColumn?: string }} opts
  */
 export function buildOrgScopedPolicy({ schema = 'dbo', table, orgColumn = 'organisation_id' }) {
@@ -176,6 +177,45 @@ export function buildOrgScopedPolicy({ schema = 'dbo', table, orgColumn = 'organ
     `    ADD FILTER PREDICATE ${fn}(${orgColumn}) ON ${schema}.${table},`,
     `    ADD BLOCK PREDICATE ${fn}(${orgColumn}) ON ${schema}.${table} AFTER INSERT,`,
     `    ADD BLOCK PREDICATE ${fn}(${orgColumn}) ON ${schema}.${table} AFTER UPDATE`,
+    `    WITH (STATE = ON);`,
+    `GO`,
+  ].join('\n');
+}
+
+/**
+ * RLS DDL for an ORG-scoped INHERITANCE table (e.g. patient_allergies): it has
+ * NO organisation_id column and reaches the org through its FK parent
+ * (patient_id -> patient_patients.organisation_id). The predicate binds the FK
+ * column the row DOES have and joins the parent to reach organisation_id,
+ * mirroring buildInheritanceTvfPredicate but resolving to the session org.
+ * @param {{ schema?: string, table: string, fkColumn: string, parentTable: string, parentKey?: string, parentOrgColumn?: string }} o
+ */
+export function buildOrgInheritanceTvfPredicate({
+  schema = 'dbo',
+  table,
+  fkColumn,
+  parentTable,
+  parentKey = 'id',
+  parentOrgColumn = 'organisation_id',
+}) {
+  for (const [v, role] of [
+    [schema, 'schema'], [table, 'table'], [fkColumn, 'fkColumn'],
+    [parentTable, 'parentTable'], [parentKey, 'parentKey'], [parentOrgColumn, 'parentOrgColumn'],
+  ]) assertIdent(v, role);
+  const fn = `${schema}.fn_rls_${table}`;
+  return [
+    `CREATE FUNCTION ${fn}(@${fkColumn} uniqueidentifier)`,
+    `    RETURNS TABLE WITH SCHEMABINDING`,
+    `AS RETURN`,
+    `    SELECT 1 AS rls_ok`,
+    `    FROM ${schema}.${parentTable} AS p`,
+    `    WHERE p.${parentKey} = @${fkColumn}`,
+    `      AND (p.${parentOrgColumn} = ${SESSION_ORG} OR ${SESSION_BYPASS} = 1);`,
+    `GO`,
+    `CREATE SECURITY POLICY ${schema}.sp_${table}`,
+    `    ADD FILTER PREDICATE ${fn}(${fkColumn}) ON ${schema}.${table},`,
+    `    ADD BLOCK PREDICATE ${fn}(${fkColumn}) ON ${schema}.${table} AFTER INSERT,`,
+    `    ADD BLOCK PREDICATE ${fn}(${fkColumn}) ON ${schema}.${table} AFTER UPDATE`,
     `    WITH (STATE = ON);`,
     `GO`,
   ].join('\n');
