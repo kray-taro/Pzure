@@ -2429,7 +2429,7 @@ which sample was tested, what template and reference range were used,
 who entered the result, who verified it, and how it was delivered.
 ```
 
-KMLTTB has statutory mandate over training, business, practice and employment of medical laboratory technicians and technologists in Kenya, and KMLTTB states that every Medical Laboratory Science professional practising in Kenya must be registered and licensed with the Board. The software should therefore treat lab verification as a regulated professional action, not a normal clerical action. ([kmlttb.org][1])
+KMLTTB has statutory mandate over training, business, practice and employment of medical laboratory technicians and technologists in Kenya, and KMLTTB states that every Medical Laboratory Science professional practising in Kenya must be registered and licensed with the Board. The software should therefore treat lab verification as a regulated professional action, not a normal clerical action. ([kmlttb.org][g6-1])
 
 ---
 
@@ -2448,7 +2448,7 @@ KMLTTB has statutory mandate over training, business, practice and employment of
 | Clinical safety             | Critical results create clinician alert and notification log; sensitive results use restricted access and neutral patient communication.                                                                                                      |
 | Interoperability            | Store LOINC-ready codes and FHIR-ready mappings for ServiceRequest, Specimen, Observation, and DiagnosticReport.                                                                                                                              |
 
-LOINC should be used as the preferred external code system where mapped because it is a universal code system for laboratory tests, measurements and clinical observations. FHIR ServiceRequest should represent lab orders, while DiagnosticReport and Observation should represent released lab results and component values. ([Regenstrief Institute][2])
+LOINC should be used as the preferred external code system where mapped because it is a universal code system for laboratory tests, measurements and clinical observations. FHIR ServiceRequest should represent lab orders, while DiagnosticReport and Observation should represent released lab results and component values. ([Regenstrief Institute][g6-2])
 
 ---
 
@@ -2655,7 +2655,7 @@ Positive result → abnormal flag
 | Basophils         | `basophils`   | % or ×10⁹/L | Numeric |
 | Comment           | `comment`     | —           | Text    |
 
-CBC reference ranges vary by analyser, age, sex, and lab policy; the seed table should be treated as a template requiring facility approval, not as universal clinical truth. MedlinePlus and Merck both emphasize that normal/reference ranges vary by lab and patient factors. ([MedlinePlus][3])
+CBC reference ranges vary by analyser, age, sex, and lab policy; the seed table should be treated as a template requiring facility approval, not as universal clinical truth. MedlinePlus and Merck both emphasize that normal/reference ranges vary by lab and patient factors. ([MedlinePlus][g6-3])
 
 ---
 
@@ -2678,7 +2678,7 @@ CBC reference ranges vary by analyser, age, sex, and lab policy; the seed table 
 | Method         | Coded   | Glucometer, laboratory analyser |
 | Comment        | Text    | —                               |
 
-MedlinePlus states that fasting blood glucose of 70–99 mg/dL, equivalent to about 3.9–5.5 mmol/L, is considered normal, while random glucose depends on when the patient last ate; it also notes normal ranges may vary between laboratories. Use such values as seed guidance only and allow facility-specific configuration. ([MedlinePlus][4])
+MedlinePlus states that fasting blood glucose of 70–99 mg/dL, equivalent to about 3.9–5.5 mmol/L, is considered normal, while random glucose depends on when the patient last ate; it also notes normal ranges may vary between laboratories. Use such values as seed guidance only and allow facility-specific configuration. ([MedlinePlus][g6-4])
 
 ---
 
@@ -2700,7 +2700,7 @@ MedlinePlus states that fasting blood glucose of 70–99 mg/dL, equivalent to ab
 | Urobilinogen     | Semi-quant/numeric | Normal, increased                       |
 | Comment          | Text               | —                                       |
 
-MedlinePlus describes urinalysis as physical, chemical and microscopic examination of urine and notes that it detects or measures compounds in urine; exact component interpretation should be configured by the lab and clinician governance team. ([MedlinePlus][5])
+MedlinePlus describes urinalysis as physical, chemical and microscopic examination of urine and notes that it detects or measures compounds in urine; exact component interpretation should be configured by the lab and clinician governance team. ([MedlinePlus][g6-5])
 
 ---
 
@@ -2773,7 +2773,7 @@ Do not interpret results solely by generic internet ranges.
 Do not use one adult range for children, pregnancy, or method-specific tests.
 ```
 
-Lab-result reference ranges vary by laboratory, patient factors, specimen, method, and instrument. The system should therefore ship seed ranges only as editable defaults requiring facility approval before release. ([MedlinePlus][6])
+Lab-result reference ranges vary by laboratory, patient factors, specimen, method, and instrument. The system should therefore ship seed ranges only as editable defaults requiring facility approval before release. ([MedlinePlus][g6-6])
 
 ---
 
@@ -2865,7 +2865,7 @@ These are **starter templates**, not clinical-authority final values.
 | Pregnancy test            | Qual    | Negative/positive/invalid       | No numeric range           |
 | Malaria RDT               | Qual    | Negative/positive/invalid       | No numeric range           |
 
-The fasting-glucose seed is consistent with MedlinePlus’ common fasting blood glucose range, but the system should still allow lab-specific units and ranges. ([MedlinePlus][4])
+The fasting-glucose seed is consistent with MedlinePlus’ common fasting blood glucose range, but the system should still allow lab-specific units and ranges. ([MedlinePlus][g6-4])
 
 ---
 
@@ -3717,3 +3717,10 @@ the result was verified by an authorized licensed lab professional,
 critical or sensitive results were handled safely,
 and every print, correction, share, or send-out was audited.
 ```
+
+[g6-1]: https://www.kmlttb.org/?utm_source=chatgpt.com "KMLTTB | Kenya Medical Laboratory Technicians & Technologist Board"
+[g6-2]: https://www.regenstrief.org/real-world-solutions/loinc/?utm_source=chatgpt.com "LOINC Data Standards - Regenstrief Institute"
+[g6-3]: https://medlineplus.gov/laboratorytests.html?utm_source=chatgpt.com "Laboratory Tests - MedlinePlus"
+[g6-4]: https://medlineplus.gov/ency/article/003482.htm?utm_source=chatgpt.com "Blood sugar test: MedlinePlus Medical Encyclopedia"
+[g6-5]: https://medlineplus.gov/ency/article/003579.htm?utm_source=chatgpt.com "Urinalysis: MedlinePlus Medical Encyclopedia"
+[g6-6]: https://medlineplus.gov/lab-tests/how-to-understand-your-lab-results/?utm_source=chatgpt.com "How to Understand Your Lab Results: MedlinePlus Medical Test"
