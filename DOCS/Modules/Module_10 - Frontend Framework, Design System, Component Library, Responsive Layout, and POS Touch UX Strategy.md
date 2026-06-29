@@ -37,7 +37,7 @@ Vite is framework-flexible through its plugin model, but the project still needs
 
 ---
 
-# 2. Why React over Vue or Svelte for this system
+## 2. Why React over Vue or Svelte for this system
 
 | Option                      | Recommendation                   | Reason                                                                                                                       |
 | --------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
@@ -54,7 +54,7 @@ Vite + React + TypeScript
 
 ---
 
-# 3. Frontend package strategy
+## 3. Frontend package strategy
 
 Use a monorepo structure:
 
@@ -97,7 +97,7 @@ Feature-level route chunks
 
 ---
 
-# 4. Design system deliverables
+## 4. Design system deliverables
 
 Create a formal document:
 
@@ -133,7 +133,7 @@ Minimum contents:
 
 ---
 
-# 5. Design tokens
+## 5. Design tokens
 
 Tokens should be stored as code, not just Figma styles.
 
@@ -207,7 +207,7 @@ sync.conflict
 
 ---
 
-# 6. Responsive breakpoints
+## 6. Responsive breakpoints
 
 Use Tailwind-compatible breakpoints, but define your own product meanings.
 
@@ -239,7 +239,7 @@ Tailwind’s responsive design model applies utilities conditionally by breakpoi
 
 ---
 
-# 7. POS must have its own shell
+## 7. POS must have its own shell
 
 Do **not** build POS as a normal admin CRUD screen.
 
@@ -323,7 +323,7 @@ Scanner input should not require the cashier to click into the search box every 
 
 ---
 
-# 8. App shells
+## 8. App shells
 
 Use different app shells for different workflows.
 
@@ -344,7 +344,7 @@ Each shell can share common tokens and components but should have workflow-speci
 
 ---
 
-# 9. Component library
+## 9. Component library
 
 ## Core components
 
@@ -400,7 +400,7 @@ Each shell can share common tokens and components but should have workflow-speci
 
 ---
 
-# 10. Component library choice
+## 10. Component library choice
 
 ## Recommended stack
 
@@ -426,7 +426,7 @@ MUI is mature and accessible, but for this product I would avoid making Material
 
 ---
 
-# 11. Design-system repository docs
+## 11. Design-system repository docs
 
 Add this folder:
 
@@ -449,7 +449,7 @@ docs/
 
 ---
 
-# 12. Design tokens example
+## 12. Design tokens example
 
 ## `tokens.json`
 
@@ -501,7 +501,7 @@ docs/
 
 ---
 
-# 13. Responsive layout document
+## 13. Responsive layout document
 
 ## Required rules
 
@@ -520,7 +520,7 @@ docs/
 
 ---
 
-# 14. Accessibility requirements
+## 14. Accessibility requirements
 
 Healthcare systems must be usable under stress.
 
@@ -540,7 +540,7 @@ Healthcare systems must be usable under stress.
 
 ---
 
-# 15. Form design standards
+## 15. Form design standards
 
 Forms are central to this system.
 
@@ -561,7 +561,7 @@ Forms are central to this system.
 
 ---
 
-# 16. Status language
+## 16. Status language
 
 All modules should use consistent status terms.
 
@@ -588,7 +588,7 @@ semantic colour: status.success
 
 ---
 
-# 17. Print and label design
+## 17. Print and label design
 
 The design system must include printable templates, not just screens.
 
@@ -611,7 +611,7 @@ Print templates should be versioned and tested on real devices.
 
 ---
 
-# 18. UX writing standards
+## 18. UX writing standards
 
 Use clear, safe, non-technical language.
 
@@ -655,7 +655,7 @@ Invoice was not accepted by eTIMS. Open the invoice status report for the reason
 
 ---
 
-# 19. Storybook requirement
+## 19. Storybook requirement
 
 Storybook should be mandatory.
 
@@ -693,7 +693,7 @@ Each component story should include:
 
 ---
 
-# 20. Frontend testing strategy
+## 20. Frontend testing strategy
 
 | Test type         | Tool                              | Scope                           |
 | ----------------- | --------------------------------- | ------------------------------- |
@@ -707,7 +707,7 @@ Each component story should include:
 
 ---
 
-# 21. Frontend ADR content
+## 21. Frontend ADR content
 
 ## ADR-026 should decide
 
@@ -731,7 +731,7 @@ Each component story should include:
 
 ---
 
-# 22. Sprint addition
+## 22. Sprint addition
 
 Add a sprint before full UI build.
 
@@ -772,7 +772,7 @@ Add a sprint before full UI build.
 
 ---
 
-# 23. Final recommendation
+## 23. Final recommendation
 
 Implement the frontend as:
 
