@@ -32,7 +32,10 @@ describe('ADR-003/ADR-007 PII/PHI field-encryption scope', () => {
   // actually declares. A new sensitive column in Unified_ERD.md that nobody
   // registers must FAIL here, instead of silently passing.
   it('classifies every ERD sensitive column as encrypted (no unregistered column)', () => {
-    const missing = ERD_SENSITIVE_COLUMNS.filter((erd) => {
+    // Derived *_hash columns hold a non-reversible keyed HMAC, not plaintext
+    // PII, so they are intentionally not field-encrypted; the dedicated
+    // hash<->searchHash invariant test covers them instead.
+    const missing = ERD_SENSITIVE_COLUMNS.filter((erd) => !erd.derivedHash).filter((erd) => {
       const c = COLUMN_CLASSIFICATIONS.find(
         (x) => x.table === erd.table && x.column === erd.column,
       );
@@ -107,6 +110,51 @@ describe('ADR-003/ADR-007 PII/PHI field-encryption scope', () => {
       expect(c?.fieldEncrypted).toBe(true);
       expect(c?.searchHash).toBe(true);
     }
+  });
+
+  it('records a derived *_hash column in the ERD for every searchable identifier, and vice versa (#65)', () => {
+    // Invariant tying the ERD to the registry: every ERD `<col>_hash` derived
+    // column must have a base column flagged `searchHash: true`, and every
+    // `searchHash: true` identifier that the ERD declares must have a matching
+    // `<col>_hash` derived column. This stops the manifest and the registry
+    // drifting on the keyed-HMAC lookup columns (ADR-003 §4.1 / ADR-007 §6).
+    const hashCols = ERD_SENSITIVE_COLUMNS.filter((c) => c.derivedHash);
+
+    // (a) every derived hash column resolves to a base column with searchHash.
+    const orphanHashes = hashCols.filter((h) => {
+      const base = h.column.replace(/_hash$/, '');
+      const c = COLUMN_CLASSIFICATIONS.find(
+        (x) => x.table === h.table && x.column === base,
+      );
+      return !h.column.endsWith('_hash') || !c || c.searchHash !== true;
+    });
+    expect(
+      orphanHashes,
+      `ERD *_hash columns with no searchHash base column: ${orphanHashes
+        .map((h) => `${h.table}.${h.column}`)
+        .join(', ')}`,
+    ).toEqual([]);
+
+    // (b) every ERD-declared searchable identifier has a derived *_hash column.
+    const erdSearchable = COLUMN_CLASSIFICATIONS.filter(
+      (c) =>
+        c.searchHash === true &&
+        ERD_SENSITIVE_COLUMNS.some(
+          (e) => !e.derivedHash && e.table === c.table && e.column === c.column,
+        ),
+    );
+    const missingHashCols = erdSearchable.filter(
+      (c) =>
+        !hashCols.some(
+          (h) => h.table === c.table && h.column === `${c.column}_hash`,
+        ),
+    );
+    expect(
+      missingHashCols,
+      `searchable identifiers in the ERD with no derived *_hash column: ${missingHashCols
+        .map((c) => `${c.table}.${c.column}`)
+        .join(', ')}`,
+    ).toEqual([]);
   });
 
   it('does NOT put a deterministic search hash on free-text PHI', () => {

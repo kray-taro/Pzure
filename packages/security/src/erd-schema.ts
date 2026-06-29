@@ -26,6 +26,15 @@ export interface ErdColumn {
   column: string;
   /** Why it is sensitive - documentation only, not used by the gate. */
   note?: string;
+  /**
+   * True for a derived `*_hash` lookup column (a keyed HMAC of an encrypted
+   * field, ADR-003 §4.1 / ADR-007 §6). These are recorded so the manifest
+   * stays a faithful transcription of the ERD, but they are NOT plaintext
+   * PII/PHI: they store a non-reversible HMAC, so they are intentionally not
+   * field-encrypted. The encryption-scope assertions exclude them; the
+   * hash<->searchHash invariant test covers them instead.
+   */
+  derivedHash?: boolean;
 }
 
 /**
@@ -43,6 +52,14 @@ export interface ErdColumn {
  * These appear in COLUMN_CLASSIFICATIONS with their non-sensitive class so the
  * over-encryption guard keeps them honest, but they are not listed here.
  *
+ * Derived `*_hash` columns: the ERD records a keyed-HMAC lookup column next to
+ * each searchable encrypted identifier (e.g. `national_id_hash`). These ARE
+ * listed here - with `derivedHash: true` - so the manifest remains a faithful
+ * transcription of `Unified_ERD.md`, but they hold a non-reversible HMAC (not
+ * plaintext PII), so they are deliberately NOT field-encrypted. The
+ * encryption-scope tests skip `derivedHash` columns; a dedicated invariant
+ * test asserts every `<col>_hash` has a base column flagged `searchHash: true`.
+ *
  * TODO(#40): replace this hand-transcription with an introspector that derives
  * the manifest directly from the SQL migrations (Phase 1 / !1), at which point
  * this constant becomes generated and ADR/ERD/registry drift is impossible.
@@ -51,7 +68,11 @@ export const ERD_SENSITIVE_COLUMNS: readonly ErdColumn[] = [
   // patient_patients (PII) - the real ERD patient table.
   { table: 'patient_patients', column: 'patient_number', note: 'direct patient identifier' },
   { table: 'patient_patients', column: 'national_id', note: 'national ID (high-sensitivity PII), encrypted; keyed-pepper HMAC search hash ratified in #65 (ADR-003 §4.1)' },
+  // Derived keyed-HMAC lookup column for national_id (ADR-003 §4.1). Non-reversible hash, not plaintext PII -> not field-encrypted.
+  { table: 'patient_patients', column: 'national_id_hash', note: 'keyed HMAC-SHA256 of national_id for exact-match lookup (ADR-003 §4.1 / ADR-007 §6)', derivedHash: true },
   { table: 'patient_patients', column: 'birth_cert_no', note: 'birth certificate number (high-sensitivity PII); minor equivalent of national_id, encrypted with keyed-pepper HMAC search hash (#65 / ADR-003 §4.1)' },
+  // Derived keyed-HMAC lookup column for birth_cert_no (ADR-003 §4.1).
+  { table: 'patient_patients', column: 'birth_cert_no_hash', note: 'keyed HMAC-SHA256 of birth_cert_no for exact-match lookup (ADR-003 §4.1 / ADR-007 §6)', derivedHash: true },
   { table: 'patient_patients', column: 'first_name', note: 'name' },
   { table: 'patient_patients', column: 'last_name', note: 'name' },
   { table: 'patient_patients', column: 'dob', note: 'date of birth' },
