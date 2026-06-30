@@ -7,10 +7,10 @@
  * the moment they diverge, so the invariant is enforced (DDIA: reliability via
  * automated checks), not merely asserted in an MR description.
  */
-import { tokens } from './tokens.typed';
-import { status, clinical, finance, inventory, claims, sync } from './colors';
-import { touch } from './touch';
-import { layout } from './layout';
+import { tokens } from './tokens.typed.js';
+import { status, clinical, finance, inventory, claims, sync } from './colors.js';
+import { touch } from './touch.js';
+import { layout } from './layout.js';
 
 // Resolve a {group.shade} alias in tokens.json against the primitive palette
 // declared inline here, mirroring colors.ts. Kept deliberately small: if the
@@ -49,7 +49,7 @@ function resolveGroup(group: Record<string, string>): Record<string, string> {
   );
 }
 
-const color = tokens.color;
+const color = tokens.color as Record<string, Record<string, string>>;
 
 describe('tokens.json <-> .ts module parity (DRY single source of truth)', () => {
   it('status group matches', () => {

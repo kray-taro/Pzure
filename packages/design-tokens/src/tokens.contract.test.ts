@@ -3,8 +3,8 @@
  * Protects against a refactor accidentally dropping a domain group or a touch
  * target, which would silently weaken accessibility / clinical safety.
  */
-import { colors, status, clinical, finance, inventory, claims, sync } from './colors';
-import { touch } from './touch';
+import { colors, status, clinical, finance, inventory, claims, sync } from './colors.js';
+import { touch } from './touch.js';
 
 describe('ADR-026 required semantic colour groups', () => {
   it('exposes all six domain groups via the barrel', () => {

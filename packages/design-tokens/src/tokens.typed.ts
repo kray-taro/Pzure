@@ -1,5 +1,4 @@
-
-import tokensJson from './tokens.json';
+import tokensJson from './tokens.json' with { type: 'json' };
 
 export interface Tokens {
   color: Record<string, Record<string, string>>;

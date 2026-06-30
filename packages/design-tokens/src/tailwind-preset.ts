@@ -5,16 +5,16 @@
  * dimensions are hard-coded here. App shells extend this preset so every
  * utility class maps to a semantic token (ADR-026: no raw hex in components).
  */
-import { colors } from './colors';
-import { typography } from './typography';
-import { spacing } from './spacing';
-import { radii } from './radii';
-import { shadows } from './shadows';
-import { breakpoints } from './breakpoints';
-import { zIndex } from './z-index';
-import { motion } from './motion';
-import { touch } from './touch';
-import { layout } from './layout';
+import { colors } from './colors.js';
+import { typography } from './typography.js';
+import { spacing } from './spacing.js';
+import { radii } from './radii.js';
+import { shadows } from './shadows.js';
+import { breakpoints } from './breakpoints.js';
+import { zIndex } from './z-index.js';
+import { motion } from './motion.js';
+import { touch } from './touch.js';
+import { layout } from './layout.js';
 
 const screens = Object.fromEntries(
   Object.entries(breakpoints).map(([k, v]) => [k, { min: v }]),
