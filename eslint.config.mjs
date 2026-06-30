@@ -46,6 +46,7 @@ export default tseslint.config(
             { sourceTag: 'layer:infrastructure', onlyDependOnLibsWithTags: ['layer:infrastructure', 'layer:application', 'layer:domain', 'layer:contracts'] },
             { sourceTag: 'layer:app', onlyDependOnLibsWithTags: ['layer:application', 'layer:domain', 'layer:infrastructure', 'layer:contracts'] },
             { sourceTag: 'layer:contracts', onlyDependOnLibsWithTags: ['layer:contracts'] },
+            { sourceTag: 'layer:design-tokens', onlyDependOnLibsWithTags: [] },
           ],
         },
       ],
