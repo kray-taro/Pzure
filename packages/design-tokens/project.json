@@ -1,0 +1,12 @@
+{
+    "name": "design-tokens",
+    "sourceRoot": "packages/design-tokens/src",
+    "projectType": "library",
+    "tags": ["layer:design-tokens"],
+    "targets": {
+      "lint": { "executor": "@nx/eslint:lint" },
+      "test": { "executor": "@nx/jest:jest", "options": { "jestConfig": "packages/design-tokens/jest.config.ts" } },
+      "typecheck": { "executor": "nx:run-commands", "options": { "command": "tsc --noEmit -p packages/design-tokens/tsconfig.json" } }
+    }
+  }
+  
