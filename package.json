@@ -1,27 +1,40 @@
 {
-  "name": "@pzure/root",
+  "name": "pzure",
   "version": "0.0.0",
   "private": true,
-  "description": "Pzure monorepo root. Develop integration line. main untouched until release gate.",
+  "description": "Clinic-pharmacy-retail operating system (Kenya). Develop integration line; main untouched until release gate.",
   "license": "UNLICENSED",
-  "type": "module",
   "workspaces": [
+    "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "lint": "eslint .",
-    "typecheck": "tsc -b --noEmit packages/design-tokens || tsc --noEmit -p packages/design-tokens/tsconfig.json",
-    "test": "vitest run --coverage",
+    "lint": "nx run-many -t lint",
+    "test": "nx run-many -t test",
+    "test:integration": "nx run-many -t test:integration",
+    "build": "nx run-many -t build",
+    "typecheck": "nx run-many -t typecheck",
     "guard:branch": "bash scripts/check-branch-name.sh",
     "guard:hex": "bash scripts/check-no-raw-hex.sh",
     "guard:secrets": "bash scripts/check-no-secrets.sh"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
-    "@vitest/coverage-v8": "^2.0.5",
+    "@nx/eslint": "^19.8.0",
+    "@nx/eslint-plugin": "^19.8.0",
+    "@nx/jest": "^19.8.0",
+    "@nx/js": "^19.8.0",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.11.0",
     "eslint": "^9.9.0",
+    "jest": "^29.7.0",
+    "nx": "^19.8.0",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.0",
     "typescript": "^5.5.4",
-    "typescript-eslint": "^8.0.0",
-    "vitest": "^2.0.5"
+    "typescript-eslint": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

@@ -1,0 +1,10 @@
+{
+  "name": "domain",
+  "sourceRoot": "packages/domain/src",
+  "projectType": "library",
+  "tags": ["layer:domain"],
+  "targets": {
+    "lint": { "executor": "@nx/eslint:lint" },
+    "test": { "executor": "@nx/jest:jest", "options": { "jestConfig": "packages/domain/jest.config.ts" } }
+  }
+}
