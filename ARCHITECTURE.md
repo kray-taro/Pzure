@@ -27,8 +27,8 @@ apps/{api,worker,web}  ->  application  ->  domain
 - **`apps/web`** — React+Vite offline-first PWA (ADR-006).
 
 Boundaries are enforced by Nx module-boundary lint rules (see
-`.eslintrc.json` `@nx/enforce-module-boundaries`).
-
+Boundaries are enforced by Nx module-boundary lint rules (see
+`eslint.config.mjs` — `@nx/enforce-module-boundaries`).
 ## Ports defined in Phase 1 (no implementations yet)
 
 `Repository<T>`, `BranchScope`, `IdentityProvider`, `EncryptionService`,
