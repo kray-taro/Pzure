@@ -18,8 +18,10 @@ export interface AuditEvent {
    * secret, so the append-only log can never leak a credential.
    */
   readonly authorizedBySubjectId?: string;
+  readonly authorizedBySubjectId?: string;
+  /** Whether the action succeeded or failed (e.g. failed PIN attempt). Defaults to 'success'. */
+  readonly outcome: 'success' | 'failure';
 }
-
 export interface AuditLogger {
   record(event: AuditEvent): Promise<void>;
 }
