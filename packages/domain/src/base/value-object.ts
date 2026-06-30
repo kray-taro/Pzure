@@ -36,6 +36,9 @@ export abstract class ValueObject<TProps extends object> {
     if (Array.isArray(value)) {
       return value.map((item) => ValueObject.sortDeep(item));
     }
+    if (value instanceof Date) {
+      return value.toISOString();
+    }
     if (value !== null && typeof value === 'object') {
       return Object.fromEntries(
         Object.entries(value as Record<string, unknown>)
