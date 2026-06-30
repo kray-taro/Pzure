@@ -7,6 +7,7 @@
  * the moment they diverge, so the invariant is enforced (DDIA: reliability via
  * automated checks), not merely asserted in an MR description.
  */
+import { describe, it, expect } from 'vitest';
 import { tokens } from './tokens.typed';
 import { status, clinical, finance, inventory, claims, sync } from './colors';
 import { touch } from './touch';

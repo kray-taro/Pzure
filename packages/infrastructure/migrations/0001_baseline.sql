@@ -50,11 +50,11 @@ GO
 CREATE INDEX IX_idempotency_key_expires ON dbo.idempotency_key (expires_at);
 GO
 
--- Immutable audit log (CONCURRENCY §5, COMPLIANCE.md). Append-only.
--- Unified audit sink for the platform: supersedes ADR-004 §5's
--- `audit_security_events`. Records BOTH successful PIN authorizations and
--- FAILED PIN attempts (brute-force/lockout signal, ADR-004). Never stores the
--- PIN or its hash. Role/grant DDL lives in 0001b_roles_grants.sql (#69).
+-- Immutable audit log (CONCURRENCY §5, COMPLIANCE.md). Append-only; no UPDATE/DELETE grants.
+-- This is the unified audit sink for the platform: it supersedes the
+-- `audit_security_events` table named in ADR-004 §5. PIN authorization/lockout
+-- events are recorded here (see authorized_by_subject_id); ADR-004 to be amended
+-- to point at audit_event. Tracked in #69.
 CREATE TABLE dbo.audit_event (
     audit_id        BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     actor_id        NVARCHAR(64)        NOT NULL,
@@ -62,57 +62,35 @@ CREATE TABLE dbo.audit_event (
     subject_type    NVARCHAR(120)       NOT NULL,
     subject_id      NVARCHAR(128)       NOT NULL,
     branch_id       NVARCHAR(64)        NOT NULL,
-    authorized_by_subject_id NVARCHAR(128) NULL,  -- subject who PIN-authorized (ADR-004); never the PIN/hash. Width matches subject_id.
-    outcome         NVARCHAR(20)        NOT NULL CONSTRAINT DF_audit_outcome DEFAULT 'success'
-                        CONSTRAINT CK_audit_outcome CHECK (outcome IN ('success','failure')),
+    authorized_by_subject_id NVARCHAR(128) NULL,  -- pharmacist who PIN-authorized (ADR-004); never the PIN/hash. Width matches subject_id.
     occurred_at     DATETIME2(3)        NOT NULL CONSTRAINT DF_audit_occurred DEFAULT SYSUTCDATETIME()
 );
 GO
--- Failed-PIN-attempt query path (brute-force / lockout detection, ADR-004):
--- failed authorization events are rows with outcome='failure'; this index makes
--- the lockout window query (by actor + recent time) cheap.
-CREATE INDEX IX_audit_event_failed_auth
-    ON dbo.audit_event (actor_id, occurred_at)
-    WHERE outcome = 'failure';
-GO
 
--- Error catalogue (#69): THROW codes are documented, not magic numbers, so they
--- are diagnosable in prod. 50001 = audit immutability violation.
--- Single source of truth for application-defined (>= 50000) error codes.
-CREATE TABLE dbo.error_catalogue (
-    error_number    INT                 NOT NULL PRIMARY KEY,
-    symbol          NVARCHAR(80)        NOT NULL,
-    description     NVARCHAR(400)       NOT NULL
-);
+-- Enforce append-only / immutability on audit_event (CONCURRENCY §5, COMPLIANCE.md).
+-- The rule is no longer just a comment: it is enforced at two layers.
+--
+-- Layer 1 — least-privilege grants. The application connects as pzure_app, which
+-- may INSERT and SELECT audit rows but is explicitly DENIED UPDATE/DELETE. DENY
+-- overrides any future GRANT, so a later permission change cannot silently
+-- re-enable mutation. Retention purges (if ever needed) must run as a separate,
+-- audited privileged principal — never the application role.
+IF DATABASE_PRINCIPAL_ID('pzure_app') IS NULL
+    CREATE ROLE pzure_app;
 GO
-INSERT INTO dbo.error_catalogue (error_number, symbol, description) VALUES
-    (50001, 'AUDIT_EVENT_IMMUTABLE', 'audit_event is append-only; UPDATE/DELETE is not permitted.');
+GRANT INSERT, SELECT ON dbo.audit_event TO pzure_app;
+DENY UPDATE, DELETE ON dbo.audit_event TO pzure_app;
 GO
 
 -- Layer 2 — defense-in-depth trigger. INSTEAD OF intercepts UPDATE/DELETE before
--- any row changes. The sanctioned, audited retention purge is the ONLY exception:
--- a purge sets SESSION_CONTEXT('audit_purge') and the purge principal logs its
--- own action; see 0001b_roles_grants.sql for the dedicated purge role/grant.
+-- any row changes and fails loudly, so even a principal that bypasses the role
+-- grants (short of ALTER/CONTROL on the table) cannot tamper with the log.
 CREATE TRIGGER dbo.trg_audit_event_immutable
 ON dbo.audit_event
 INSTEAD OF UPDATE, DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
-    -- Sanctioned, audited retention purge: only DELETE, only when the dedicated
-    -- purge principal has opened a SESSION_CONTEXT purge window. UPDATE is never
-    -- permitted (append-only). The purge job is responsible for writing its own
-    -- audit_event row recording the retention action (auditable purge path, #69).
-    IF (
-        EXISTS (SELECT 1 FROM deleted)
-        AND NOT EXISTS (SELECT 1 FROM inserted)        -- DELETE, not UPDATE
-        AND CAST(SESSION_CONTEXT(N'audit_purge') AS BIT) = 1
-    )
-    BEGIN
-        DELETE a FROM dbo.audit_event a
-        INNER JOIN deleted d ON d.audit_id = a.audit_id;
-        RETURN;
-    END;
     THROW 50001, 'audit_event is append-only; UPDATE/DELETE is not permitted.', 1;
 END;
 GO

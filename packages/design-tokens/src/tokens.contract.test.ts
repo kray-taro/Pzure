@@ -3,6 +3,7 @@
  * Protects against a refactor accidentally dropping a domain group or a touch
  * target, which would silently weaken accessibility / clinical safety.
  */
+import { describe, it, expect } from 'vitest';
 import { colors, status, clinical, finance, inventory, claims, sync } from './colors';
 import { touch } from './touch';
 
